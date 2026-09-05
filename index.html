@@ -15,6 +15,9 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
+/* gouttière de barre de défilement réservée en permanence : la largeur (donc la taille de la
+   map en width:100%) ne change plus quand la modale de combat fait apparaître la barre */
+html{scrollbar-gutter:stable}
 body{
   background:radial-gradient(1200px 700px at 50% -10%, #242b25 0%, #131713 70%), #131713;
   color:var(--paper); font-family:'Barlow',system-ui,sans-serif;
