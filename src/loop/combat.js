@@ -10,9 +10,10 @@ import {
   TONE_CRIT_HZ, TONE_HIT_HZ,
   DIE_MISS_DROP, DIE_MISS_ROT, DIE_MISS_SCALE, DIE_MISS_OPACITY, COVER_DIE_OFFSET, COVER_DIE_ROT,
   DIE_ENTER_LEFT, DIE_ENTER_RIGHT, DIE_ENTER_JITTER_Y, DIE_ENTER_ROT, DIE_ENTER_SCALE, DIE_REST_ROT,
+  OVERHEAT_ROLL, OVERHEAT_DAMAGE, OVERHEAT_INTRO,
 } from '../config.js';
 import { state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
-import { isCrit, isHit, isSave, effectiveBs, resolveShot } from '../rules/combat.js';
+import { isCrit, isHit, isSave, effectiveBs, resolveShot, resolveOverheat } from '../rules/combat.js';
 import { weaponsForRole } from '../rules/loadout.js';
 import { weaponCanFire } from '../rules/sight.js';
 import { sfx, audio, tone } from '../audio.js';
@@ -260,8 +261,51 @@ async function throwDice(n, row, from) {
   return out;
 }
 
+// Trait surchauffe (plasma) : après le tir, le tireur lance un dé et peut se blesser.
+async function overheatStep(shooter) {
+  // on nettoie la table du tir précédent et on annonce la phase avant de lancer le dé,
+  // pour que le dé de surchauffe ne surgisse pas sans contexte
+  field.querySelectorAll('.die').forEach(d => d.remove());
+  document.getElementById('labAtk').innerHTML = `Surchauffe<b>${OVERHEAT_ROLL} = ${OVERHEAT_DAMAGE} dégâts</b>`;
+  document.getElementById('labDef').innerHTML = '';
+  const nAtk = document.getElementById('noteAtk'), nDef = document.getElementById('noteDef');
+  nDef.className = 'f-note';
+  nAtk.className = 'f-note';
+  nAtk.innerHTML = `Le plasma de <em>${shooter.name}</em> chauffe…`;
+  nAtk.classList.add('show');
+  sfx.throwDice();
+  await sleep(OVERHEAT_INTRO);
+
+  const [die] = await throwDice(1, ROW.atk, 'left');
+  const self = resolveOverheat(die.v);
+  if (!self) {
+    die.el.classList.add('save');
+    nAtk.innerHTML = '<em>plasma stable</em>';
+    journal(`<b>${shooter.name}</b> : plasma stable, pas de surchauffe.`);
+    await sleep(DEFENSE_NOTE_HOLD);
+    return;
+  }
+  die.el.classList.add('crit');
+  nAtk.innerHTML = '<em>Surchauffe !</em>';
+  shooter.hp = Math.max(0, shooter.hp - self);
+  sfx.wound(); state.shake = SHAKE_WOUND;
+  addFx({ type: 'float', x: shooter.x, y: shooter.y, text: '−' + self, color: '#ff8a5a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
+  document.getElementById('cbVerdict').innerHTML = `<em>Surchauffe !</em> ${shooter.name} subit ${self} dégâts — ${shooter.hp} PV`;
+  journal(`<b>${shooter.name}</b> surchauffe son plasma : ${self} dégâts.`);
+  refresh();
+  if (shooter.hp <= 0) {
+    await sleep(DOWN_DELAY);
+    shooter.alive = false; sfx.down();
+    addFx({ type: 'float', x: shooter.x, y: shooter.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
+    document.getElementById('cbVerdict').innerHTML = `<em>${shooter.name} est mis hors de combat par la surchauffe.</em>`;
+    journal(`<b>${shooter.name}</b> est mis hors de combat par la surchauffe.`);
+  }
+  await sleep(DAMAGE_SETTLE);
+}
+
 async function endShot(shooter, dmg, target, s) {
   shooter.ap--; shooter.shot = true; shooter.aimed = false; shooter.activated = true; state.undoState = null;
+  if (shooter.weapon.overheat) await overheatStep(shooter);
   await sleep(dmg > 0 ? ENDSHOT_WAIT_DMG : ENDSHOT_WAIT_NODMG);
   document.getElementById('combat').classList.remove('show');
   field.querySelectorAll('.die').forEach(d => d.remove());

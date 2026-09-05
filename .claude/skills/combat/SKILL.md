@@ -18,6 +18,7 @@ animée** (`src/loop/combat.js`). Toute modification de mécanique passe d'abord
 | Sauvegarde | `isSave(v, sv)` | `v >= sv`, `v > 1`, pas un critique |
 | Seuil après visée | `effectiveBs(bs, aimed)` | viser abaisse d'un cran, plancher `MIN_HIT_TARGET` (2+) |
 | Résolution | `resolveShot({ atkRolls, defRolls, bs, sv, cover, dn, dc })` | renvoie comptes + `damage` |
+| Surchauffe (trait plasma) | `resolveOverheat(roll)` | `OVERHEAT_DAMAGE` si `roll === OVERHEAT_ROLL`, sinon 0 |
 
 `resolveShot` applique les annulations dans cet ordre :
 1. une **sauvegarde critique** annule une critique (1 pour 1) ;
@@ -38,6 +39,7 @@ l'animation.
 | Annuler avant les dés | `cancelShot()` |
 | Résoudre (dés, annulations, dégâts) | `fire()` |
 | Lancer un jet de `n` dés | `throwDice(n, row, from)` |
+| Dé de surchauffe (armes `overheat`) | `overheatStep(shooter)` |
 | Clôturer et enchaîner | `endShot(shooter, dmg, target, s)` |
 
 `fire()` **ne recalcule pas** la mécanique : il appelle `resolveShot` puis rejoue ses comptes

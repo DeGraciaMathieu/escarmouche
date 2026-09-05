@@ -28,6 +28,8 @@ export const CRIT_VALUE = 6;      // valeur de dé = critique
 export const DEFENSE_DICE = 3;    // nombre de dés de sauvegarde
 export const MIN_HIT_TARGET = 2;  // seuil de touche minimal (2+)
 export const SAVES_PER_CRIT = 2;  // sauvegardes normales nécessaires pour annuler une critique
+export const OVERHEAT_ROLL = 1;   // résultat du dé de surchauffe qui blesse le tireur
+export const OVERHEAT_DAMAGE = 2; // dégâts subis par le tireur en cas de surchauffe
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal
@@ -73,6 +75,7 @@ export const ATTACK_NOTE_HOLD = 520;  // lecture du résultat d'attaque
 export const DEFENSE_INTRO = 340;     // annonce « doit encaisser »
 export const COVER_DIE_DELAY = 180;   // arrivée du dé de couvert
 export const DEFENSE_NOTE_HOLD = 560; // lecture du résultat de défense
+export const OVERHEAT_INTRO = 420;    // annonce de la phase de surchauffe avant le dé
 export const CANCEL_ALIGN = 260;      // alignement des dés avant annulation
 export const CANCEL_POP = 240;        // disparition des dés annulés
 export const DAMAGE_STEP = 230;       // décompte d'un dé de dégât

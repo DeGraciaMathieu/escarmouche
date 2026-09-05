@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { effectiveBs, resolveShot } from '../src/rules/combat.js';
+import { effectiveBs, resolveShot, resolveOverheat } from '../src/rules/combat.js';
 
 // arme type : dn=3 dégâts par touche, dc=4 si critique
 const shot = (o) => resolveShot({ bs: 3, sv: 4, cover: false, dn: 3, dc: 4, ...o });
@@ -58,4 +58,12 @@ test('un 1 ne touche jamais, même en visant', () => {
   const r = shot({ atkRolls: [1, 1], defRolls: [1, 1, 1], bs: 2 });
   assert.equal(r.hits, 0);
   assert.equal(r.crits, 0);
+});
+
+test('une surchauffe (dé de surchauffe à 1) blesse le tireur', () => {
+  assert.equal(resolveOverheat(1), 2);
+});
+
+test('tout autre résultat du dé de surchauffe est sans effet', () => {
+  for (const v of [2, 3, 4, 5, 6]) assert.equal(resolveOverheat(v), 0);
 });

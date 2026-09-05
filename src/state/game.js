@@ -16,11 +16,12 @@ export const WEAPONS = {
   bolter:   { name: 'Bolter', a: 4, bs: 3, dn: 4, dc: 5, range: 18 },
   assaut:   { name: "Fusil d'assaut", a: 5, bs: 4, dn: 3, dc: 4, range: 16 },
   sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true },
+  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 10, overheat: true },
 };
 
 // Ensemble cohérent d'armes autorisées pour chaque rôle.
 export const ROLE_LOADOUTS = {
-  meneur: ['pm', 'scie', 'bolter'],
+  meneur: ['pm', 'scie', 'bolter', 'plasma'],
   ligne: ['fusil', 'carabine', 'assaut'],
   appui: ['canon', 'sniper'],
 };

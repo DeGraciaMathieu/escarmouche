@@ -35,6 +35,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | Classement d'un dé (touche / critique / sauvegarde) | `rules/combat.js` | `isCrit`, `isHit`, `isSave` |
 | Seuil de touche après visée | `rules/combat.js` | `effectiveBs(bs, aimed)` |
 | Résolution complète d'un tir (annulations, dégâts) | `rules/combat.js` | `resolveShot({...})` |
+| Surchauffe (trait plasma : dégâts au tireur) | `rules/combat.js` | `resolveOverheat(roll)` |
 | Armes autorisées par rôle (loadout) | `rules/loadout.js` | `weaponsForRole(role, loadouts)`, `isWeaponAllowed(role, key, loadouts)` |
 | Hasard à graine | `rules/rng.js` | `createRng(seed)` |
 

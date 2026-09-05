@@ -1,4 +1,4 @@
-import { CRIT_VALUE, MIN_HIT_TARGET, SAVES_PER_CRIT } from '../config.js';
+import { CRIT_VALUE, MIN_HIT_TARGET, SAVES_PER_CRIT, OVERHEAT_ROLL, OVERHEAT_DAMAGE } from '../config.js';
 
 // Classement d'un dé (un 1 ne touche/sauve jamais ; un 6 est toujours critique).
 export const isCrit = v => v === CRIT_VALUE;
@@ -7,6 +7,9 @@ export const isSave = (v, sv) => v !== CRIT_VALUE && v >= sv && v > 1;
 
 // Seuil de touche effectif : viser abaisse le seuil d'un cran, sans descendre sous 2+.
 export const effectiveBs = (bs, aimed) => Math.max(MIN_HIT_TARGET, aimed ? bs - 1 : bs);
+
+// Surchauffe (trait plasma) : sur le résultat OVERHEAT_ROLL, le tireur subit OVERHEAT_DAMAGE dégâts.
+export const resolveOverheat = roll => roll === OVERHEAT_ROLL ? OVERHEAT_DAMAGE : 0;
 
 // Résout un tir à partir des dés lancés :
 // une sauvegarde annule une touche, deux sauvegardes (ou une sauvegarde critique) annulent

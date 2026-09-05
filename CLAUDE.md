@@ -55,6 +55,9 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
   l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
   La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).
+- Un **trait d'arme** est un marqueur sur l'entrée du catalogue (ex. `overheat: true` pour la
+  surchauffe du plasma) ; sa règle est pure (ex. `resolveOverheat`, seuils en `config.js`) et
+  son effet animé vit dans `loop/combat.js`.
 - Déplacement : un mouvement **contourne automatiquement le décor** (graphe de visibilité,
   `rules/pathfind.js`) ; la distance dépensée est la **longueur du chemin** contourné, plafonnée
   à `M`, pour un seul point d'action. Les figurines ne bloquent pas le trajet (seule la
