@@ -1,16 +1,17 @@
-import { BW, BH, SELECT_MARGIN, DRAG_MIN_DISTANCE, MOVE_ANIM_BASE, MOVE_ANIM_PER_INCH, TOAST_MS, SPEED_FAST } from '../config.js';
+import { BW, BH, SELECT_MARGIN, DRAG_MIN_DISTANCE, TOAST_MS, SPEED_FAST } from '../config.js';
 import { cv } from '../canvas.js';
 import { state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
 import { canTarget, canFight, inControlRange } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
 import { engagedModel } from '../rules/turn.js';
-import { effectiveBs } from '../rules/combat.js';
-import { sfx, audio, tone } from '../audio.js';
+import { sfx, audio } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
-import { select, afterAction, endActivation } from '../loop/turn.js';
+import { select, endActivation } from '../loop/turn.js';
+import { moveModel, aim } from '../loop/actions.js';
 import { declareShot, cancelShot, fire } from '../loop/combat.js';
 import { declareFight, cancelFight, fight } from '../loop/melee.js';
+import { isAiControlled } from '../ai/runner.js';
 
 function toBoard(ev) {
   const r = cv.getBoundingClientRect();
@@ -28,7 +29,7 @@ function toast(msg, ev) {
 }
 
 cv.addEventListener('mousedown', ev => {
-  if (state.busy || state.over) return; audio();
+  if (state.busy || state.over || isAiControlled(state.side)) return; audio();
   const p = toBoard(ev), m = modelAt(p); if (!m) return;
   if (m.team === state.side && !m.activated) {
     const busy = engagedModel(state.models, state.side);
@@ -55,18 +56,12 @@ window.addEventListener('mouseup', ev => {
   if (!state.drag) return;
   const d = state.drag; state.drag = null; cv.style.cursor = 'default';
   if (d.chk.d <= DRAG_MIN_DISTANCE) { refresh(); return; }
-  if (d.chk.ok) {
-    state.undoState = { m: d.m, x: d.m.x, y: d.m.y, moved: d.m.moved };
-    const path = d.chk.path, to = path[path.length - 1];
-    d.m.anim = { path, t0: performance.now(), dur: MOVE_ANIM_BASE + d.chk.d * MOVE_ANIM_PER_INCH };
-    d.m.x = to.x; d.m.y = to.y; d.m.ap--; d.m.moved = true; d.m.activated = true;
-    journal(`<b>${d.m.name}</b> se déplace de ${d.chk.d.toFixed(1)}″.`);
-    afterAction(d.m);
-  } else toast(d.chk.why, ev);
+  const chk = moveModel(d.m, d.to, d.chk);
+  if (!chk.ok) toast(chk.why, ev);
   refresh();
 });
 cv.addEventListener('click', ev => {
-  if (state.busy || state.over || state.drag) return;
+  if (state.busy || state.over || state.drag || isAiControlled(state.side)) return;
   const p = toBoard(ev), m = modelAt(p);
   if (!m || !state.selected || m.team === state.selected.team) return;
   if (state.selected.team !== state.side) { toast('cette figurine ne joue pas ce tour', ev); return; }
@@ -82,10 +77,7 @@ cv.addEventListener('click', ev => {
 
 document.getElementById('btnAim').onclick = () => {
   if (!state.selected || state.selected.ap < 1 || state.selected.aimed || state.selected.shot || state.pending) return;
-  audio(); state.selected.aimed = true; state.selected.ap--; state.selected.activated = true; state.undoState = null;
-  tone(660, .12, 'triangle', .1, 880);
-  journal(`<b>${state.selected.name}</b> se met en joue : touche à ${effectiveBs(state.selected.weapon.bs, true)}+.`);
-  afterAction(state.selected);
+  audio(); aim(state.selected);
 };
 document.getElementById('btnUndo').onclick = () => {
   if (!state.undoState || state.undoState.m !== state.selected || state.selected.shot) return;
@@ -100,7 +92,7 @@ document.getElementById('btnUndo').onclick = () => {
 document.getElementById('btnEnd').onclick = () => { if (!state.busy && !state.over && state.selected && state.selected.team === state.side) endActivation(); };
 
 window.addEventListener('keydown', ev => {
-  if (state.over) return;
+  if (state.over || isAiControlled(state.side)) return;
   if (state.pending) {
     if (ev.key === 'Enter') { ev.preventDefault(); if (document.getElementById('cbCta').style.display !== 'none') fire(); }
     else if (ev.key === 'Escape') { if (document.getElementById('cbCta').style.display !== 'none') cancelShot(); }

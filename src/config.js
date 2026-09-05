@@ -34,6 +34,9 @@ export const SAVES_PER_CRIT = 2;  // sauvegardes normales nécessaires pour annu
 export const OVERHEAT_ROLL = 1;   // résultat du dé de surchauffe qui blesse le tireur
 export const OVERHEAT_DAMAGE = 2; // dégâts subis par le tireur en cas de surchauffe
 
+// --- Intelligence artificielle (mode 1 joueur)
+export const AI_ACT_DELAY = 520; // délai de réflexion entre deux actions de l'IA (ms)
+
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal
 

@@ -15,10 +15,11 @@ import { checkEnd, afterAction, endActivation } from './turn.js';
 const sleep = ms => new Promise(r => setTimeout(r, ms * COMBAT_PACE));
 const roll = n => Array.from({ length: n }, () => 1 + Math.floor(state.rng() * DICE_FACES));
 
-// Attente d'un choix du joueur actif : résolue par le clic sur un bouton d'action.
+// Attente d'un choix du joueur actif, résolue par une action (clic humain ou décision IA).
+// `submitMeleeChoice` est l'intention partagée : sans attente en cours, elle ne fait rien.
 let resolveChoice = null;
 const waitChoice = () => new Promise(r => { resolveChoice = r; });
-function chooseAction(action) { const r = resolveChoice; resolveChoice = null; if (r) r(action); }
+export function submitMeleeChoice(action) { const r = resolveChoice; resolveChoice = null; if (r) r(action); }
 
 // Modèle correspondant à un camp du duel ('atk' | 'def').
 const modelOf = side => side === 'atk' ? state.duel.atk : state.duel.def;
@@ -79,7 +80,7 @@ function renderArena(duel) {
     const b = document.createElement('button');
     b.className = opt.kind === 'strike' ? 'strike' : 'parry';
     b.textContent = poolLabel(opt, me);
-    b.onclick = () => chooseAction(opt);
+    b.onclick = () => submitMeleeChoice(opt);
     actions.appendChild(b);
   }
 }
@@ -118,6 +119,7 @@ export async function fight() {
     atkRolls: roll(atk.meleeWeapon.a), defRolls: roll(def.meleeWeapon.a),
     atkWeapon: atk.meleeWeapon, defWeapon: def.meleeWeapon, atkHp: atk.hp, defHp: def.hp,
   });
+  state.duel.live = duel;   // état interactif publié pour tout consommateur (dont l'IA)
   renderArena(duel);
   await sleep(DAMAGE_SETTLE);
 
@@ -125,6 +127,7 @@ export async function fight() {
     const action = await waitChoice();
     const before = duel;
     duel = applyMeleeAction(before, action);
+    state.duel.live = duel;
     playStep(action, before, duel);
     refresh();
     renderArena(duel);
