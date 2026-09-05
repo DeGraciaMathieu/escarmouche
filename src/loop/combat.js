@@ -1,4 +1,16 @@
-import { DEFENSE_DICE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST, ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG } from '../config.js';
+import {
+  DEFENSE_DICE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST,
+  ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG, DICE_FACES,
+  DIE_REVEAL_STEP, ATTACK_SETTLE, ATTACK_NOTE_HOLD, DEFENSE_INTRO, COVER_DIE_DELAY,
+  DEFENSE_NOTE_HOLD, CANCEL_ALIGN, CANCEL_POP, DAMAGE_STEP, DAMAGE_SETTLE, DOWN_DELAY,
+  SPIN_HOLD, DIE_DROP_STEP, DROP_SETTLE, DIE_LAND_HOLD,
+  FX_MUZZLE_MS, FX_TRACER_MS, TRACER_STAGGER, FX_SHIELD_MS, FX_IMPACT_MS,
+  FX_FLOAT_DMG_MS, FX_FLOAT_DOWN_MS, FX_FLOAT_SAVE_MS, FLOAT_DMG_SIZE, FLOAT_SMALL_SIZE,
+  IMPACT_JITTER, IMPACT_SEED_RANGE, SHAKE_HIT, SHAKE_CRIT, SHAKE_WOUND, TARGET_FLASH,
+  TONE_CRIT_HZ, TONE_HIT_HZ,
+  DIE_MISS_DROP, DIE_MISS_ROT, DIE_MISS_SCALE, DIE_MISS_OPACITY, COVER_DIE_OFFSET, COVER_DIE_ROT,
+  DIE_ENTER_LEFT, DIE_ENTER_RIGHT, DIE_ENTER_JITTER_Y, DIE_ENTER_ROT, DIE_ENTER_SCALE, DIE_REST_ROT,
+} from '../config.js';
 import { state } from '../state/game.js';
 import { isCrit, isHit, isSave, effectiveBs, resolveShot } from '../rules/combat.js';
 import { sfx, audio, tone } from '../audio.js';
@@ -71,29 +83,29 @@ export async function fire() {
 
   // --- coups de feu sur le plateau
   sfx.shot();
-  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: 180 });
+  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS });
   for (let i = 0; i < shooter.weapon.a; i++)
-    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: 230 }), i * 70);
+    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS }), i * TRACER_STAGGER);
 
   // --- jet d'attaque
   const atk = await throwDice(shooter.weapon.a, ROW.atk, 'left');
   let hits = [], crits = [], miss = [];
   for (const d of atk) {
-    await sleep(130);
+    await sleep(DIE_REVEAL_STEP);
     if (isCrit(d.v)) { d.el.classList.add('crit'); crits.push(d); sfx.hitDie(); }
     else if (isHit(d.v, bs)) { d.el.classList.add('hit'); hits.push(d); sfx.hitDie(); }
     else { d.el.classList.add('miss'); miss.push(d); }
   }
-  await sleep(120);
+  await sleep(ATTACK_SETTLE);
   // les échecs quittent la table
-  miss.forEach((d, i) => { place(d.el, d.x, ROW.atk + 34, d.rot + 22, .8); d.el.style.opacity = .28; });
+  miss.forEach((d, i) => { place(d.el, d.x, ROW.atk + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
   const kept = [...crits, ...hits];
   kept.forEach((d, i) => { d.x = DX + i * GAP; place(d.el, d.x, ROW.atk, d.rot, 1); });
   nAtk.innerHTML = kept.length
     ? `<em>${kept.length} touche${kept.length > 1 ? 's' : ''}</em>${crits.length ? ` dont <em>${crits.length} critique${crits.length > 1 ? 's' : ''}</em>` : ''}`
     : 'aucune touche';
   nAtk.classList.add('show');
-  await sleep(520);
+  await sleep(ATTACK_NOTE_HOLD);
 
   if (!kept.length) {
     document.getElementById('cbVerdict').innerHTML = 'La rafale se perd.';
@@ -106,29 +118,29 @@ export async function fire() {
   // --- jet de défense
   nDef.innerHTML = `<em>${target.name}</em> doit encaisser…`;
   nDef.classList.add('show');
-  await sleep(340);
+  await sleep(DEFENSE_INTRO);
   const def = await throwDice(DEFENSE_DICE, ROW.def, 'right');
   let saves = [], csaves = [];
   for (const d of def) {
-    await sleep(130);
+    await sleep(DIE_REVEAL_STEP);
     if (isCrit(d.v)) { d.el.classList.add('crit'); csaves.push(d); sfx.save(); }
     else if (isSave(d.v, target.sv)) { d.el.classList.add('save'); saves.push(d); sfx.save(); }
     else d.el.classList.add('miss');
   }
   if (s.cover) {
-    await sleep(180);
+    await sleep(COVER_DIE_DELAY);
     const el = makeDie(); paintDie(el, target.sv); el.classList.add('cover');
-    place(el, DX + 3 * GAP + 16, ROW.def, -6, 1); el.classList.add('land');
-    saves.push({ el, v: target.sv, x: DX + 3 * GAP + 16, rot: -6 }); sfx.save();
+    place(el, DX + 3 * GAP + COVER_DIE_OFFSET, ROW.def, COVER_DIE_ROT, 1); el.classList.add('land');
+    saves.push({ el, v: target.sv, x: DX + 3 * GAP + COVER_DIE_OFFSET, rot: COVER_DIE_ROT }); sfx.save();
   }
   const failed = def.filter(d => !saves.includes(d) && !csaves.includes(d));
-  failed.forEach(d => { place(d.el, d.x, ROW.def + 34, d.rot + 22, .8); d.el.style.opacity = .28; });
+  failed.forEach(d => { place(d.el, d.x, ROW.def + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
   const goodDef = [...csaves, ...saves];
   goodDef.forEach((d, i) => { d.x = DX + i * GAP; place(d.el, d.x, ROW.def, d.rot, 1); });
   nDef.innerHTML = goodDef.length
     ? `<em>${goodDef.length} sauvegarde${goodDef.length > 1 ? 's' : ''}</em>${s.cover ? ' (dont le dé de couvert)' : ''}`
     : 'aucune sauvegarde';
-  await sleep(560);
+  await sleep(DEFENSE_NOTE_HOLD);
 
   // --- résolution des annulations et des dégâts (règle pure)
   const outcome = resolveShot({
@@ -147,12 +159,12 @@ export async function fire() {
   for (const op of ops) {
     const hx = op.hit.x;
     op.sv.forEach(sv => place(sv.el, hx, ROW.atk, sv.rot, 1));
-    await sleep(260);
+    await sleep(CANCEL_ALIGN);
     op.sv.forEach(sv => sv.el.classList.add('pop'));
     op.hit.el.classList.add('pop');
     sfx.cancel();
-    addFx({ type: 'shield', x: target.x, y: target.y, dur: 420 });
-    await sleep(240);
+    addFx({ type: 'shield', x: target.x, y: target.y, dur: FX_SHIELD_MS });
+    await sleep(CANCEL_POP);
   }
 
   // --- dégâts restants
@@ -166,35 +178,35 @@ export async function fire() {
       const fromCrit = rc.includes(d);
       shown += fromCrit ? shooter.weapon.dc : shooter.weapon.dn;
       document.getElementById('tallyNum').textContent = shown;
-      tone(fromCrit ? 720 : 600, .1, 'triangle', .1);
+      tone(fromCrit ? TONE_CRIT_HZ : TONE_HIT_HZ, .1, 'triangle', .1);
       addFx({
-        type: 'impact', x: target.x + (Math.random() - .5) * .5, y: target.y + (Math.random() - .5) * .5,
-        dur: 420, seed: Math.random() * 6,
+        type: 'impact', x: target.x + (Math.random() - .5) * IMPACT_JITTER, y: target.y + (Math.random() - .5) * IMPACT_JITTER,
+        dur: FX_IMPACT_MS, seed: Math.random() * IMPACT_SEED_RANGE,
       });
-      target.flash = .7; state.shake = fromCrit ? 7 : 4.5;
-      await sleep(230);
+      target.flash = TARGET_FLASH; state.shake = fromCrit ? SHAKE_CRIT : SHAKE_HIT;
+      await sleep(DAMAGE_STEP);
     }
   }
-  await sleep(260);
+  await sleep(DAMAGE_SETTLE);
 
   if (dmg > 0) {
     target.hp = Math.max(0, target.hp - dmg);
-    sfx.wound(); state.shake = 8;
-    addFx({ type: 'float', x: target.x, y: target.y, text: '−' + dmg, color: '#ffb27a', dur: 1100, size: 28 });
+    sfx.wound(); state.shake = SHAKE_WOUND;
+    addFx({ type: 'float', x: target.x, y: target.y, text: '−' + dmg, color: '#ffb27a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
     document.getElementById('cbVerdict').innerHTML =
       `<em>${dmg} dégâts</em> — ${target.name} passe à ${target.hp} PV`;
     journal(`<b>${shooter.name}</b> touche <b>${target.name}</b> : ${dmg} dégâts${s.cover ? ' (couvert)' : ''}.`);
     refresh();
     if (target.hp <= 0) {
-      await sleep(420);
+      await sleep(DOWN_DELAY);
       target.alive = false; sfx.down();
-      addFx({ type: 'float', x: target.x, y: target.y, text: 'hors de combat', color: '#e6e1d3', dur: 1400, size: 20 });
+      addFx({ type: 'float', x: target.x, y: target.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
       document.getElementById('cbVerdict').innerHTML = `<em>${target.name} est hors de combat.</em>`;
       journal(`<b>${target.name}</b> est mis hors de combat.`);
     }
   } else {
     document.getElementById('cbVerdict').innerHTML = 'Tout est encaissé.';
-    addFx({ type: 'float', x: target.x, y: target.y, text: 'encaissé', color: '#9dc4dd', dur: 1000, size: 20 });
+    addFx({ type: 'float', x: target.x, y: target.y, text: 'encaissé', color: '#9dc4dd', dur: FX_FLOAT_SAVE_MS, size: FLOAT_SMALL_SIZE });
     journal(`<b>${shooter.name}</b> touche <b>${target.name}</b>, sans dégât.`);
     sfx.save();
   }
@@ -205,18 +217,18 @@ async function throwDice(n, row, from) {
   const out = [];
   for (let i = 0; i < n; i++) {
     const el = makeDie();
-    const startX = from === 'left' ? -140 : 700;
-    place(el, startX, row + (Math.random() - .5) * 40, (Math.random() - .5) * 260, .9);
-    out.push({ el, x: DX + i * GAP, rot: (Math.random() - .5) * 16, v: 1 });
+    const startX = from === 'left' ? DIE_ENTER_LEFT : DIE_ENTER_RIGHT;
+    place(el, startX, row + (Math.random() - .5) * DIE_ENTER_JITTER_Y, (Math.random() - .5) * DIE_ENTER_ROT, DIE_ENTER_SCALE);
+    out.push({ el, x: DX + i * GAP, rot: (Math.random() - .5) * DIE_REST_ROT, v: 1 });
   }
   sfx.throwDice();
-  const spin = setInterval(() => out.forEach(d => paintDie(d.el, 1 + Math.floor(Math.random() * 6))), DIE_SPIN_INTERVAL);
-  await sleep(40);
-  out.forEach((d, i) => setTimeout(() => { place(d.el, d.x, row, d.rot, 1); sfx.land(); }, i * 80 * state.speed));
-  await sleep(80 * n + 380);
+  const spin = setInterval(() => out.forEach(d => paintDie(d.el, 1 + Math.floor(Math.random() * DICE_FACES))), DIE_SPIN_INTERVAL);
+  await sleep(SPIN_HOLD);
+  out.forEach((d, i) => setTimeout(() => { place(d.el, d.x, row, d.rot, 1); sfx.land(); }, i * DIE_DROP_STEP * state.speed));
+  await sleep(DIE_DROP_STEP * n + DROP_SETTLE);
   clearInterval(spin);
-  out.forEach(d => { d.v = 1 + Math.floor(state.rng() * 6); paintDie(d.el, d.v); d.el.classList.add('land'); });
-  await sleep(160);
+  out.forEach(d => { d.v = 1 + Math.floor(state.rng() * DICE_FACES); paintDie(d.el, d.v); d.el.classList.add('land'); });
+  await sleep(DIE_LAND_HOLD);
   return out;
 }
 
