@@ -1,6 +1,6 @@
 ---
 name: combat
-description: Use when touching the shooting mechanic — dice thresholds, saves, cancellations, damage, cover, aiming — or its animated resolution sequence.
+description: Use when touching the shooting mechanic — dice thresholds, saves, cancellations, damage, cover, aiming — its animated resolution sequence, or the melee duel (strike/parry, contrôle range).
 auto_invoke: true
 ---
 
@@ -75,3 +75,34 @@ d'ensemble se règle d'un seul cran avec `COMBAT_PACE` (facteur appliqué à cha
 5. Si la règle change (ex. seuil critique, nombre de sauvegardes par critique), vérifier que
    le bloc `.legend` d'`index.html` reste exact — sinon le hook doc-sync bloquera.
 6. `npm test` vert avant de finir.
+
+## Corps à corps (mêlée)
+
+Mécanique distincte du tir, façon Kill Team : au contact (portée `CONTROL_RANGE`), le clic sur
+un ennemi ouvre un **duel** au lieu d'un tir (mêlée prioritaire, pas de tir au contact).
+
+### Règle pure — `src/rules/combat.js`
+
+| Concept | Fonction | Détail |
+| --- | --- | --- |
+| Classement des dés | `classifyMelee(rolls, ws)` | `{ hits, crits }` (6 critique, ≥ `ws` touche) |
+| État initial du duel | `createMelee({ atkRolls, defRolls, atkWeapon, defWeapon, atkHp, defHp })` | attaquant d'abord ; sinon le camp qui a des dés |
+| Actions légales | `meleeOptions(duel)` | frapper ; contrer (une normale ↔ normale, une critique ↔ n'importe quoi) |
+| Résoudre un dé | `applyMeleeAction(duel, action)` | nouvel état immuable ; mort à 0 PV → `done` |
+
+`action` = `{ kind: 'strike'|'parry', die: 'hit'|'crit', target?: 'hit'|'crit' }`. **Seule une
+critique bloque une critique.** Frapper inflige `dn`/`dc` de l'arme du frappeur. La main passe à
+l'adversaire s'il a des dés, sinon le camp courant résout les siens ; une mort arrête le duel.
+
+### Portée de contrôle — `src/rules/sight.js`
+
+`inControlRange(a, b)` (distance ≤ `CONTROL_RANGE`) et `canFight(m, target, terrain)` (miroir de
+`canShoot` : cible adverse en vue, à portée de contrôle, arme de mêlée requise).
+
+### Séquence interactive — `src/loop/melee.js`
+
+`declareFight` (briefing) → `fight()` lance les dés des deux camps (`state.rng`) puis **boucle
+interactive** : le joueur actif clique une action (`meleeOptions`), `applyMeleeAction` résout,
+`playStep` joue l'effet plateau (impact/parade/PV/mort). À la fin, seul l'attaquant dépense 1 AP
+et pose `shot` ; le défenseur riposte gratuitement. Contrairement au tir, les PV sont appliqués
+**au fil des frappes** (pas de `plan` différé). Tests purs dans `tests/melee.test.js`.

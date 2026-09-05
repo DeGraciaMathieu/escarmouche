@@ -55,6 +55,8 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
   l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
   La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).
+- Chaque figurine porte aussi une arme de mêlée fixe (`m.meleeWeapon`, catalogue `MELEE_WEAPONS`
+  de `state/game.js`) : `a` dés contre la valeur Touche `ws`, dégâts `dn`/`dc`.
 - Un **trait d'arme** est un marqueur sur l'entrée du catalogue (ex. `overheat: true` pour la
   surchauffe du plasma) ; sa règle est pure (ex. `resolveOverheat`, seuils en `config.js`) et
   son effet animé vit dans `loop/combat.js`.
@@ -69,6 +71,12 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 - Couvert et masquage sont deux effets **exclusifs** d'un décor bas traversé, décidés par la
   géométrie dans `rules/sight.js` : couvert si le décor est proche de la cible, masquage s'il est
   au milieu de la ligne (loin des deux) ; le couvert prime. Seuils en `config.js`.
+- Corps à corps : au contact (`CONTROL_RANGE`, `rules/sight.js` → `canFight`/`inControlRange`),
+  un clic ouvre un **duel** au lieu d'un tir (mêlée prioritaire, pas de tir au contact). Les deux
+  figurines lancent leurs dés ; on résout en alternance **frapper/contrer** en commençant par
+  l'attaquant, seule une critique contre une critique. Règle pure dans `rules/combat.js`
+  (`createMelee`/`meleeOptions`/`applyMeleeAction`), orchestration interactive dans `loop/melee.js`.
+  Le défenseur riposte gratuitement ; seul l'attaquant dépense 1 AP et consomme son attaque.
 
 ## Comportement (règles de process)
 
