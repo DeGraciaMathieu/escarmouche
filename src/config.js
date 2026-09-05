@@ -60,6 +60,10 @@ export const ENDSHOT_WAIT_NODMG = 950; // attente après un tir sans dégât
 // --- Dé à six faces
 export const DICE_FACES = 6;
 
+// --- Zones de déploiement (bandes colorées sur les bords du plateau)
+export const DEPLOY_ZONE_WIDTH = 5;    // largeur en pouces
+export const DEPLOY_ZONE_ALPHA = 0.06; // opacité de la teinte
+
 // --- Cadence de la séquence de tir (ms, multipliés par la vitesse d'animation)
 export const DIE_REVEAL_STEP = 130;   // révélation d'un dé, un par un
 export const ATTACK_SETTLE = 120;     // pause après le jet d'attaque

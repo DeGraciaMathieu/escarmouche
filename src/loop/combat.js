@@ -49,7 +49,7 @@ export function declareShot(shooter, target, s) {
     `${s.len.toFixed(1)}″ · ${s.cover ? 'cible à couvert' : 'cible à découvert'}${shooter.aimed ? ' · en joue' : ''}`;
   document.getElementById('cbBrief').innerHTML = `
     <div class="col">Attaque<br><b>${shooter.weapon.a} dés, touche ${bs}+</b><br>${shooter.weapon.name}</div>
-    <div class="col">Défense<br><b>3 dés, sauvegarde ${target.sv}+</b><br>${s.cover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
+    <div class="col">Défense<br><b>${DEFENSE_DICE} dés, sauvegarde ${target.sv}+</b><br>${s.cover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
     <div class="col">Dégâts<br><b>${shooter.weapon.dn} par touche, ${shooter.weapon.dc} si critique</b><br>${target.name} a ${target.hp} PV</div>`;
   document.getElementById('cbCta').style.display = 'flex';
   field.style.display = 'none';
