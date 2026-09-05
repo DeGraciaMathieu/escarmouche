@@ -17,7 +17,7 @@ import { isCrit, isHit, isSave, effectiveBs, resolveShot, resolveOverheat } from
 import { weaponsForRole } from '../rules/loadout.js';
 import { weaponCanFire } from '../rules/sight.js';
 import { sfx, audio, tone } from '../audio.js';
-import { addFx } from '../render/fx.js';
+import { addFx, tracerColor } from '../render/fx.js';
 import { refresh, journal } from '../render/ui.js';
 import { checkEnd, afterAction } from './turn.js';
 
@@ -291,10 +291,11 @@ async function endSequence(plan) {
 // dégâts (cible puis surchauffe du tireur) et mises hors de combat.
 async function playCinematic(plan) {
   const { shooter, target, damage, impacts, cancels } = plan;
+  const fxColor = tracerColor(shooter.weapon.tracer);   // teinte de l'arme (bouche, impact), null si aucune
   sfx.shot();
-  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS });
+  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS, color: fxColor });
   for (let i = 0; i < shooter.weapon.a; i++)
-    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS }), i * TRACER_STAGGER);
+    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS, style: shooter.weapon.tracer }), i * TRACER_STAGGER);
   await sleep(CINE_TRACER_HOLD);
 
   for (let i = 0; i < cancels; i++) {
@@ -305,7 +306,7 @@ async function playCinematic(plan) {
   for (const imp of impacts) {
     tone(imp.crit ? TONE_CRIT_HZ : TONE_HIT_HZ, .1, 'triangle', .1);
     addFx({ type: 'impact', x: target.x + (Math.random() - .5) * IMPACT_JITTER, y: target.y + (Math.random() - .5) * IMPACT_JITTER,
-      dur: FX_IMPACT_MS, seed: Math.random() * IMPACT_SEED_RANGE });
+      dur: FX_IMPACT_MS, seed: Math.random() * IMPACT_SEED_RANGE, color: fxColor });
     target.flash = TARGET_FLASH; state.shake = imp.crit ? SHAKE_CRIT : SHAKE_HIT;
     await sleep(DAMAGE_STEP);
   }

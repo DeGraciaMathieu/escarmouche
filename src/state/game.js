@@ -14,9 +14,9 @@ export const WEAPONS = {
   scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 },
   carabine: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 },
   bolter:   { name: 'Bolter', a: 4, bs: 3, dn: 4, dc: 5, range: 18 },
-  assaut:   { name: "Fusil d'assaut", a: 5, bs: 4, dn: 3, dc: 4, range: 16 },
-  sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true },
-  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 10, overheat: true },
+  assaut:   { name: "Fusil d'assaut", a: 5, bs: 4, dn: 3, dc: 4, range: 16, tracer: 'assaut' },
+  sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true, tracer: 'sniper' },
+  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 10, overheat: true, tracer: 'plasma' },
 };
 
 // Ensemble cohérent d'armes autorisées pour chaque rôle.

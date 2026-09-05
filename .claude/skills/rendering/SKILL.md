@@ -26,6 +26,7 @@ logique de règle n'y vit. Le temps (`performance.now()`) et l'aléa cosmétique
 | Ligne de vue au survol | `src/render/board.js` | `drawSight` |
 | Étiquette de nom au survol | `src/render/board.js` | `drawHoverName` |
 | Effets éphémères (traceur, impact, bouclier, texte flottant) | `src/render/fx.js` | `addFx`, `drawFx` |
+| Teinte/aspect des tirs par arme (bouche, traçante, impact ; champ `weapon.tracer`) | `src/render/fx.js` | `TRACER_STYLES`, `tracerColor` |
 | Boucle principale | `src/loop/render-loop.js` | `render` |
 | Panneau latéral, journal, cartes, bandeau | `src/render/ui.js` | `refresh`, `journal` |
 
