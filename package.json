@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "npx serve .",
     "test": "node --test",
-    "test:watch": "node --test --watch"
+    "test:watch": "node --test --watch",
+    "sim": "node tools/duel-sim.mjs"
   }
 }
