@@ -130,8 +130,8 @@ export async function fire() {
   if (s.cover) {
     await sleep(COVER_DIE_DELAY);
     const el = makeDie(); paintDie(el, target.sv); el.classList.add('cover');
-    place(el, DX + 3 * GAP + COVER_DIE_OFFSET, ROW.def, COVER_DIE_ROT, 1); el.classList.add('land');
-    saves.push({ el, v: target.sv, x: DX + 3 * GAP + COVER_DIE_OFFSET, rot: COVER_DIE_ROT }); sfx.save();
+    place(el, DX + DEFENSE_DICE * GAP + COVER_DIE_OFFSET, ROW.def, COVER_DIE_ROT, 1); el.classList.add('land');
+    saves.push({ el, v: target.sv, x: DX + DEFENSE_DICE * GAP + COVER_DIE_OFFSET, rot: COVER_DIE_ROT }); sfx.save();
   }
   const failed = def.filter(d => !saves.includes(d) && !csaves.includes(d));
   failed.forEach(d => { place(d.el, d.x, ROW.def + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
