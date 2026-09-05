@@ -3,7 +3,7 @@ import {
   ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG, DICE_FACES,
   DIE_REVEAL_STEP, ATTACK_SETTLE, ATTACK_NOTE_HOLD, DEFENSE_INTRO, COVER_DIE_DELAY,
   DEFENSE_NOTE_HOLD, CANCEL_ALIGN, CANCEL_POP, DAMAGE_STEP, DAMAGE_SETTLE, DOWN_DELAY,
-  SPIN_HOLD, DIE_DROP_STEP, DROP_SETTLE, DIE_LAND_HOLD,
+  SPIN_HOLD, DIE_DROP_STEP, DROP_SETTLE, DIE_LAND_HOLD, CINE_TRACER_HOLD,
   FX_MUZZLE_MS, FX_TRACER_MS, TRACER_STAGGER, FX_SHIELD_MS, FX_IMPACT_MS,
   FX_FLOAT_DMG_MS, FX_FLOAT_DOWN_MS, FX_FLOAT_SAVE_MS, FLOAT_DMG_SIZE, FLOAT_SMALL_SIZE,
   IMPACT_JITTER, IMPACT_SEED_RANGE, SHAKE_HIT, SHAKE_CRIT, SHAKE_WOUND, TARGET_FLASH,
@@ -110,11 +110,9 @@ export async function fire() {
   const tally = document.getElementById('tally'); tally.className = 'tally';
   document.getElementById('tallyNum').textContent = '0';
 
-  // --- coups de feu sur le plateau
-  sfx.shot();
-  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS });
-  for (let i = 0; i < shooter.weapon.a; i++)
-    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS }), i * TRACER_STAGGER);
+  // Effets plateau (tir, impacts, dégâts, mort) collectés dans ce plan et joués APRÈS la
+  // fermeture de la modale (playCinematic), pour qu'ils soient visibles sur le plateau.
+  const plan = { shooter, target, s, damage: 0, cancels: 0, impacts: [], targetDown: false, overheat: 0, shooterDown: false };
 
   // --- jet d'attaque
   const atk = await throwDice(shooter.weapon.a, ROW.atk, 'left');
@@ -140,7 +138,7 @@ export async function fire() {
     document.getElementById('cbVerdict').innerHTML = 'La rafale se perd.';
     journal(`<b>${shooter.name}</b> tire sur <b>${target.name}</b> et manque.`);
     sfx.no();
-    await endShot(shooter, 0, target, s);
+    await endSequence(plan);
     return;
   }
 
@@ -192,54 +190,39 @@ export async function fire() {
     op.sv.forEach(sv => sv.el.classList.add('pop'));
     op.hit.el.classList.add('pop');
     sfx.cancel();
-    addFx({ type: 'shield', x: target.x, y: target.y, dur: FX_SHIELD_MS });
     await sleep(CANCEL_POP);
   }
+  plan.cancels = ops.length;
 
-  // --- dégâts restants
+  // --- dégâts restants : décompte chiffré dans la modale ; les impacts plateau sont différés
   const left = [...rc, ...rh];
   const dmg = outcome.damage;
+  plan.damage = dmg;
+  plan.impacts = left.map(d => ({ crit: rc.includes(d) }));
   if (left.length) {
     tally.classList.add('show');
     left.forEach(d => d.el.classList.add('pulse'));
     let shown = 0;
     for (const d of left) {
-      const fromCrit = rc.includes(d);
-      shown += fromCrit ? shooter.weapon.dc : shooter.weapon.dn;
+      shown += rc.includes(d) ? shooter.weapon.dc : shooter.weapon.dn;
       document.getElementById('tallyNum').textContent = shown;
-      tone(fromCrit ? TONE_CRIT_HZ : TONE_HIT_HZ, .1, 'triangle', .1);
-      addFx({
-        type: 'impact', x: target.x + (Math.random() - .5) * IMPACT_JITTER, y: target.y + (Math.random() - .5) * IMPACT_JITTER,
-        dur: FX_IMPACT_MS, seed: Math.random() * IMPACT_SEED_RANGE,
-      });
-      target.flash = TARGET_FLASH; state.shake = fromCrit ? SHAKE_CRIT : SHAKE_HIT;
       await sleep(DAMAGE_STEP);
     }
   }
   await sleep(DAMAGE_SETTLE);
 
+  // verdict chiffré annoncé dans la modale ; l'état des PV et les effets changent au cinématique
   if (dmg > 0) {
-    target.hp = Math.max(0, target.hp - dmg);
-    sfx.wound(); state.shake = SHAKE_WOUND;
-    addFx({ type: 'float', x: target.x, y: target.y, text: '−' + dmg, color: '#ffb27a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
+    const newHp = Math.max(0, target.hp - dmg);
+    plan.targetDown = newHp <= 0;
     document.getElementById('cbVerdict').innerHTML =
-      `<em>${dmg} dégâts</em> — ${target.name} passe à ${target.hp} PV`;
+      `<em>${dmg} dégâts</em> — ${target.name} ${plan.targetDown ? 'tombe' : `passe à ${newHp} PV`}`;
     journal(`<b>${shooter.name}</b> touche <b>${target.name}</b> : ${dmg} dégâts${s.cover ? ' (couvert)' : ''}.`);
-    refresh();
-    if (target.hp <= 0) {
-      await sleep(DOWN_DELAY);
-      target.alive = false; sfx.down();
-      addFx({ type: 'float', x: target.x, y: target.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
-      document.getElementById('cbVerdict').innerHTML = `<em>${target.name} est hors de combat.</em>`;
-      journal(`<b>${target.name}</b> est mis hors de combat.`);
-    }
   } else {
     document.getElementById('cbVerdict').innerHTML = 'Tout est encaissé.';
-    addFx({ type: 'float', x: target.x, y: target.y, text: 'encaissé', color: '#9dc4dd', dur: FX_FLOAT_SAVE_MS, size: FLOAT_SMALL_SIZE });
     journal(`<b>${shooter.name}</b> touche <b>${target.name}</b>, sans dégât.`);
-    sfx.save();
   }
-  await endShot(shooter, dmg, target, s);
+  await endSequence(plan);
 }
 
 async function throwDice(n, row, from) {
@@ -261,58 +244,102 @@ async function throwDice(n, row, from) {
   return out;
 }
 
-// Trait surchauffe (plasma) : après le tir, le tireur lance un dé et peut se blesser.
-async function overheatStep(shooter) {
-  // on nettoie la table du tir précédent et on annonce la phase avant de lancer le dé,
-  // pour que le dé de surchauffe ne surgisse pas sans contexte
+// Dé de surchauffe (plasma) dans la modale : annonce la phase, lance le dé et renvoie les
+// dégâts encourus par le tireur, SANS effet plateau ni changement d'état (différés au cinématique).
+async function overheatDie(shooter) {
   field.querySelectorAll('.die').forEach(d => d.remove());
   document.getElementById('labAtk').innerHTML = `Surchauffe<b>${OVERHEAT_ROLL} = ${OVERHEAT_DAMAGE} dégâts</b>`;
   document.getElementById('labDef').innerHTML = '';
   const nAtk = document.getElementById('noteAtk'), nDef = document.getElementById('noteDef');
-  nDef.className = 'f-note';
-  nAtk.className = 'f-note';
+  nDef.className = 'f-note'; nAtk.className = 'f-note';
   nAtk.innerHTML = `Le plasma de <em>${shooter.name}</em> chauffe…`;
   nAtk.classList.add('show');
   sfx.throwDice();
   await sleep(OVERHEAT_INTRO);
-
   const [die] = await throwDice(1, ROW.atk, 'left');
   const self = resolveOverheat(die.v);
-  if (!self) {
-    die.el.classList.add('save');
-    nAtk.innerHTML = '<em>plasma stable</em>';
-    journal(`<b>${shooter.name}</b> : plasma stable, pas de surchauffe.`);
-    await sleep(DEFENSE_NOTE_HOLD);
-    return;
-  }
-  die.el.classList.add('crit');
-  nAtk.innerHTML = '<em>Surchauffe !</em>';
-  shooter.hp = Math.max(0, shooter.hp - self);
-  sfx.wound(); state.shake = SHAKE_WOUND;
-  addFx({ type: 'float', x: shooter.x, y: shooter.y, text: '−' + self, color: '#ff8a5a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
-  document.getElementById('cbVerdict').innerHTML = `<em>Surchauffe !</em> ${shooter.name} subit ${self} dégâts — ${shooter.hp} PV`;
-  journal(`<b>${shooter.name}</b> surchauffe son plasma : ${self} dégâts.`);
-  refresh();
-  if (shooter.hp <= 0) {
-    await sleep(DOWN_DELAY);
-    shooter.alive = false; sfx.down();
-    addFx({ type: 'float', x: shooter.x, y: shooter.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
-    document.getElementById('cbVerdict').innerHTML = `<em>${shooter.name} est mis hors de combat par la surchauffe.</em>`;
-    journal(`<b>${shooter.name}</b> est mis hors de combat par la surchauffe.`);
-  }
-  await sleep(DAMAGE_SETTLE);
+  die.el.classList.add(self ? 'crit' : 'save');
+  nAtk.innerHTML = self ? '<em>Surchauffe !</em>' : '<em>plasma stable</em>';
+  await sleep(DEFENSE_NOTE_HOLD);
+  return self;
 }
 
-async function endShot(shooter, dmg, target, s) {
+// Résolution finale : dé de surchauffe éventuel (modale), fermeture de la modale, puis
+// cinématique des effets sur le plateau, enfin fin de partie / activation.
+async function endSequence(plan) {
+  const { shooter } = plan;
+  if (shooter.weapon.overheat) {
+    plan.overheat = await overheatDie(shooter);
+    plan.shooterDown = plan.overheat > 0 && shooter.hp - plan.overheat <= 0;
+    journal(plan.overheat
+      ? `<b>${shooter.name}</b> surchauffe son plasma : ${plan.overheat} dégâts.`
+      : `<b>${shooter.name}</b> : plasma stable, pas de surchauffe.`);
+  }
   shooter.ap--; shooter.shot = true; shooter.aimed = false; shooter.activated = true; state.undoState = null;
-  if (shooter.weapon.overheat) await overheatStep(shooter);
-  await sleep(dmg > 0 ? ENDSHOT_WAIT_DMG : ENDSHOT_WAIT_NODMG);
+  await sleep(plan.damage > 0 ? ENDSHOT_WAIT_DMG : ENDSHOT_WAIT_NODMG);
   document.getElementById('combat').classList.remove('show');
   field.querySelectorAll('.die').forEach(d => d.remove());
-  state.pending = null; state.busy = false; state.speed = 1;
+  state.pending = null; state.speed = 1;
+  await playCinematic(plan);
+  state.busy = false;
   if (checkEnd()) return;
   afterAction(shooter);
   refresh();
+}
+
+// Effets sur le plateau, joués une fois la modale fermée : tir, sauvegardes, impacts,
+// dégâts (cible puis surchauffe du tireur) et mises hors de combat.
+async function playCinematic(plan) {
+  const { shooter, target, damage, impacts, cancels } = plan;
+  sfx.shot();
+  addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS });
+  for (let i = 0; i < shooter.weapon.a; i++)
+    setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS }), i * TRACER_STAGGER);
+  await sleep(CINE_TRACER_HOLD);
+
+  for (let i = 0; i < cancels; i++) {
+    addFx({ type: 'shield', x: target.x, y: target.y, dur: FX_SHIELD_MS });
+    sfx.cancel();
+    await sleep(CANCEL_POP);
+  }
+  for (const imp of impacts) {
+    tone(imp.crit ? TONE_CRIT_HZ : TONE_HIT_HZ, .1, 'triangle', .1);
+    addFx({ type: 'impact', x: target.x + (Math.random() - .5) * IMPACT_JITTER, y: target.y + (Math.random() - .5) * IMPACT_JITTER,
+      dur: FX_IMPACT_MS, seed: Math.random() * IMPACT_SEED_RANGE });
+    target.flash = TARGET_FLASH; state.shake = imp.crit ? SHAKE_CRIT : SHAKE_HIT;
+    await sleep(DAMAGE_STEP);
+  }
+
+  if (damage > 0) {
+    target.hp = Math.max(0, target.hp - damage);
+    sfx.wound(); state.shake = SHAKE_WOUND;
+    addFx({ type: 'float', x: target.x, y: target.y, text: '−' + damage, color: '#ffb27a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
+    refresh();
+    if (plan.targetDown) {
+      await sleep(DOWN_DELAY);
+      target.alive = false; sfx.down();
+      addFx({ type: 'float', x: target.x, y: target.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
+      journal(`<b>${target.name}</b> est mis hors de combat.`);
+    }
+  } else if (cancels > 0) {
+    addFx({ type: 'float', x: target.x, y: target.y, text: 'encaissé', color: '#9dc4dd', dur: FX_FLOAT_SAVE_MS, size: FLOAT_SMALL_SIZE });
+    sfx.save();
+  }
+
+  if (plan.overheat > 0) {
+    await sleep(DAMAGE_SETTLE);
+    shooter.hp = Math.max(0, shooter.hp - plan.overheat);
+    sfx.wound(); state.shake = SHAKE_WOUND;
+    addFx({ type: 'float', x: shooter.x, y: shooter.y, text: '−' + plan.overheat, color: '#ff8a5a', dur: FX_FLOAT_DMG_MS, size: FLOAT_DMG_SIZE });
+    refresh();
+    if (plan.shooterDown) {
+      await sleep(DOWN_DELAY);
+      shooter.alive = false; sfx.down();
+      addFx({ type: 'float', x: shooter.x, y: shooter.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
+      journal(`<b>${shooter.name}</b> est mis hors de combat par la surchauffe.`);
+    }
+  }
+  await sleep(DAMAGE_SETTLE);
 }
 
 document.getElementById('btnFire').onclick = ev => { ev.stopPropagation(); audio(); fire(); };

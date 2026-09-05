@@ -85,6 +85,7 @@ export const SPIN_HOLD = 40;          // avant la chute des dés lancés
 export const DIE_DROP_STEP = 80;      // décalage de chute entre deux dés
 export const DROP_SETTLE = 380;       // pause de fin de lancer (+ DIE_DROP_STEP par dé)
 export const DIE_LAND_HOLD = 160;     // pause après l'atterrissage final
+export const CINE_TRACER_HOLD = 260;  // vol des traçantes avant les impacts (cinématique plateau)
 
 // --- Durées des effets visuels (ms)
 export const FX_MUZZLE_MS = 180;

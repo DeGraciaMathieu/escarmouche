@@ -37,15 +37,24 @@ l'animation.
 | --- | --- |
 | Déclarer un tir (ouvre le panneau) | `declareShot(shooter, target, s)` |
 | Annuler avant les dés | `cancelShot()` |
-| Résoudre (dés, annulations, dégâts) | `fire()` |
+| Résoudre les dés dans la modale | `fire()` |
 | Lancer un jet de `n` dés | `throwDice(n, row, from)` |
-| Dé de surchauffe (armes `overheat`) | `overheatStep(shooter)` |
-| Clôturer et enchaîner | `endShot(shooter, dmg, target, s)` |
+| Dé de surchauffe dans la modale | `overheatDie(shooter)` |
+| Surchauffe + fermeture + cinématique + fin | `endSequence(plan)` |
+| Effets plateau joués APRÈS fermeture | `playCinematic(plan)` |
 
 `fire()` **ne recalcule pas** la mécanique : il appelle `resolveShot` puis rejoue ses comptes
 sur les dés à l'écran (les `ops` d'annulation sont reconstruits depuis les comptes). La valeur
 finale d'un dé vient du RNG à graine : `d.v = 1 + Math.floor(state.rng() * DICE_FACES)`. Les
 faces affichées pendant le spin restent sur `Math.random` (cosmétique).
+
+**Séparation modale ↔ plateau.** La modale ne joue que les **dés** (attaque, défense,
+annulations, surchauffe) et annonce le verdict chiffré ; elle ne touche **ni les PV ni le
+plateau**. `fire()` remplit un `plan` (dégâts, sauvegardes absorbées, impacts, mises hors de
+combat, surchauffe) que `endSequence` déroule : dé de surchauffe, fermeture de la modale, puis
+`playCinematic(plan)` qui joue **sur le plateau** (bouche, traçantes, boucliers, impacts,
+tremblement, application des PV, dégâts flottants, morts) — visible car la modale est fermée.
+`state.busy` reste vrai jusqu'à la fin du cinématique.
 
 Toutes les durées, décalages de dés, fréquences de son et intensités de tremblement sont des
 constantes de `config.js` (section « Cadence de la séquence de tir » et suivantes).
@@ -57,7 +66,8 @@ constantes de `config.js` (section « Cadence de la séquence de tir » et suiva
 2. Sortir toute nouvelle valeur réglable dans `config.js`.
 3. Mettre à jour/ajouter les cas dans `tests/combat.test.js` (une sauvegarde annule une
    touche, deux annulent une critique, couvert, etc.).
-4. Adapter l'animation de `fire()` pour consommer les nouveaux comptes de `resolveShot`.
+4. Consommer les nouveaux comptes de `resolveShot` : dés dans `fire()` (modale), effets sur le
+   plateau dans `playCinematic` via le `plan` (jamais d'effet plateau ni de PV pendant la modale).
 5. Si la règle change (ex. seuil critique, nombre de sauvegardes par critique), vérifier que
    le bloc `.legend` d'`index.html` reste exact — sinon le hook doc-sync bloquera.
 6. `npm test` vert avant de finir.
