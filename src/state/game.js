@@ -57,6 +57,8 @@ export function createModels() {
       weapon: WEAPONS.fusil, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 3, team: 'A', name: 'Tireur Vess', role: 'appui', M: 4, sv: 3, w: 12, x: 3, y: 15,
       weapon: WEAPONS.canon, meleeWeapon: MELEE_WEAPONS.crosse }),
+    mk({ id: 8, team: 'A', name: 'Fusilier Bram', role: 'ligne', M: 5, sv: 3, w: 12, x: 4.4, y: 4,
+      weapon: WEAPONS.assaut, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 4, team: 'B', name: 'Chef Sarn', role: 'meneur', M: 7, sv: 4, w: 10, x: 27, y: 6,
       weapon: WEAPONS.scie, meleeWeapon: MELEE_WEAPONS.hache }),
     mk({ id: 5, team: 'B', name: 'Pillard Kro', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 9.6,
@@ -64,6 +66,8 @@ export function createModels() {
     mk({ id: 6, team: 'B', name: 'Pillard Yun', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 13,
       weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
     mk({ id: 7, team: 'B', name: 'Pillard Tass', role: 'ligne', M: 7, sv: 5, w: 8, x: 27, y: 16.5,
+      weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
+    mk({ id: 9, team: 'B', name: 'Pillard Vos', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 19.5,
       weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
   ];
 }
