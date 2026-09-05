@@ -269,6 +269,9 @@ import {
 } from './src/config.js';
 import { createRng } from './src/rules/rng.js';
 import { dist, inflate, pointInRect, segRectT } from './src/rules/geometry.js';
+import { aliveOf as aliveOfRule, remaining as remainingRule } from './src/rules/squad.js';
+const aliveOf=t=>aliveOfRule(models,t);
+const remaining=t=>remainingRule(models,t);
 
 // ============================================================
 //  Plateau et données
@@ -963,8 +966,6 @@ function newTurn(){
   setTimeout(()=>f.classList.remove('show'),FLASH_TURN_MS);
   journal(`<b>Tour ${turn}</b> — toutes les figurines se réactivent.`);
 }
-const remaining=t=>models.filter(m=>m.alive&&m.team===t&&!m.activated).length;
-const aliveOf=t=>models.filter(m=>m.alive&&m.team===t);
 function autoSelect(){ if(over)return; selected=models.find(m=>m.alive&&m.team===side&&!m.activated)||null; }
 function checkEnd(){ for(const t of ['A','B']) if(!aliveOf(t).length){finish(t==='A'?'B':'A');return true;} return false; }
 function finish(forced){
