@@ -1,4 +1,4 @@
-import { CRIT_VALUE, MIN_HIT_TARGET } from '../config.js';
+import { CRIT_VALUE, MIN_HIT_TARGET, SAVES_PER_CRIT } from '../config.js';
 
 // Classement d'un dé (un 1 ne touche/sauve jamais ; un 6 est toujours critique).
 export const isCrit = v => v === CRIT_VALUE;
@@ -20,9 +20,9 @@ export function resolveShot({ atkRolls, defRolls, bs, sv, cover, dn, dc }) {
   const critCancelledByCrit = Math.min(csaves, crits);          // une sauvegarde critique annule une critique
   let rc = crits - critCancelledByCrit;
   let ns = saves + (csaves - critCancelledByCrit);              // les sauvegardes critiques en trop valent des sauvegardes normales
-  const critCancelledByPair = Math.min(rc, Math.floor(ns / 2)); // deux sauvegardes normales annulent une critique
+  const critCancelledByPair = Math.min(rc, Math.floor(ns / SAVES_PER_CRIT)); // deux sauvegardes normales annulent une critique
   rc -= critCancelledByPair;
-  ns -= critCancelledByPair * 2;
+  ns -= critCancelledByPair * SAVES_PER_CRIT;
   const hitCancelled = Math.min(hits, ns);                      // une sauvegarde annule une touche
   const rh = hits - hitCancelled;
 

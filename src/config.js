@@ -26,6 +26,7 @@ export const DRAG_MIN_DISTANCE = 0.15;  // distance mini de glisser pour déclen
 export const CRIT_VALUE = 6;      // valeur de dé = critique
 export const DEFENSE_DICE = 3;    // nombre de dés de sauvegarde
 export const MIN_HIT_TARGET = 2;  // seuil de touche minimal (2+)
+export const SAVES_PER_CRIT = 2;  // sauvegardes normales nécessaires pour annuler une critique
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal
