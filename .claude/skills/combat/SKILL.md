@@ -26,7 +26,9 @@ animée** (`src/loop/combat.js`). Toute modification de mécanique passe d'abord
 3. **`SAVES_PER_CRIT` (2)** sauvegardes normales annulent une critique ;
 4. une sauvegarde normale annule une touche.
 
-Le **couvert** ajoute une sauvegarde (`cover: true`). Les dégâts valent `dc` par critique
+Le **couvert** ajoute une sauvegarde (`cover: true`). Le **masquage** (`masked: true`) retire
+une réussite à l'attaquant avant les annulations (une touche simple d'abord, une critique
+seulement à défaut) ; les deux sont exclusifs et décidés par `rules/sight.js`. Les dégâts valent `dc` par critique
 survivante et `dn` par touche survivante. La sortie contient aussi `critCancelledByCrit`,
 `critCancelledByPair`, `hitCancelled`, `survivingCrits`, `survivingHits` — utilisés par
 l'animation.

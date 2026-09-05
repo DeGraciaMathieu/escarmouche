@@ -15,6 +15,7 @@ test('un décor bas traversé, proche de la cible, donne le couvert sans bloquer
   const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
   assert.equal(s.los, true);
   assert.equal(s.cover, true);
+  assert.equal(s.masked, false);
 });
 
 test('un décor bas traversé mais loin de la cible ne donne pas le couvert', () => {
@@ -22,6 +23,24 @@ test('un décor bas traversé mais loin de la cible ne donne pas le couvert', ()
   const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
   assert.equal(s.los, true);
   assert.equal(s.cover, false);
+});
+
+test('un décor bas au milieu de la ligne, loin des deux unités, masque la cible', () => {
+  const low = [{ x: 4.5, y: 0, w: 1, h: 10, t: 'low' }]; // à 4.5″ des deux (> 2″) et > 3″ de la cible
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
+  assert.equal(s.los, true);
+  assert.equal(s.masked, true);
+  assert.equal(s.cover, false);
+});
+
+test('le couvert prime sur le masquage quand les deux pourraient s\'appliquer', () => {
+  const low = [
+    { x: 4.5, y: 0, w: 1, h: 10, t: 'low' }, // au milieu → masquerait
+    { x: 7, y: 0, w: 2, h: 10, t: 'low' },   // près de la cible → couvert
+  ];
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
+  assert.equal(s.cover, true);
+  assert.equal(s.masked, false);
 });
 
 test('en terrain dégagé la vue est libre et sans couvert', () => {

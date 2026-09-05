@@ -23,12 +23,12 @@ const rollDice = n => Array.from({ length: n }, rollDie);
 
 // Un tir : lance les dés d'attaque et de défense, délègue la résolution à la règle pure,
 // renvoie les dégâts infligés.
-function shoot(weapon, target, { cover = false, aimed = false } = {}) {
+function shoot(weapon, target, { cover = false, masked = false, aimed = false } = {}) {
   const bs = effectiveBs(weapon.bs, aimed);
   return resolveShot({
     atkRolls: rollDice(weapon.a),
     defRolls: rollDice(DEFENSE_DICE),
-    bs, sv: target.sv, cover, dn: weapon.dn, dc: weapon.dc,
+    bs, sv: target.sv, cover, masked, dn: weapon.dn, dc: weapon.dc,
   }).damage;
 }
 
@@ -83,6 +83,17 @@ for (const t of TARGETS) {
   }
   console.log('');
 }
+
+// --- Section 1bis : impact du masquage (−1 réussite) sur les dégâts moyens, par arme.
+console.log(`--- Impact du masquage (dégâts moyens, 3 profils, sans couvert) ${'-'.repeat(11)}`);
+console.log(`  ${pad('arme', 20)}${padL('normal', 8)}${padL('masqué', 8)}${padL('écart', 8)}`);
+for (const key of WEAPON_KEYS) {
+  const w = WEAPONS[key];
+  const normal = TARGETS.reduce((s, t) => s + damageStats(w, t, {}).mean, 0) / TARGETS.length;
+  const masked = TARGETS.reduce((s, t) => s + damageStats(w, t, { masked: true }).mean, 0) / TARGETS.length;
+  console.log(`  ${pad(w.name, 20)}${padL(f2(normal), 8)}${padL(f2(masked), 8)}${padL('-' + f2(normal - masked), 8)}`);
+}
+console.log('');
 
 // --- Section 2 : classement de puissance (dégâts moyens, tous profils confondus, sans couvert).
 console.log(`--- Classement de puissance (dégâts moyens, 3 profils, sans couvert) ${'-'.repeat(8)}`);

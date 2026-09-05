@@ -47,10 +47,11 @@ function place(el, x, y, rot = 0, scale = 1) {
 function shotBrief() {
   const { shooter, target, s } = state.pending;
   const bs = effectiveBs(shooter.weapon.bs, shooter.aimed);
+  const conceal = s.cover ? 'cible à couvert' : s.masked ? 'cible masquée' : 'cible à découvert';
   document.getElementById('cbMeta').textContent =
-    `${s.len.toFixed(1)}″ · ${s.cover ? 'cible à couvert' : 'cible à découvert'}${shooter.aimed ? ' · en joue' : ''}`;
+    `${s.len.toFixed(1)}″ · ${conceal}${shooter.aimed ? ' · en joue' : ''}`;
   document.getElementById('cbBrief').innerHTML = `
-    <div class="col">Attaque<br><b>${shooter.weapon.a} dés, touche ${bs}+</b><br>${shooter.weapon.name}</div>
+    <div class="col">Attaque<br><b>${shooter.weapon.a} dés, touche ${bs}+</b><br>${shooter.weapon.name}${s.masked ? '<br>− 1 réussite (masquée)' : ''}</div>
     <div class="col">Défense<br><b>${DEFENSE_DICE} dés, sauvegarde ${target.sv}+</b><br>${s.cover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
     <div class="col">Dégâts<br><b>${shooter.weapon.dn} par touche, ${shooter.weapon.dc} si critique</b><br>${target.name} a ${target.hp} PV</div>`;
 
@@ -124,13 +125,16 @@ export async function fire() {
     else { d.el.classList.add('miss'); miss.push(d); }
   }
   await sleep(ATTACK_SETTLE);
-  // les échecs quittent la table
+  // masquage : le décor au milieu de la ligne retire une réussite (une touche simple d'abord).
+  const maskedDie = s.masked ? (hits.pop() || crits.pop() || null) : null;
+  if (maskedDie) { maskedDie.el.classList.remove('hit', 'crit'); maskedDie.el.classList.add('miss'); miss.push(maskedDie); }
+  // les échecs (et la réussite masquée) quittent la table
   miss.forEach((d, i) => { place(d.el, d.x, ROW.atk + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
   const kept = [...crits, ...hits];
   kept.forEach((d, i) => { d.x = DX + i * GAP; place(d.el, d.x, ROW.atk, d.rot, 1); });
-  nAtk.innerHTML = kept.length
+  nAtk.innerHTML = (kept.length
     ? `<em>${kept.length} touche${kept.length > 1 ? 's' : ''}</em>${crits.length ? ` dont <em>${crits.length} critique${crits.length > 1 ? 's' : ''}</em>` : ''}`
-    : 'aucune touche';
+    : 'aucune touche') + (maskedDie ? ' · <em>1 masquée</em>' : '');
   nAtk.classList.add('show');
   await sleep(ATTACK_NOTE_HOLD);
 
@@ -172,7 +176,7 @@ export async function fire() {
   // --- résolution des annulations et des dégâts (règle pure)
   const outcome = resolveShot({
     atkRolls: atk.map(d => d.v), defRolls: def.map(d => d.v),
-    bs, sv: target.sv, cover: s.cover, dn: shooter.weapon.dn, dc: shooter.weapon.dc,
+    bs, sv: target.sv, cover: s.cover, masked: s.masked, dn: shooter.weapon.dn, dc: shooter.weapon.dc,
   });
 
   // --- annulations, une par une (l'animation suit les comptes de la règle)

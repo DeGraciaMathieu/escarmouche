@@ -1,19 +1,24 @@
-import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE } from '../config.js';
+import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE, MASK_MIN_DISTANCE } from '../config.js';
 import { dist, segRectT, distPointRect } from './geometry.js';
 
-// Ligne de vue de a vers b à travers le décor :
-// un mur la bloque ; un décor bas donne le couvert s'il est à plus de COVER_MIN_DISTANCE du
-// tireur ET à moins de COVER_TARGET_DISTANCE de la cible (c'est elle qui doit s'abriter).
+// Ligne de vue de a vers b à travers le décor. Un mur la bloque. Un décor bas traversé produit,
+// selon sa position, l'un de deux effets (exclusifs, le couvert primant) :
+// - couvert : à plus de COVER_MIN_DISTANCE du tireur ET à moins de COVER_TARGET_DISTANCE de la
+//   cible (elle s'abrite) → +1 sauvegarde ;
+// - masquage : à plus de MASK_MIN_DISTANCE de CHACUNE des deux unités (obstacle au milieu de la
+//   ligne) → l'attaquant retire une réussite.
 export function sight(a, b, terrain) {
   const p1 = { x: a.x, y: a.y }, p2 = { x: b.x, y: b.y }, len = dist(p1, p2);
-  let cover = false;
+  let cover = false, masked = false;
   for (const rect of terrain) {
     const t = segRectT(p1, p2, rect);
     if (t === null) continue;
-    if (rect.t === 'wall') return { los: false, cover: false, len };
+    if (rect.t === 'wall') return { los: false, cover: false, masked: false, len };
     if (t * len > COVER_MIN_DISTANCE && distPointRect(p2, rect) < COVER_TARGET_DISTANCE) cover = true;
+    else if (distPointRect(p1, rect) > MASK_MIN_DISTANCE && distPointRect(p2, rect) > MASK_MIN_DISTANCE) masked = true;
   }
-  return { los: true, cover, len };
+  if (cover) masked = false;                    // exclusifs : le couvert prime sur le masquage
+  return { los: true, cover, masked, len };
 }
 
 // Peut-on prendre cette figurine pour cible, indépendamment de l'arme choisie :

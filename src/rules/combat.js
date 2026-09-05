@@ -13,10 +13,12 @@ export const resolveOverheat = roll => roll === OVERHEAT_ROLL ? OVERHEAT_DAMAGE 
 
 // Résout un tir à partir des dés lancés :
 // une sauvegarde annule une touche, deux sauvegardes (ou une sauvegarde critique) annulent
-// une critique ; le couvert offre une sauvegarde supplémentaire.
-export function resolveShot({ atkRolls, defRolls, bs, sv, cover, dn, dc }) {
-  const crits = atkRolls.filter(isCrit).length;
-  const hits = atkRolls.filter(v => isHit(v, bs)).length;
+// une critique ; le couvert offre une sauvegarde supplémentaire ; le masquage fait retirer une
+// réussite à l'attaquant (une touche simple d'abord, une critique seulement à défaut).
+export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc }) {
+  let crits = atkRolls.filter(isCrit).length;
+  let hits = atkRolls.filter(v => isHit(v, bs)).length;
+  if (masked) { if (hits > 0) hits--; else if (crits > 0) crits--; }
   const csaves = defRolls.filter(isCrit).length;
   const saves = defRolls.filter(v => isSave(v, sv)).length + (cover ? 1 : 0);
 

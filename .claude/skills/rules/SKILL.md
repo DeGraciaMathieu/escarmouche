@@ -23,7 +23,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | --- | --- | --- |
 | Distance / géométrie du plateau | `rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `distPointRect`, `segSegT`, `segRectT` |
 | Effectif d'une escouade | `rules/squad.js` | `aliveOf(models, t)`, `remaining(models, t)` |
-| Ligne de vue, couvert | `rules/sight.js` | `sight(a, b, terrain)` |
+| Ligne de vue, couvert, masquage | `rules/sight.js` | `sight(a, b, terrain)` |
 | Peut-on cibler (camp, PA, tir, ligne de vue — sans l'arme) | `rules/sight.js` | `canTarget(m, target, terrain)` |
 | Une arme peut-elle faire feu (portée, arme lourde) | `rules/sight.js` | `weaponCanFire(weapon, moved, s)` |
 | Peut-on tirer avec l'arme équipée (compose les deux) | `rules/sight.js` | `canShoot(m, target, terrain)` |

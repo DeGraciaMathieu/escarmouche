@@ -142,7 +142,7 @@ export function drawTargets() {
     const chk = canTarget(state.selected, e, TERRAIN), cx = px(e.x), cy = px(e.y), R = px(e.r) + 9;
     ctx.save();
     if (chk.ok) {
-      ctx.strokeStyle = chk.s.cover ? 'rgba(217,176,58,.9)' : 'rgba(143,191,106,.95)'; ctx.lineWidth = 1.8;
+      ctx.strokeStyle = chk.s.cover ? 'rgba(217,176,58,.9)' : chk.s.masked ? 'rgba(180,144,201,.9)' : 'rgba(143,191,106,.95)'; ctx.lineWidth = 1.8;
       for (let i = 0; i < 4; i++) {
         const a = i * Math.PI / 2 + Math.PI / 4;
         ctx.beginPath(); ctx.arc(cx, cy, R, a - .28, a + .28); ctx.stroke();
@@ -189,14 +189,14 @@ export function drawFiringLine() {
   if (!state.pending) return;
   const pending = state.pending;
   const a = { x: px(pending.shooter.x), y: px(pending.shooter.y) }, b = { x: px(pending.target.x), y: px(pending.target.y) };
-  const col = pending.s.cover ? '#d9b03a' : '#8fbf6a';
+  const col = pending.s.cover ? '#d9b03a' : pending.s.masked ? '#b490c9' : '#8fbf6a';
+  const status = pending.s.cover ? 'à couvert' : pending.s.masked ? 'masquée' : 'à découvert';
   ctx.save();
   ctx.setLineDash([9, 6]); ctx.lineDashOffset = -performance.now() / 45;
   ctx.strokeStyle = col; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
   ctx.restore();
-  tag((a.x + b.x) / 2, (a.y + b.y) / 2 - 16,
-    pending.s.len.toFixed(1) + '″ · ' + (pending.s.cover ? 'à couvert' : 'à découvert'), col, '#191b12');
+  tag((a.x + b.x) / 2, (a.y + b.y) / 2 - 16, pending.s.len.toFixed(1) + '″ · ' + status, col, '#191b12');
 }
 
 export function drawSight() {
@@ -208,6 +208,7 @@ export function drawSight() {
   if (!s.los) { col = '#c4503a'; label = 'vue bloquée'; }
   else if (!chk.ok) { col = '#c4503a'; label = chk.why; }
   else if (s.cover) { col = '#d9b03a'; label = s.len.toFixed(1) + '″ · à couvert'; }
+  else if (s.masked) { col = '#b490c9'; label = s.len.toFixed(1) + '″ · masquée'; }
   else { col = '#8fbf6a'; label = s.len.toFixed(1) + '″ · à découvert'; }
   ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.7;
   if (!chk.ok) ctx.setLineDash([5, 6]);

@@ -54,6 +54,27 @@ test('le couvert ajoute une sauvegarde', () => {
   assert.equal(without.damage, 3);
 });
 
+test('le masquage retire une touche simple à l\'attaquant', () => {
+  const masked = shot({ atkRolls: [5, 5], defRolls: [1, 1, 1], masked: true }); // 2 touches → 1 retirée
+  assert.equal(masked.hits, 1);
+  assert.equal(masked.damage, 3);
+  const clear = shot({ atkRolls: [5, 5], defRolls: [1, 1, 1] });               // sans masquage : 2 touches
+  assert.equal(clear.damage, 6);
+});
+
+test('le masquage retire la touche simple avant la critique', () => {
+  const r = shot({ atkRolls: [6, 5], defRolls: [1, 1, 1], masked: true }); // crit + touche → la touche saute
+  assert.equal(r.survivingCrits, 1);
+  assert.equal(r.survivingHits, 0);
+  assert.equal(r.damage, 4);
+});
+
+test('le masquage ne retire une critique que faute de touche simple', () => {
+  const r = shot({ atkRolls: [6], defRolls: [1, 1, 1], masked: true }); // aucune touche simple → la critique saute
+  assert.equal(r.crits, 0);
+  assert.equal(r.damage, 0);
+});
+
 test('un 1 ne touche jamais, même en visant', () => {
   const r = shot({ atkRolls: [1, 1], defRolls: [1, 1, 1], bs: 2 });
   assert.equal(r.hits, 0);
