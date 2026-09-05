@@ -257,7 +257,6 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 import {
   PPI, BW, BH, MAXTURN,
   BASE_RADIUS, ACTIONS_PER_ACTIVATION,
-  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR,
   SELECT_MARGIN, DRAG_MIN_DISTANCE,
   CRIT_VALUE, DEFENSE_DICE, MIN_HIT_TARGET,
   JOURNAL_MAX,
@@ -268,13 +267,15 @@ import {
   FLASH_SIDE_MS, FLASH_TURN_MS, TOAST_MS, ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG,
 } from './src/config.js';
 import { createRng } from './src/rules/rng.js';
-import { dist, inflate, pointInRect, segRectT } from './src/rules/geometry.js';
+import { dist } from './src/rules/geometry.js';
 import { aliveOf as aliveOfRule, remaining as remainingRule } from './src/rules/squad.js';
 import { sight as sightRule, canShoot as canShootRule } from './src/rules/sight.js';
+import { moveCheck as moveCheckRule } from './src/rules/movement.js';
 const aliveOf=t=>aliveOfRule(models,t);
 const remaining=t=>remainingRule(models,t);
 const sight=(a,b)=>sightRule(a,b,TERRAIN);
 const canShoot=(m,target)=>canShootRule(m,target,TERRAIN);
+const moveCheck=(m,to)=>moveCheckRule(m,to,models,TERRAIN);
 
 // ============================================================
 //  Plateau et données
@@ -320,26 +321,6 @@ let drag=null, hoverModel=null, undoState=null;
 let pending=null;          // tir déclaré, en attente de confirmation
 let speed=1;               // accéléré si le joueur clique pendant la résolution
 let shake=0;
-
-// ============================================================
-//  Règles
-// ============================================================
-function moveCheck(m,to){
-  const from={x:m.x,y:m.y}, d=dist(from,to);
-  if (d>m.M+MOVE_EPSILON) return {ok:false,why:'trop loin — '+m.M+'″ maximum',d};
-  if (to.x<m.r||to.y<m.r||to.x>BW-m.r||to.y>BH-m.r) return {ok:false,why:'hors du plateau',d};
-  for(const rect of TERRAIN){
-    const big=inflate(rect,m.r*TERRAIN_MARGIN_FACTOR);
-    // si la figurine part déjà dans la marge de ce décor, on la laisse s'en dégager :
-    // seul le décor lui-même reste infranchissable, sinon elle serait bloquée à vie
-    const stuck=pointInRect(from,big);
-    if (pointInRect(to,stuck?rect:big)) return {ok:false,why:'le socle ne rentre pas',d};
-    if (!stuck && segRectT(from,to,big)!==null) return {ok:false,why:'décor sur le trajet',d};
-  }
-  for(const o of models){ if(o===m||!o.alive)continue;
-    if (dist(o,to)<o.r+m.r) return {ok:false,why:'place occupée',d}; }
-  return {ok:true,d};
-}
 
 // ============================================================
 //  Sons
