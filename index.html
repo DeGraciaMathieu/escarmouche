@@ -102,7 +102,10 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .cb-cta button.fire:disabled{background:#3a4239;border-color:var(--line);color:var(--dim);cursor:not-allowed}
 .cb-cta .k{margin-left:auto;font-size:12px;color:var(--dim)}
 
-.field{position:relative;height:158px;margin:2px 0 4px}
+/* overflow caché : les dés entrent depuis l'extérieur du cadre (DIE_ENTER_LEFT/RIGHT) ;
+   sans ce clip ils débordent la modale et font apparaître une barre de défilement qui
+   décale la taille du plateau à la fermeture du panneau */
+.field{position:relative;height:158px;margin:2px 0 4px;overflow:hidden}
 .f-label{position:absolute;left:0;width:96px;text-align:right;font-family:'Barlow Condensed';
   font-size:15px;color:var(--dim);line-height:1.15}
 .f-label b{display:block;color:var(--paper);font-weight:600}
