@@ -267,11 +267,13 @@ import {
   SPEED_FAST,
   FLASH_SIDE_MS, FLASH_TURN_MS, TOAST_MS, ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG,
 } from './src/config.js';
+import { createRng } from './src/rules/rng.js';
 
 // ============================================================
 //  Plateau et données
 // ============================================================
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const rng=createRng(Date.now());   // graine décidée ici ; les règles reçoivent rng()
 const px=v=>v*PPI;
 
 const TERRAIN=[
@@ -923,7 +925,7 @@ async function throwDice(n,row,from){
   out.forEach((d,i)=>setTimeout(()=>{place(d.el,d.x,row,d.rot,1);sfx.land();}, i*80*speed));
   await sleep(80*n+380);
   clearInterval(spin);
-  out.forEach(d=>{d.v=1+Math.floor(Math.random()*6);paintDie(d.el,d.v);d.el.classList.add('land');});
+  out.forEach(d=>{d.v=1+Math.floor(rng()*6);paintDie(d.el,d.v);d.el.classList.add('land');});
   await sleep(160);
   return out;
 }
