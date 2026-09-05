@@ -60,7 +60,7 @@ d'archétype (son et contexte canvas) : feuilles sans dépendance de jeu.
 
 | Rule | Module | Test | Notes |
 | --- | --- | --- | --- |
-| `dist`, `inflate`, `pointInRect`, `segSegT`, `segRectT` | `rules/geometry.js` | `tests/geometry.test.js` | primitives géométriques pures |
+| `dist`, `inflate`, `pointInRect`, `distPointRect`, `segSegT`, `segRectT` | `rules/geometry.js` | `tests/geometry.test.js` | primitives géométriques pures |
 | `aliveOf`, `remaining` | `rules/squad.js` | `tests/squad.test.js` | `models` passé en argument |
 | `sight`, `canShoot` | `rules/sight.js` | `tests/sight.test.js` | `terrain` passé en argument |
 | `moveCheck` | `rules/movement.js` | `tests/movement.test.js` | `models` + `terrain` passés en argument |

@@ -20,6 +20,13 @@ export function segSegT(p1, p2, p3, p4) {
   return (t < 0 || t > 1 || u < 0 || u > 1) ? null : t;
 }
 
+// Distance du point p au rectangle r (0 si p est à l'intérieur).
+export function distPointRect(p, r) {
+  const dx = Math.max(r.x - p.x, 0, p.x - (r.x + r.w));
+  const dy = Math.max(r.y - p.y, 0, p.y - (r.y + r.h));
+  return Math.hypot(dx, dy);
+}
+
 // Paramètre t (0..1) du premier point où le segment p1→p2 rencontre le rectangle r, ou null.
 export function segRectT(p1, p2, r) {
   if (pointInRect(p1, r)) return 0;

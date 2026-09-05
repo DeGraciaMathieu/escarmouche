@@ -16,7 +16,7 @@ partagé. La dépendance ne pointe que vers le haut du tableau.
 | `src/config.js` | toutes les constantes nommées (dimensions, seuils, durées, couleurs de règle) | rien |
 | `src/canvas.js` | `cv`, `ctx`, conversion pouces→pixels `px` | `config` |
 | `src/rules/rng.js` | générateur pseudo-aléatoire à graine `createRng` | rien |
-| `src/rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `segSegT`, `segRectT` | `config` |
+| `src/rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `distPointRect`, `segSegT`, `segRectT` | `config` |
 | `src/rules/squad.js` | `aliveOf`, `remaining` | rien |
 | `src/rules/sight.js` | `sight`, `canShoot` | `config`, `geometry` |
 | `src/rules/movement.js` | `moveCheck` | `config`, `geometry` |

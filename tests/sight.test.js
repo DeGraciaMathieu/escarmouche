@@ -10,11 +10,18 @@ test('un mur sur la ligne bloque la vue', () => {
   assert.equal(sight({ x: 0, y: 5 }, { x: 10, y: 5 }, wall).los, false);
 });
 
-test('un décor bas traversé donne le couvert sans bloquer la vue', () => {
-  const low = [{ x: 4, y: 0, w: 2, h: 10, t: 'low' }];
+test('un décor bas traversé, proche de la cible, donne le couvert sans bloquer la vue', () => {
+  const low = [{ x: 7, y: 0, w: 2, h: 10, t: 'low' }]; // cible en x=10 à 1″ du décor (< 3″)
   const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
   assert.equal(s.los, true);
   assert.equal(s.cover, true);
+});
+
+test('un décor bas traversé mais loin de la cible ne donne pas le couvert', () => {
+  const low = [{ x: 2, y: 0, w: 1, h: 10, t: 'low' }]; // cible en x=10 à 7″ du décor (> 3″)
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
+  assert.equal(s.los, true);
+  assert.equal(s.cover, false);
 });
 
 test('en terrain dégagé la vue est libre et sans couvert', () => {

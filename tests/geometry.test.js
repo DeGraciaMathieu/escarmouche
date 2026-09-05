@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dist, pointInRect, segRectT } from '../src/rules/geometry.js';
+import { dist, pointInRect, segRectT, distPointRect } from '../src/rules/geometry.js';
 
 test('la distance entre deux points est euclidienne', () => {
   assert.equal(dist({ x: 0, y: 0 }, { x: 3, y: 4 }), 5);
@@ -22,4 +22,11 @@ test('un point à l\'intérieur du rectangle est reconnu', () => {
   const rect = { x: 0, y: 0, w: 4, h: 4 };
   assert.equal(pointInRect({ x: 2, y: 2 }, rect), true);
   assert.equal(pointInRect({ x: 5, y: 2 }, rect), false);
+});
+
+test('la distance d\'un point à un rectangle est nulle dedans, sinon au bord le plus proche', () => {
+  const rect = { x: 0, y: 0, w: 4, h: 4 };
+  assert.equal(distPointRect({ x: 2, y: 2 }, rect), 0);   // à l'intérieur
+  assert.equal(distPointRect({ x: 7, y: 2 }, rect), 3);   // à droite : 7 - 4
+  assert.equal(distPointRect({ x: 7, y: 8 }, rect), 5);   // en diagonale : hypot(3, 4)
 });

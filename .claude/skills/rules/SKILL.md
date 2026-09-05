@@ -21,7 +21,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 
 | Concept | Fichier | Fonction |
 | --- | --- | --- |
-| Distance / géométrie du plateau | `rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `segSegT`, `segRectT` |
+| Distance / géométrie du plateau | `rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `distPointRect`, `segSegT`, `segRectT` |
 | Effectif d'une escouade | `rules/squad.js` | `aliveOf(models, t)`, `remaining(models, t)` |
 | Ligne de vue, couvert | `rules/sight.js` | `sight(a, b, terrain)` |
 | Peut-on cibler (camp, PA, tir, ligne de vue — sans l'arme) | `rules/sight.js` | `canTarget(m, target, terrain)` |

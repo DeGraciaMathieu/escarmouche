@@ -16,7 +16,8 @@ export const ACTIONS_PER_ACTIVATION = 2;    // points d'action par activation
 export const MOVE_EPSILON = 1e-6;             // tolérance flottante sur la distance de mouvement
 export const TERRAIN_MARGIN_FACTOR = 0.92;    // réduction de la marge de collision socle/décor
 export const SEGMENT_PARALLEL_EPSILON = 1e-9; // tolérance de parallélisme de deux segments
-export const COVER_MIN_DISTANCE = 1;          // distance mini (pouces) pour qu'un décor bas donne le couvert
+export const COVER_MIN_DISTANCE = 1;          // distance mini (pouces) entre le tireur et le décor bas pour qu'il donne le couvert
+export const COVER_TARGET_DISTANCE = 3;       // distance maxi (pouces) entre la cible et le décor bas pour qu'elle en profite
 export const PATH_CORNER_OFFSET = 0.01;       // décalage (pouces) des coins de contournement hors du décor
 
 // --- Interaction

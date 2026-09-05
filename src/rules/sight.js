@@ -1,8 +1,9 @@
-import { COVER_MIN_DISTANCE } from '../config.js';
-import { dist, segRectT } from './geometry.js';
+import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE } from '../config.js';
+import { dist, segRectT, distPointRect } from './geometry.js';
 
 // Ligne de vue de a vers b à travers le décor :
-// un mur la bloque ; un décor bas au-delà de COVER_MIN_DISTANCE donne le couvert.
+// un mur la bloque ; un décor bas donne le couvert s'il est à plus de COVER_MIN_DISTANCE du
+// tireur ET à moins de COVER_TARGET_DISTANCE de la cible (c'est elle qui doit s'abriter).
 export function sight(a, b, terrain) {
   const p1 = { x: a.x, y: a.y }, p2 = { x: b.x, y: b.y }, len = dist(p1, p2);
   let cover = false;
@@ -10,7 +11,7 @@ export function sight(a, b, terrain) {
     const t = segRectT(p1, p2, rect);
     if (t === null) continue;
     if (rect.t === 'wall') return { los: false, cover: false, len };
-    if (t * len > COVER_MIN_DISTANCE) cover = true;
+    if (t * len > COVER_MIN_DISTANCE && distPointRect(p2, rect) < COVER_TARGET_DISTANCE) cover = true;
   }
   return { los: true, cover, len };
 }
