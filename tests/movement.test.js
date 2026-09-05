@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { moveCheck } from '../src/rules/movement.js';
+import { dist } from '../src/rules/geometry.js';
 
 const unit = (o = {}) => ({ r: 0.62, M: 5, alive: true, x: 5, y: 5, ...o });
 
@@ -20,10 +21,20 @@ test('on ne peut pas se déplacer sur une case occupée', () => {
   assert.equal(moveCheck(m, { x: 7, y: 5 }, [m, other], []).ok, false);
 });
 
-test('un décor sur le trajet bloque le déplacement', () => {
-  const m = unit({ M: 8, x: 1, y: 5 });
-  const wall = [{ x: 4, y: 0, w: 1, h: 10, t: 'wall' }];
-  assert.equal(moveCheck(m, { x: 8, y: 5 }, [m], wall).ok, false);
+test('un décor est contourné si le détour tient dans le mouvement', () => {
+  const m = unit({ M: 10, x: 1, y: 5 });
+  const wall = [{ x: 4, y: 4, w: 1, h: 2, t: 'wall' }]; // petit obstacle sur la ligne droite
+  const chk = moveCheck(m, { x: 8, y: 5 }, [m], wall);
+  assert.equal(chk.ok, true);
+  assert.ok(chk.path.length > 2);                                 // le chemin contourne l'obstacle
+  assert.ok(chk.d > dist({ x: 1, y: 5 }, { x: 8, y: 5 }));        // donc plus long que la ligne droite
+});
+
+test('un détour plus long que le mouvement est refusé', () => {
+  const m = unit({ M: 5, x: 1, y: 5 });
+  const wall = [{ x: 3, y: 0, w: 1, h: 10, t: 'wall' }];
+  // 5″ en ligne droite jusqu'à (6,5), mais le contour du mur dépasse le mouvement
+  assert.equal(moveCheck(m, { x: 6, y: 5 }, [m], wall).ok, false);
 });
 
 test('on ne peut pas sortir du plateau', () => {

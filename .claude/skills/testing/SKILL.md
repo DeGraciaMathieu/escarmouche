@@ -31,7 +31,8 @@ règle. Le pourcentage de couverture n'est pas un objectif.
 | `tests/geometry.test.js` | distance, intersection segment/rectangle, point dans rectangle |
 | `tests/squad.test.js` | figurines vivantes, figurines restant à activer |
 | `tests/sight.test.js` | mur bloquant, couvert de décor bas, portée, arme lourde |
-| `tests/movement.test.js` | portée de mouvement, place occupée, décor sur le trajet |
+| `tests/movement.test.js` | portée de mouvement, place occupée, contournement du décor, détour trop long |
+| `tests/pathfind.test.js` | ligne droite sans obstacle, détour imposé, destination enfermée |
 | `tests/turn.test.js` | changement de camp, nouveau tour, victoire, match nul |
 | `tests/combat.test.js` | seuils, sauvegardes/annulations, couvert, critiques, visée |
 | `tests/loadout.test.js` | armes autorisées par rôle, arme hors-rôle refusée |

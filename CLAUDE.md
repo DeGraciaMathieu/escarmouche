@@ -55,6 +55,10 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
   l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
   La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).
+- Déplacement : un mouvement **contourne automatiquement le décor** (graphe de visibilité,
+  `rules/pathfind.js`) ; la distance dépensée est la **longueur du chemin** contourné, plafonnée
+  à `M`, pour un seul point d'action. Les figurines ne bloquent pas le trajet (seule la
+  destination occupée est interdite).
 - Résolution des dés : **6 = critique**, une sauvegarde annule une touche, deux sauvegardes
   (ou une sauvegarde critique) annulent une critique, le couvert offre un dé de plus. Ces
   règles vivent dans `src/rules/combat.js` (`resolveShot`) et nulle part ailleurs.
@@ -72,7 +76,7 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 ## Skills disponibles
 
 - **architecture** — carte des modules et « où va le nouveau code ».
-- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `turn`, `combat`, `squad`, `loadout`).
+- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `pathfind`, `turn`, `combat`, `squad`, `loadout`).
 - **combat** — résolution du tir (dés, seuils, annulations, dégâts) et séquence animée.
 - **rendering** — dessin du plateau, des figurines, des effets et boucle de rendu.
 - **turn-flow** — état partagé, activation, transitions de tour/camp, victoire.

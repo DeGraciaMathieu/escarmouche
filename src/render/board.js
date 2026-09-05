@@ -3,6 +3,7 @@ import { MAT_TEXTURE_DOTS } from '../config.js';
 import { TEAMS, TERRAIN, state } from '../state/game.js';
 import { sfx } from '../audio.js';
 import { sight, canShoot, canTarget } from '../rules/sight.js';
+import { dist } from '../rules/geometry.js';
 
 // Texture du tapis, pré-rendue une fois hors écran.
 export const mat = document.createElement('canvas');
@@ -40,16 +41,31 @@ export function drawTerrain() {
   }
 }
 
-// Position interpolée d'une figurine en cours d'animation de déplacement.
+// Point situé à la fraction `frac` (0..1) le long d'une polyligne, par longueur cumulée.
+function pointAlong(path, frac) {
+  let total = 0;
+  for (let i = 1; i < path.length; i++) total += dist(path[i - 1], path[i]);
+  let target = frac * total;
+  for (let i = 1; i < path.length; i++) {
+    const seg = dist(path[i - 1], path[i]);
+    if (target <= seg || i === path.length - 1) {
+      const t = seg === 0 ? 0 : target / seg, a = path[i - 1], b = path[i];
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    }
+    target -= seg;
+  }
+  return path[path.length - 1];
+}
+
+// Position interpolée d'une figurine en cours d'animation de déplacement, le long de son chemin.
 export function modelPos(m) {
   if (m.anim) {
     const k = Math.min(1, (performance.now() - m.anim.t0) / m.anim.dur);
     const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-    if (k >= 1) { const a = m.anim; m.anim = null; m.x = a.to.x; m.y = a.to.y; sfx.drop(); return { x: m.x, y: m.y, lift: 0 }; }
-    return {
-      x: m.anim.from.x + (m.anim.to.x - m.anim.from.x) * e,
-      y: m.anim.from.y + (m.anim.to.y - m.anim.from.y) * e, lift: Math.sin(k * Math.PI),
-    };
+    const path = m.anim.path, last = path[path.length - 1];
+    if (k >= 1) { m.anim = null; m.x = last.x; m.y = last.y; sfx.drop(); return { x: m.x, y: m.y, lift: 0 }; }
+    const p = pointAlong(path, e);
+    return { x: p.x, y: p.y, lift: Math.sin(k * Math.PI) };
   }
   return { x: m.x, y: m.y, lift: 0 };
 }
@@ -153,11 +169,14 @@ export function drawRange(m) {
 
 export function drawTape() {
   if (!state.drag) return;
-  const drag = state.drag;
-  const a = { x: px(drag.m.x), y: px(drag.m.y) }, b = { x: px(drag.to.x), y: px(drag.to.y) }, ok = drag.chk.ok;
+  const drag = state.drag, ok = drag.chk.ok;
+  const a = { x: px(drag.m.x), y: px(drag.m.y) }, b = { x: px(drag.to.x), y: px(drag.to.y) };
+  const path = (ok && drag.chk.path) ? drag.chk.path : [{ x: drag.m.x, y: drag.m.y }, drag.to];
   ctx.save();
   ctx.strokeStyle = ok ? 'rgba(201,162,39,.95)' : 'rgba(196,80,58,.9)'; ctx.lineWidth = 2.2; ctx.setLineDash(ok ? [] : [7, 6]);
-  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(px(path[0].x), px(path[0].y));
+  for (let i = 1; i < path.length; i++) ctx.lineTo(px(path[i].x), px(path[i].y));
+  ctx.stroke(); ctx.setLineDash([]);
   ctx.beginPath(); ctx.arc(b.x, b.y, px(drag.m.r), 0, 7);
   ctx.fillStyle = ok ? 'rgba(255,255,255,.14)' : 'rgba(196,80,58,.18)'; ctx.fill();
   ctx.strokeStyle = ok ? 'rgba(255,255,255,.5)' : 'rgba(196,80,58,.8)'; ctx.lineWidth = 1.5; ctx.stroke();

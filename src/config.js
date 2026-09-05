@@ -17,6 +17,7 @@ export const MOVE_EPSILON = 1e-6;             // tolérance flottante sur la dis
 export const TERRAIN_MARGIN_FACTOR = 0.92;    // réduction de la marge de collision socle/décor
 export const SEGMENT_PARALLEL_EPSILON = 1e-9; // tolérance de parallélisme de deux segments
 export const COVER_MIN_DISTANCE = 1;          // distance mini (pouces) pour qu'un décor bas donne le couvert
+export const PATH_CORNER_OFFSET = 0.01;       // décalage (pouces) des coins de contournement hors du décor
 
 // --- Interaction
 export const SELECT_MARGIN = 0.25;      // marge de sélection au clic au-delà du socle (pouces)

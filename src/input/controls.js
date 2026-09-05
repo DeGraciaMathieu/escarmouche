@@ -53,8 +53,8 @@ window.addEventListener('mouseup', ev => {
   if (d.chk.d <= DRAG_MIN_DISTANCE) { refresh(); return; }
   if (d.chk.ok) {
     state.undoState = { m: d.m, x: d.m.x, y: d.m.y, moved: d.m.moved };
-    const to = { ...d.to };
-    d.m.anim = { from: { x: d.m.x, y: d.m.y }, to, t0: performance.now(), dur: MOVE_ANIM_BASE + d.chk.d * MOVE_ANIM_PER_INCH };
+    const path = d.chk.path, to = path[path.length - 1];
+    d.m.anim = { path, t0: performance.now(), dur: MOVE_ANIM_BASE + d.chk.d * MOVE_ANIM_PER_INCH };
     d.m.x = to.x; d.m.y = to.y; d.m.ap--; d.m.moved = true; d.m.activated = true;
     journal(`<b>${d.m.name}</b> se déplace de ${d.chk.d.toFixed(1)}″.`);
     afterAction(d.m);
