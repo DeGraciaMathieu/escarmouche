@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sight, canShoot } from '../src/rules/sight.js';
+import { sight, canShoot, canTarget, weaponCanFire } from '../src/rules/sight.js';
 
 const shooter = (o = {}) => ({ team: 'A', alive: true, ap: 2, shot: false, moved: false, weapon: { a: 4, bs: 3 }, x: 0, y: 5, ...o });
 const target = (o = {}) => ({ team: 'B', alive: true, x: 10, y: 5, ...o });
@@ -54,4 +54,21 @@ test('on ne peut pas tirer au-delà de la portée de l\'arme', () => {
 test('une arme lourde ne peut pas tirer après avoir bougé', () => {
   const m = shooter({ moved: true, weapon: { a: 4, bs: 2, heavy: true } });
   assert.equal(canShoot(m, target(), []).ok, false);
+});
+
+test('on peut cibler un ennemi en vue même si l\'arme équipée est hors de portée', () => {
+  const m = shooter({ weapon: { a: 4, bs: 3, range: 8 } });
+  const t = target({ x: 10, y: 5 }); // distance 10 > portée 8
+  assert.equal(canShoot(m, t, []).ok, false);   // l'arme n'atteint pas
+  assert.equal(canTarget(m, t, []).ok, true);   // mais la cible reste sélectionnable
+});
+
+test('on ne peut pas cibler un ennemi derrière un mur', () => {
+  const wall = [{ x: 4, y: 0, w: 2, h: 10, t: 'wall' }];
+  assert.equal(canTarget(shooter(), target(), wall).ok, false);
+});
+
+test('une arme fait feu si la cible est dans sa portée, pas au-delà', () => {
+  assert.equal(weaponCanFire({ range: 12 }, false, { len: 10 }).ok, true);
+  assert.equal(weaponCanFire({ range: 8 }, false, { len: 10 }).ok, false);
 });

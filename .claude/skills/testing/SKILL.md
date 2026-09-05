@@ -34,6 +34,7 @@ règle. Le pourcentage de couverture n'est pas un objectif.
 | `tests/movement.test.js` | portée de mouvement, place occupée, décor sur le trajet |
 | `tests/turn.test.js` | changement de camp, nouveau tour, victoire, match nul |
 | `tests/combat.test.js` | seuils, sauvegardes/annulations, couvert, critiques, visée |
+| `tests/loadout.test.js` | armes autorisées par rôle, arme hors-rôle refusée |
 
 ## Où mettre un nouveau test
 

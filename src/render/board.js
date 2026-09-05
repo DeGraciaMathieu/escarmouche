@@ -2,7 +2,7 @@ import { cv, ctx, px } from '../canvas.js';
 import { MAT_TEXTURE_DOTS } from '../config.js';
 import { TEAMS, TERRAIN, state } from '../state/game.js';
 import { sfx } from '../audio.js';
-import { sight, canShoot } from '../rules/sight.js';
+import { sight, canShoot, canTarget } from '../rules/sight.js';
 
 // Texture du tapis, pré-rendue une fois hors écran.
 export const mat = document.createElement('canvas');
@@ -123,7 +123,7 @@ export function drawTargets() {
   if (state.selected.team !== state.side || state.selected.ap < 1 || state.selected.shot) return;
   for (const e of state.models) {
     if (!e.alive || e.team === state.selected.team) continue;
-    const chk = canShoot(state.selected, e, TERRAIN), cx = px(e.x), cy = px(e.y), R = px(e.r) + 9;
+    const chk = canTarget(state.selected, e, TERRAIN), cx = px(e.x), cy = px(e.y), R = px(e.r) + 9;
     ctx.save();
     if (chk.ok) {
       ctx.strokeStyle = chk.s.cover ? 'rgba(217,176,58,.9)' : 'rgba(143,191,106,.95)'; ctx.lineWidth = 1.8;

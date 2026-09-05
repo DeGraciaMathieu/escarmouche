@@ -11,8 +11,10 @@ import {
   DIE_MISS_DROP, DIE_MISS_ROT, DIE_MISS_SCALE, DIE_MISS_OPACITY, COVER_DIE_OFFSET, COVER_DIE_ROT,
   DIE_ENTER_LEFT, DIE_ENTER_RIGHT, DIE_ENTER_JITTER_Y, DIE_ENTER_ROT, DIE_ENTER_SCALE, DIE_REST_ROT,
 } from '../config.js';
-import { state } from '../state/game.js';
+import { state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { isCrit, isHit, isSave, effectiveBs, resolveShot } from '../rules/combat.js';
+import { weaponsForRole } from '../rules/loadout.js';
+import { weaponCanFire } from '../rules/sight.js';
 import { sfx, audio, tone } from '../audio.js';
 import { addFx } from '../render/fx.js';
 import { refresh, journal } from '../render/ui.js';
@@ -39,18 +41,43 @@ function place(el, x, y, rot = 0, scale = 1) {
   el.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg) scale(${scale})`;
 }
 
-export function declareShot(shooter, target, s) {
-  state.pending = { shooter, target, s };
-  state.busy = true; state.hoverModel = null;
+// Redessine les parties de la modale qui dépendent de l'arme équipée : méta, briefing,
+// sélecteur d'armes (verdict de portée par arme) et disponibilité du bouton de tir.
+function shotBrief() {
+  const { shooter, target, s } = state.pending;
   const bs = effectiveBs(shooter.weapon.bs, shooter.aimed);
-  document.getElementById('cbShooter').textContent = shooter.name;
-  document.getElementById('cbTarget').textContent = target.name;
   document.getElementById('cbMeta').textContent =
     `${s.len.toFixed(1)}″ · ${s.cover ? 'cible à couvert' : 'cible à découvert'}${shooter.aimed ? ' · en joue' : ''}`;
   document.getElementById('cbBrief').innerHTML = `
     <div class="col">Attaque<br><b>${shooter.weapon.a} dés, touche ${bs}+</b><br>${shooter.weapon.name}</div>
     <div class="col">Défense<br><b>${DEFENSE_DICE} dés, sauvegarde ${target.sv}+</b><br>${s.cover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
     <div class="col">Dégâts<br><b>${shooter.weapon.dn} par touche, ${shooter.weapon.dc} si critique</b><br>${target.name} a ${target.hp} PV</div>`;
+
+  const box = document.getElementById('cbWeapons'); box.innerHTML = '';
+  for (const key of weaponsForRole(shooter.role, ROLE_LOADOUTS)) {
+    const wp = WEAPONS[key], reach = weaponCanFire(wp, shooter.moved, s);
+    const b = document.createElement('button');
+    b.className = 'wpick' + (shooter.weapon === wp ? ' on' : '') + (reach.ok ? '' : ' out');
+    b.innerHTML = `<b>${wp.name}</b><span>${wp.a} dés · ${wp.bs}+ · ${wp.dn}/${wp.dc} · ${wp.range ? wp.range + '″' : '∞'}${wp.heavy ? ' · lourde' : ''}</span><em>${reach.ok ? 'à portée' : reach.why}</em>`;
+    b.onclick = () => selectWeapon(key);
+    box.appendChild(b);
+  }
+  document.getElementById('btnFire').disabled = !weaponCanFire(shooter.weapon, shooter.moved, s).ok;
+}
+
+// Équipe durablement l'arme choisie et met à jour la modale et le panneau latéral.
+function selectWeapon(key) {
+  if (!state.pending || state.pending.shooter.weapon === WEAPONS[key]) return;
+  audio(); state.pending.shooter.weapon = WEAPONS[key]; sfx.pick();
+  shotBrief(); refresh();
+}
+
+export function declareShot(shooter, target, s) {
+  state.pending = { shooter, target, s };
+  state.busy = true; state.hoverModel = null;
+  document.getElementById('cbShooter').textContent = shooter.name;
+  document.getElementById('cbTarget').textContent = target.name;
+  shotBrief();
   document.getElementById('cbCta').style.display = 'flex';
   field.style.display = 'none';
   document.getElementById('cbVerdict').textContent = '';
@@ -68,6 +95,7 @@ export function cancelShot() {
 export async function fire() {
   if (!state.pending) return;
   const { shooter, target, s } = state.pending;
+  if (!weaponCanFire(shooter.weapon, shooter.moved, s).ok) return;
   state.speed = 1;
   document.getElementById('cbCta').style.display = 'none';
   document.getElementById('cbSkip').textContent = 'clique pour accélérer';

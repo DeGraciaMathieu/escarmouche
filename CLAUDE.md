@@ -51,7 +51,10 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 
 - Distances et portées en **pouces** ; conversion en pixels par `px()` (`src/canvas.js`).
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
-  `activated`, `aimed`, `moved`, `shot`, `weapon`, etc. Pas de classes.
+  `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
+- Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
+  l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
+  La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).
 - Résolution des dés : **6 = critique**, une sauvegarde annule une touche, deux sauvegardes
   (ou une sauvegarde critique) annulent une critique, le couvert offre un dé de plus. Ces
   règles vivent dans `src/rules/combat.js` (`resolveShot`) et nulle part ailleurs.
@@ -69,7 +72,7 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 ## Skills disponibles
 
 - **architecture** — carte des modules et « où va le nouveau code ».
-- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `turn`, `combat`, `squad`).
+- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `turn`, `combat`, `squad`, `loadout`).
 - **combat** — résolution du tir (dés, seuils, annulations, dégâts) et séquence animée.
 - **rendering** — dessin du plateau, des figurines, des effets et boucle de rendu.
 - **turn-flow** — état partagé, activation, transitions de tour/camp, victoire.

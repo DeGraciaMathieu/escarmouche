@@ -2,7 +2,7 @@ import { BW, BH, SELECT_MARGIN, DRAG_MIN_DISTANCE, MOVE_ANIM_BASE, MOVE_ANIM_PER
 import { cv } from '../canvas.js';
 import { TERRAIN, state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
-import { canShoot } from '../rules/sight.js';
+import { canTarget } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
 import { effectiveBs } from '../rules/combat.js';
 import { sfx, audio, tone } from '../audio.js';
@@ -32,9 +32,9 @@ cv.addEventListener('mousedown', ev => {
     select(m); if (m.ap > 0) { state.drag = { m, to: { x: m.x, y: m.y }, chk: { ok: false, d: 0 } }; sfx.pick(); }
   } else if (m.team === state.side) { select(m); toast('déjà activée ce tour', ev); }
   else {
-    // figurine adverse : si c'est une cible valide, on garde le tireur sélectionné
-    // pour que le clic déclare le tir au lieu de changer la sélection
-    const chk = (state.selected && state.selected.team === state.side) ? canShoot(state.selected, m, TERRAIN) : { ok: false };
+    // figurine adverse : si elle est en ligne de vue, on garde le tireur sélectionné
+    // pour que le clic ouvre la modale de tir au lieu de changer la sélection
+    const chk = (state.selected && state.selected.team === state.side) ? canTarget(state.selected, m, TERRAIN) : { ok: false };
     if (!chk.ok) select(m);
   }
 });
@@ -43,7 +43,7 @@ cv.addEventListener('mousemove', ev => {
   if (state.drag) { state.drag.to = p; state.drag.chk = moveCheck(state.drag.m, p, state.models, TERRAIN); state.hoverModel = null; cv.style.cursor = 'grabbing'; return; }
   state.hoverModel = m;
   cv.style.cursor = !m ? 'default'
-    : (state.selected && m.team !== state.selected.team && canShoot(state.selected, m, TERRAIN).ok) ? 'crosshair'
+    : (state.selected && m.team !== state.selected.team && canTarget(state.selected, m, TERRAIN).ok) ? 'crosshair'
       : (m.team === state.side && !m.activated) ? 'grab' : 'pointer';
 });
 cv.addEventListener('mouseleave', () => { state.hoverModel = null; });
@@ -66,7 +66,7 @@ cv.addEventListener('click', ev => {
   const p = toBoard(ev), m = modelAt(p);
   if (!m || !state.selected || m.team === state.selected.team) return;
   if (state.selected.team !== state.side) { toast('cette figurine ne joue pas ce tour', ev); return; }
-  const chk = canShoot(state.selected, m, TERRAIN);
+  const chk = canTarget(state.selected, m, TERRAIN);
   if (!chk.ok) { toast(chk.why, ev); return; }
   declareShot(state.selected, m, chk.s);
 });

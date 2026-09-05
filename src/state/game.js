@@ -5,6 +5,26 @@ export const TEAMS = {
   B: { name: 'Écumeurs', color: '#b4553a', deep: '#7b3122' },
 };
 
+// Catalogue d'armes : chaque arme est un objet plat de caractéristiques, lu tel quel par
+// weaponCanFire (portée, lourde) et resolveShot (dés, touche, dégâts). Partagé en lecture seule.
+export const WEAPONS = {
+  pm:       { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 12 },
+  fusil:    { name: 'Fusil de combat', a: 4, bs: 3, dn: 3, dc: 4 },
+  canon:    { name: 'Canon long', a: 4, bs: 2, dn: 4, dc: 5, heavy: true },
+  scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 },
+  carabine: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 },
+  bolter:   { name: 'Bolter', a: 4, bs: 3, dn: 4, dc: 5, range: 18 },
+  assaut:   { name: "Fusil d'assaut", a: 5, bs: 4, dn: 3, dc: 4, range: 16 },
+  sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true },
+};
+
+// Ensemble cohérent d'armes autorisées pour chaque rôle.
+export const ROLE_LOADOUTS = {
+  meneur: ['pm', 'scie', 'bolter'],
+  ligne: ['fusil', 'carabine', 'assaut'],
+  appui: ['canon', 'sniper'],
+};
+
 export const TERRAIN = [
   { x: 6, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 6, y: 13.5, w: 1.2, h: 5, t: 'wall' },
   { x: 22.8, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 22.8, y: 13.5, w: 1.2, h: 5, t: 'wall' },
@@ -21,19 +41,19 @@ const mk = o => ({ r: BASE_RADIUS, apl: ACTIONS_PER_ACTIVATION, ap: ACTIONS_PER_
 export function createModels() {
   return [
     mk({ id: 1, team: 'A', name: 'Sergent Kael', role: 'meneur', M: 5, sv: 3, w: 12, x: 3, y: 7,
-      weapon: { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 12 } }),
+      weapon: WEAPONS.pm }),
     mk({ id: 2, team: 'A', name: 'Fusilier Dorn', role: 'ligne', M: 5, sv: 3, w: 12, x: 4.4, y: 11,
-      weapon: { name: 'Fusil de combat', a: 4, bs: 3, dn: 3, dc: 4 } }),
+      weapon: WEAPONS.fusil }),
     mk({ id: 3, team: 'A', name: 'Tireur Vess', role: 'appui', M: 4, sv: 3, w: 12, x: 3, y: 15,
-      weapon: { name: 'Canon long', a: 4, bs: 2, dn: 4, dc: 5, heavy: true } }),
+      weapon: WEAPONS.canon }),
     mk({ id: 4, team: 'B', name: 'Chef Sarn', role: 'meneur', M: 7, sv: 4, w: 10, x: 27, y: 6,
-      weapon: { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 } }),
+      weapon: WEAPONS.scie }),
     mk({ id: 5, team: 'B', name: 'Pillard Kro', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 9.6,
-      weapon: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 } }),
+      weapon: WEAPONS.carabine }),
     mk({ id: 6, team: 'B', name: 'Pillard Yun', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 13,
-      weapon: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 } }),
+      weapon: WEAPONS.carabine }),
     mk({ id: 7, team: 'B', name: 'Pillard Tass', role: 'ligne', M: 7, sv: 5, w: 8, x: 27, y: 16.5,
-      weapon: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 } }),
+      weapon: WEAPONS.carabine }),
   ];
 }
 

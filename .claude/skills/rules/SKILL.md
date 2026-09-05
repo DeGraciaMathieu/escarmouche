@@ -24,7 +24,9 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | Distance / géométrie du plateau | `rules/geometry.js` | `dist`, `inflate`, `pointInRect`, `segSegT`, `segRectT` |
 | Effectif d'une escouade | `rules/squad.js` | `aliveOf(models, t)`, `remaining(models, t)` |
 | Ligne de vue, couvert | `rules/sight.js` | `sight(a, b, terrain)` |
-| Peut-on tirer (portée, arme lourde, PA…) | `rules/sight.js` | `canShoot(m, target, terrain)` |
+| Peut-on cibler (camp, PA, tir, ligne de vue — sans l'arme) | `rules/sight.js` | `canTarget(m, target, terrain)` |
+| Une arme peut-elle faire feu (portée, arme lourde) | `rules/sight.js` | `weaponCanFire(weapon, moved, s)` |
+| Peut-on tirer avec l'arme équipée (compose les deux) | `rules/sight.js` | `canShoot(m, target, terrain)` |
 | Déplacement légal (portée, bords, décor, collision) | `rules/movement.js` | `moveCheck(m, to, models, terrain)` |
 | Fin d'activation : changer de camp / nouveau tour / enchaîner | `rules/turn.js` | `decideActivationEnd(models, side)` |
 | Victoire par anéantissement | `rules/turn.js` | `annihilationWinner(models)` |
@@ -32,6 +34,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | Classement d'un dé (touche / critique / sauvegarde) | `rules/combat.js` | `isCrit`, `isHit`, `isSave` |
 | Seuil de touche après visée | `rules/combat.js` | `effectiveBs(bs, aimed)` |
 | Résolution complète d'un tir (annulations, dégâts) | `rules/combat.js` | `resolveShot({...})` |
+| Armes autorisées par rôle (loadout) | `rules/loadout.js` | `weaponsForRole(role, loadouts)`, `isWeaponAllowed(role, key, loadouts)` |
 | Hasard à graine | `rules/rng.js` | `createRng(seed)` |
 
 Les données mutables (`models`, `terrain`) sont **passées en argument**, jamais lues depuis
