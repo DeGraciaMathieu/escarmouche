@@ -4,6 +4,7 @@ import { TERRAIN, state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
 import { canTarget } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
+import { engagedModel } from '../rules/turn.js';
 import { effectiveBs } from '../rules/combat.js';
 import { sfx, audio, tone } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
@@ -29,6 +30,8 @@ cv.addEventListener('mousedown', ev => {
   if (state.busy || state.over) return; audio();
   const p = toBoard(ev), m = modelAt(p); if (!m) return;
   if (m.team === state.side && !m.activated) {
+    const busy = engagedModel(state.models, state.side);
+    if (busy) { select(busy); toast("termine l'activation en cours", ev); return; }
     select(m); if (m.ap > 0) { state.drag = { m, to: { x: m.x, y: m.y }, chk: { ok: false, d: 0 } }; sfx.pick(); }
   } else if (m.team === state.side) { select(m); toast('déjà activée ce tour', ev); }
   else {
@@ -101,6 +104,7 @@ window.addEventListener('keydown', ev => {
   if (state.busy) return;
   if (ev.key === 'Tab') {
     ev.preventDefault();
+    if (engagedModel(state.models, state.side)) return;
     const pool = state.models.filter(m => m.alive && m.team === state.side && !m.activated);
     if (!pool.length) return;
     select(pool[(pool.indexOf(state.selected) + 1) % pool.length]);

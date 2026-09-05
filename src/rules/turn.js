@@ -11,6 +11,14 @@ export function decideActivationEnd(models, side) {
   return { type: 'continue' };
 }
 
+// Figurine « engagée » d'un camp : elle a déjà dépensé un point dans son activation mais il
+// lui en reste. Tant qu'elle n'a pas fini, on ne peut pas en activer une autre — sinon aucune
+// activation ne s'achèverait et la main ne passerait jamais à l'adversaire. Il y en a au plus
+// une à la fois. Rend cette figurine, sinon null.
+export function engagedModel(models, side) {
+  return models.find(m => m.alive && m.team === side && m.activated && m.ap > 0) || null;
+}
+
 // Vainqueur par anéantissement : rend l'escouade adverse si l'une est entièrement hors de
 // combat, sinon null.
 export function annihilationWinner(models) {

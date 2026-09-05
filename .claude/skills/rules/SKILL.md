@@ -30,6 +30,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | Déplacement légal (bords, socle, place, chemin contourné ≤ M) | `rules/movement.js` | `moveCheck(m, to, models, terrain)` |
 | Plus court chemin contournant le décor | `rules/pathfind.js` | `findPath(from, to, rects)` |
 | Fin d'activation : changer de camp / nouveau tour / enchaîner | `rules/turn.js` | `decideActivationEnd(models, side)` |
+| Figurine engagée : entamée mais pas terminée (verrouille la sélection) | `rules/turn.js` | `engagedModel(models, side)` |
 | Victoire par anéantissement | `rules/turn.js` | `annihilationWinner(models)` |
 | Victoire aux points en fin de partie | `rules/turn.js` | `attritionWinner(models)` |
 | Classement d'un dé (touche / critique / sauvegarde) | `rules/combat.js` | `isCrit`, `isHit`, `isSave` |

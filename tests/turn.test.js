@@ -1,8 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideActivationEnd, annihilationWinner, attritionWinner } from '../src/rules/turn.js';
+import { decideActivationEnd, engagedModel, annihilationWinner, attritionWinner } from '../src/rules/turn.js';
 
-const m = (team, o = {}) => ({ team, alive: true, activated: false, hp: 10, ...o });
+const m = (team, o = {}) => ({ team, alive: true, activated: false, ap: 2, hp: 10, ...o });
+
+test('une figurine entamée mais pas terminée reste engagée : on ne peut pas en activer une autre', () => {
+  const entamee = m('A', { activated: true, ap: 1 });
+  const models = [entamee, m('A'), m('B')];
+  assert.equal(engagedModel(models, 'A'), entamee);
+});
+
+test('une figurine aux points épuisés n\'est plus engagée : la main peut passer', () => {
+  const models = [m('A', { activated: true, ap: 0 }), m('B')];
+  assert.equal(engagedModel(models, 'A'), null);
+});
 
 test('quand l\'adverse a encore des figurines, la main passe à l\'autre camp', () => {
   const models = [m('A', { activated: true }), m('B')];

@@ -64,7 +64,7 @@ d'archétype (son et contexte canvas) : feuilles sans dépendance de jeu.
 | `aliveOf`, `remaining` | `rules/squad.js` | `tests/squad.test.js` | `models` passé en argument |
 | `sight`, `canShoot` | `rules/sight.js` | `tests/sight.test.js` | `terrain` passé en argument |
 | `moveCheck` | `rules/movement.js` | `tests/movement.test.js` | `models` + `terrain` passés en argument |
-| `decideActivationEnd`, `annihilationWinner`, `attritionWinner` | `rules/turn.js` | `tests/turn.test.js` | décisions pures ; les effets DOM restent dans `loop/turn.js` |
+| `decideActivationEnd`, `engagedModel`, `annihilationWinner`, `attritionWinner` | `rules/turn.js` | `tests/turn.test.js` | décisions pures ; les effets DOM restent dans `loop/turn.js` |
 | `isCrit`, `isHit`, `isSave`, `effectiveBs`, `resolveShot` | `rules/combat.js` | `tests/combat.test.js` | `fire()` consomme les comptes de `resolveShot` pour l'animation |
 
 ## Randomness and time
