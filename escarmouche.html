@@ -271,6 +271,7 @@ import { dist } from './src/rules/geometry.js';
 import { aliveOf as aliveOfRule, remaining as remainingRule } from './src/rules/squad.js';
 import { sight as sightRule, canShoot as canShootRule } from './src/rules/sight.js';
 import { moveCheck as moveCheckRule } from './src/rules/movement.js';
+import { decideActivationEnd, annihilationWinner, attritionWinner } from './src/rules/turn.js';
 const aliveOf=t=>aliveOfRule(models,t);
 const remaining=t=>remainingRule(models,t);
 const sight=(a,b)=>sightRule(a,b,TERRAIN);
@@ -901,11 +902,9 @@ function afterAction(m){ if(m.ap<=0) endActivation(); else refresh(); }
 function endActivation(){
   if(selected){selected.activated=true;selected.ap=0;selected.aimed=false;}
   selected=null; undoState=null;
-  const other=side==='A'?'B':'A';
-  const otherLeft=models.some(m=>m.alive&&m.team===other&&!m.activated);
-  const sameLeft=models.some(m=>m.alive&&m.team===side&&!m.activated);
-  if(otherLeft){side=other;announceSide();}
-  else if(!sameLeft){newTurn();}
+  const decision=decideActivationEnd(models,side);
+  if(decision.type==='switch'){side=decision.side;announceSide();}
+  else if(decision.type==='newTurn'){newTurn();}
   else announceSide("L'escouade adverse a fini — tu enchaînes");
   autoSelect(); refresh();
 }
@@ -931,18 +930,13 @@ function newTurn(){
   journal(`<b>Tour ${turn}</b> — toutes les figurines se réactivent.`);
 }
 function autoSelect(){ if(over)return; selected=models.find(m=>m.alive&&m.team===side&&!m.activated)||null; }
-function checkEnd(){ for(const t of ['A','B']) if(!aliveOf(t).length){finish(t==='A'?'B':'A');return true;} return false; }
+function checkEnd(){ const w=annihilationWinner(models); if(w){finish(w);return true;} return false; }
 function finish(forced){
   over=true;selected=null;pending=null;
   document.getElementById('combat').classList.remove('show');
   let win=forced,sub='';
   if(!win){
-    const a=aliveOf('A').length,b=aliveOf('B').length;
-    if(a!==b)win=a>b?'A':'B';
-    else{
-      const ha=aliveOf('A').reduce((s,m)=>s+m.hp,0),hb=aliveOf('B').reduce((s,m)=>s+m.hp,0);
-      win=ha===hb?null:(ha>hb?'A':'B');
-    }
+    win=attritionWinner(models);
     sub=`Fin du tour ${MAXTURN} — ${aliveOf('A').length} contre ${aliveOf('B').length} figurines debout`;
   } else sub='Escouade adverse anéantie';
   document.getElementById('bannerTitle').textContent=win?TEAMS[win].name+" l'emporte":'Match nul';
