@@ -26,9 +26,18 @@ mutable partagé (`src/state/game.js`).
 | rendu | `src/render/` | tout ce qui écrit à l'écran | `config`, `canvas`, `state`, règles (lecture) |
 | entrée | `src/input/` | souris, clavier, boutons → intentions | `config`, `canvas`, `state`, règles, `loop`, `render` |
 | boucle | `src/loop/` | orchestration : intention → règle → état → rendu | tout le reste |
+| IA | `src/ai/` | décision et pilotage de l'IA (mode solo) | `config`, `state` (lecture), règles, `loop` |
 | entrée programme | `src/main.js` | câblage, graine du hasard, démarrage | tout |
 
 La flèche de dépendance ne pointe que vers le haut de ce tableau.
+
+**IA = consommateur.** En mode 1 joueur, `src/ai/` pilote le camp B via les **mêmes actions**
+qu'un humain (`loop/actions.js` : `moveModel`, `aim` ; + `declareShot`/`fire`,
+`declareFight`/`fight`, `submitMeleeChoice`, `endActivation`). La décision est pure
+(`ai/decide.js`, `decide(state, side) → intention`) ; un ordonnanceur (`ai/runner.js`) observe
+`state` et agit à son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
+importé que par `main.js` (câblage) et par `input/` (qui consulte `isAiControlled` pour bloquer
+la main humaine pendant le tour de l'IA).
 
 ## Conventions de code — non négociables
 
