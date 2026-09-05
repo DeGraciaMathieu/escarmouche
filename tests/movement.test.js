@@ -25,3 +25,20 @@ test('un décor sur le trajet bloque le déplacement', () => {
   const wall = [{ x: 4, y: 0, w: 1, h: 10, t: 'wall' }];
   assert.equal(moveCheck(m, { x: 8, y: 5 }, [m], wall).ok, false);
 });
+
+test('on ne peut pas sortir du plateau', () => {
+  const m = unit({ M: 5, x: 28, y: 5 });
+  assert.equal(moveCheck(m, { x: 30, y: 5 }, [m], []).ok, false); // 30″ dépasse le bord (BW = 30)
+});
+
+test('on ne peut pas finir son mouvement à l\'intérieur d\'un décor', () => {
+  const m = unit({ M: 5, x: 5, y: 5 });
+  const decor = [{ x: 8, y: 3, w: 2, h: 4, t: 'low' }];
+  assert.equal(moveCheck(m, { x: 9, y: 5 }, [m], decor).ok, false); // le socle ne rentre pas dans le décor
+});
+
+test('une figurine coincée dans la marge d\'un décor peut s\'en dégager', () => {
+  const m = unit({ M: 5, x: 7.6, y: 5 }); // dans la marge du décor mais pas dans le décor lui-même
+  const decor = [{ x: 8, y: 3, w: 4, h: 6, t: 'low' }];
+  assert.equal(moveCheck(m, { x: 6, y: 5 }, [m], decor).ok, true); // elle recule pour se dégager
+});

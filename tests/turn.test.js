@@ -24,6 +24,11 @@ test('une escouade anéantie donne la victoire à l\'autre', () => {
   assert.equal(annihilationWinner(models), 'B');
 });
 
+test('à la fin de la partie, l\'escouade la plus nombreuse l\'emporte', () => {
+  const models = [m('A'), m('A'), m('B')];
+  assert.equal(attritionWinner(models), 'A');
+});
+
 test('à égalité de figurines, le plus de PV cumulés l\'emporte', () => {
   const models = [m('A', { hp: 12 }), m('B', { hp: 5 })];
   assert.equal(attritionWinner(models), 'A');

@@ -40,6 +40,13 @@ test('une sauvegarde critique annule une critique à elle seule', () => {
   assert.equal(r.damage, 0);
 });
 
+test('une sauvegarde critique en surplus vaut une sauvegarde normale', () => {
+  const r = shot({ atkRolls: [6, 5], defRolls: [6, 6, 1] }); // 1 crit + 1 touche, 2 sauvegardes critiques
+  assert.equal(r.survivingCrits, 0); // une save crit annule la critique
+  assert.equal(r.survivingHits, 0); // la save crit en trop annule la touche
+  assert.equal(r.damage, 0);
+});
+
 test('le couvert ajoute une sauvegarde', () => {
   const withCover = shot({ atkRolls: [5], defRolls: [1, 1, 1], cover: true }); // couvert = 1 sauvegarde
   assert.equal(withCover.damage, 0);
