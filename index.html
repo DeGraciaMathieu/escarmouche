@@ -25,6 +25,11 @@ body{
 }
 button{font-family:'Barlow Condensed',system-ui,sans-serif}
 .stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* le plateau (board-wrap) est le seul enfant qui doit fixer la largeur de la colonne ; le
+   bandeau d'état et la barre d'aide portent un texte de longueur variable — sans width:0 leur
+   max-content dicterait la largeur du .stage et le plateau (width:100%) changerait de taille à
+   chaque message. width:0 + min-width:100% : ils remplissent la colonne sans jamais l'élargir. */
+.hud,.prompt{width:0;min-width:100%}
 
 /* bandeau d'état */
 .hud{display:flex;gap:12px}
