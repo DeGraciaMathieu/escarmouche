@@ -1,0 +1,12 @@
+{
+  "name": "escarmouche",
+  "version": "1.0.0",
+  "description": "Jeu d'escarmouche tactique au tour par tour",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  }
+}

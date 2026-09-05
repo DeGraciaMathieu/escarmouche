@@ -257,7 +257,7 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 import {
   PPI, BW, BH, MAXTURN,
   BASE_RADIUS, ACTIONS_PER_ACTIVATION,
-  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR, SEGMENT_PARALLEL_EPSILON, COVER_MIN_DISTANCE,
+  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR, COVER_MIN_DISTANCE,
   SELECT_MARGIN, DRAG_MIN_DISTANCE,
   CRIT_VALUE, DEFENSE_DICE, MIN_HIT_TARGET,
   JOURNAL_MAX,
@@ -268,6 +268,7 @@ import {
   FLASH_SIDE_MS, FLASH_TURN_MS, TOAST_MS, ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG,
 } from './src/config.js';
 import { createRng } from './src/rules/rng.js';
+import { dist, inflate, pointInRect, segRectT } from './src/rules/geometry.js';
 
 // ============================================================
 //  Plateau et données
@@ -315,25 +316,8 @@ let speed=1;               // accéléré si le joueur clique pendant la résolu
 let shake=0;
 
 // ============================================================
-//  Géométrie et règles
+//  Règles
 // ============================================================
-const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const inflate=(r,m)=>({x:r.x-m,y:r.y-m,w:r.w+2*m,h:r.h+2*m,t:r.t});
-const pointInRect=(p,r)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
-function segSegT(p1,p2,p3,p4){
-  const d1x=p2.x-p1.x,d1y=p2.y-p1.y,d2x=p4.x-p3.x,d2y=p4.y-p3.y;
-  const den=d1x*d2y-d1y*d2x; if(Math.abs(den)<SEGMENT_PARALLEL_EPSILON) return null;
-  const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/den,u=((p3.x-p1.x)*d1y-(p3.y-p1.y)*d1x)/den;
-  return (t<0||t>1||u<0||u>1)?null:t;
-}
-function segRectT(p1,p2,r){
-  if (pointInRect(p1,r)) return 0;
-  const c=[{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x+r.w,y:r.y+r.h},{x:r.x,y:r.y+r.h}];
-  let best=null;
-  for(let i=0;i<4;i++){const t=segSegT(p1,p2,c[i],c[(i+1)%4]); if(t!==null&&(best===null||t<best))best=t;}
-  if (best===null&&pointInRect(p2,r)) return 1;
-  return best;
-}
 function moveCheck(m,to){
   const from={x:m.x,y:m.y}, d=dist(from,to);
   if (d>m.M+MOVE_EPSILON) return {ok:false,why:'trop loin — '+m.M+'″ maximum',d};
