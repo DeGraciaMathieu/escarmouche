@@ -258,7 +258,7 @@ import {
   PPI, BW, BH, MAXTURN,
   BASE_RADIUS, ACTIONS_PER_ACTIVATION,
   SELECT_MARGIN, DRAG_MIN_DISTANCE,
-  CRIT_VALUE, DEFENSE_DICE, MIN_HIT_TARGET,
+  DEFENSE_DICE,
   JOURNAL_MAX,
   SHAKE_DAMPING, SHAKE_MIN, MAT_TEXTURE_DOTS,
   MOVE_ANIM_BASE, MOVE_ANIM_PER_INCH,
@@ -272,6 +272,7 @@ import { aliveOf as aliveOfRule, remaining as remainingRule } from './src/rules/
 import { sight as sightRule, canShoot as canShootRule } from './src/rules/sight.js';
 import { moveCheck as moveCheckRule } from './src/rules/movement.js';
 import { decideActivationEnd, annihilationWinner, attritionWinner } from './src/rules/turn.js';
+import { isCrit, isHit, isSave, effectiveBs, resolveShot } from './src/rules/combat.js';
 const aliveOf=t=>aliveOfRule(models,t);
 const remaining=t=>remainingRule(models,t);
 const sight=(a,b)=>sightRule(a,b,TERRAIN);
@@ -704,7 +705,7 @@ function place(el,x,y,rot=0,scale=1){
 function declareShot(shooter,target,s){
   pending={shooter,target,s};
   busy=true; hoverModel=null;
-  const bs=Math.max(MIN_HIT_TARGET,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
+  const bs=effectiveBs(shooter.weapon.bs,shooter.aimed);
   document.getElementById('cbShooter').textContent=shooter.name;
   document.getElementById('cbTarget').textContent=target.name;
   document.getElementById('cbMeta').textContent=
@@ -733,7 +734,7 @@ async function fire(){
   document.getElementById('cbSkip').textContent='clique pour accélérer';
   field.style.display='block';
   field.querySelectorAll('.die').forEach(d=>d.remove());
-  const bs=Math.max(MIN_HIT_TARGET,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
+  const bs=effectiveBs(shooter.weapon.bs,shooter.aimed);
   document.getElementById('labAtk').innerHTML=`Attaque<b>touche ${bs}+</b>`;
   document.getElementById('labDef').innerHTML=`Défense<b>sauve ${target.sv}+</b>`;
   const nAtk=document.getElementById('noteAtk'), nDef=document.getElementById('noteDef');
@@ -752,8 +753,8 @@ async function fire(){
   let hits=[],crits=[],miss=[];
   for(const d of atk){
     await sleep(130);
-    if(d.v===CRIT_VALUE){d.el.classList.add('crit');crits.push(d);sfx.hitDie();}
-    else if(d.v>=bs&&d.v>1){d.el.classList.add('hit');hits.push(d);sfx.hitDie();}
+    if(isCrit(d.v)){d.el.classList.add('crit');crits.push(d);sfx.hitDie();}
+    else if(isHit(d.v,bs)){d.el.classList.add('hit');hits.push(d);sfx.hitDie();}
     else {d.el.classList.add('miss');miss.push(d);}
   }
   await sleep(120);
@@ -783,8 +784,8 @@ async function fire(){
   let saves=[],csaves=[];
   for(const d of def){
     await sleep(130);
-    if(d.v===CRIT_VALUE){d.el.classList.add('crit');csaves.push(d);sfx.save();}
-    else if(d.v>=target.sv&&d.v>1){d.el.classList.add('save');saves.push(d);sfx.save();}
+    if(isCrit(d.v)){d.el.classList.add('crit');csaves.push(d);sfx.save();}
+    else if(isSave(d.v,target.sv)){d.el.classList.add('save');saves.push(d);sfx.save();}
     else d.el.classList.add('miss');
   }
   if(s.cover){
@@ -802,13 +803,18 @@ async function fire(){
     : 'aucune sauvegarde';
   await sleep(560);
 
-  // --- annulations, une par une
+  // --- résolution des annulations et des dégâts (règle pure)
+  const outcome=resolveShot({
+    atkRolls:atk.map(d=>d.v), defRolls:def.map(d=>d.v),
+    bs, sv:target.sv, cover:s.cover, dn:shooter.weapon.dn, dc:shooter.weapon.dc});
+
+  // --- annulations, une par une (l'animation suit les comptes de la règle)
   let rc=[...crits], rh=[...hits], ns=[...saves], cs=[...csaves];
   const ops=[];
-  while(cs.length&&rc.length) ops.push({sv:[cs.shift()],hit:rc.shift(),label:'critique annulée'});
+  for(let i=0;i<outcome.critCancelledByCrit;i++) ops.push({sv:[cs.shift()],hit:rc.shift(),label:'critique annulée'});
   ns.push(...cs); cs=[];
-  while(rc.length&&ns.length>=2) ops.push({sv:[ns.shift(),ns.shift()],hit:rc.shift(),label:'critique annulée à deux dés'});
-  while(rh.length&&ns.length) ops.push({sv:[ns.shift()],hit:rh.shift(),label:'touche annulée'});
+  for(let i=0;i<outcome.critCancelledByPair;i++) ops.push({sv:[ns.shift(),ns.shift()],hit:rc.shift(),label:'critique annulée à deux dés'});
+  for(let i=0;i<outcome.hitCancelled;i++) ops.push({sv:[ns.shift()],hit:rh.shift(),label:'touche annulée'});
 
   for(const op of ops){
     const hx=op.hit.x;
@@ -823,18 +829,19 @@ async function fire(){
 
   // --- dégâts restants
   const left=[...rc,...rh];
-  let dmg=0;
+  const dmg=outcome.damage;
   if(left.length){
     tally.classList.add('show');
     left.forEach(d=>d.el.classList.add('pulse'));
+    let shown=0;
     for(const d of left){
-      const isCrit=rc.includes(d);
-      dmg += isCrit?shooter.weapon.dc:shooter.weapon.dn;
-      document.getElementById('tallyNum').textContent=dmg;
-      tone(isCrit?720:600,.1,'triangle',.1);
+      const fromCrit=rc.includes(d);
+      shown += fromCrit?shooter.weapon.dc:shooter.weapon.dn;
+      document.getElementById('tallyNum').textContent=shown;
+      tone(fromCrit?720:600,.1,'triangle',.1);
       addFx({type:'impact',x:target.x+(Math.random()-.5)*.5,y:target.y+(Math.random()-.5)*.5,
              dur:420,seed:Math.random()*6});
-      target.flash=.7; shake=isCrit?7:4.5;
+      target.flash=.7; shake=fromCrit?7:4.5;
       await sleep(230);
     }
   }
@@ -1026,7 +1033,7 @@ document.getElementById('btnAim').onclick=()=>{
   if(!selected||selected.ap<1||selected.aimed||selected.shot||pending)return;
   audio();selected.aimed=true;selected.ap--;selected.activated=true;undoState=null;
   tone(660,.12,'triangle',.1,880);
-  journal(`<b>${selected.name}</b> se met en joue : touche à ${Math.max(MIN_HIT_TARGET,selected.weapon.bs-1)}+.`);
+  journal(`<b>${selected.name}</b> se met en joue : touche à ${effectiveBs(selected.weapon.bs,true)}+.`);
   afterAction(selected);
 };
 document.getElementById('btnUndo').onclick=()=>{
