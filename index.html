@@ -100,7 +100,8 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
   display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:5px;
   box-shadow:inset 0 -2px 0 rgba(0,0,0,.22),0 3px 5px rgba(0,0,0,.45);
   transition:transform .42s cubic-bezier(.2,.8,.3,1), opacity .3s;}
-.die i{background:#20261f;border-radius:50%;width:6px;height:6px;align-self:center;justify-self:center}
+.die span{display:grid;place-items:center}
+.die i{background:#20261f;border-radius:50%;width:6px;height:6px}
 .die.hit{background:#cf9f34}
 .die.crit{background:#efc94f;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 0 0 2px var(--brass),0 3px 5px rgba(0,0,0,.45)}
 .die.miss{background:#6f6a5e;opacity:.45}
