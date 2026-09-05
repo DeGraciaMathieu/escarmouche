@@ -253,11 +253,24 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
   </div>
 </div>
 
-<script>
+<script type="module">
+import {
+  PPI, BW, BH, MAXTURN,
+  BASE_RADIUS, ACTIONS_PER_ACTIVATION,
+  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR, SEGMENT_PARALLEL_EPSILON, COVER_MIN_DISTANCE,
+  SELECT_MARGIN, DRAG_MIN_DISTANCE,
+  CRIT_VALUE, DEFENSE_DICE, MIN_HIT_TARGET,
+  JOURNAL_MAX,
+  SHAKE_DAMPING, SHAKE_MIN, MAT_TEXTURE_DOTS,
+  MOVE_ANIM_BASE, MOVE_ANIM_PER_INCH,
+  DIE_SPIN_INTERVAL, DIE_START_X, DIE_GAP, DIE_ROW,
+  SPEED_FAST,
+  FLASH_SIDE_MS, FLASH_TURN_MS, TOAST_MS, ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG,
+} from './src/config.js';
+
 // ============================================================
 //  Plateau et données
 // ============================================================
-const PPI=30, BW=30, BH=22, MAXTURN=4;
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const px=v=>v*PPI;
 
@@ -274,7 +287,7 @@ const TEAMS={A:{name:'Garde de Fer',color:'#5c7f9e',deep:'#33506b'},
              B:{name:'Écumeurs',color:'#b4553a',deep:'#7b3122'}};
 let models=[];
 (function(){
-  const mk=o=>({r:.62,apl:2,ap:2,aimed:false,moved:false,shot:false,activated:false,alive:true,anim:null,flash:0,...o,hp:o.w});
+  const mk=o=>({r:BASE_RADIUS,apl:ACTIONS_PER_ACTIVATION,ap:ACTIONS_PER_ACTIVATION,aimed:false,moved:false,shot:false,activated:false,alive:true,anim:null,flash:0,...o,hp:o.w});
   models=[
     mk({id:1,team:'A',name:'Sergent Kael',role:'meneur',M:5,sv:3,w:12,x:3,y:7,
         weapon:{name:'Pistolet-mitrailleur',a:4,bs:3,dn:3,dc:4,range:12}}),
@@ -307,7 +320,7 @@ const inflate=(r,m)=>({x:r.x-m,y:r.y-m,w:r.w+2*m,h:r.h+2*m,t:r.t});
 const pointInRect=(p,r)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
 function segSegT(p1,p2,p3,p4){
   const d1x=p2.x-p1.x,d1y=p2.y-p1.y,d2x=p4.x-p3.x,d2y=p4.y-p3.y;
-  const den=d1x*d2y-d1y*d2x; if(Math.abs(den)<1e-9) return null;
+  const den=d1x*d2y-d1y*d2x; if(Math.abs(den)<SEGMENT_PARALLEL_EPSILON) return null;
   const t=((p3.x-p1.x)*d2y-(p3.y-p1.y)*d2x)/den,u=((p3.x-p1.x)*d1y-(p3.y-p1.y)*d1x)/den;
   return (t<0||t>1||u<0||u>1)?null:t;
 }
@@ -321,10 +334,10 @@ function segRectT(p1,p2,r){
 }
 function moveCheck(m,to){
   const from={x:m.x,y:m.y}, d=dist(from,to);
-  if (d>m.M+1e-6) return {ok:false,why:'trop loin — '+m.M+'″ maximum',d};
+  if (d>m.M+MOVE_EPSILON) return {ok:false,why:'trop loin — '+m.M+'″ maximum',d};
   if (to.x<m.r||to.y<m.r||to.x>BW-m.r||to.y>BH-m.r) return {ok:false,why:'hors du plateau',d};
   for(const rect of TERRAIN){
-    const big=inflate(rect,m.r*.92);
+    const big=inflate(rect,m.r*TERRAIN_MARGIN_FACTOR);
     // si la figurine part déjà dans la marge de ce décor, on la laisse s'en dégager :
     // seul le décor lui-même reste infranchissable, sinon elle serait bloquée à vie
     const stuck=pointInRect(from,big);
@@ -340,7 +353,7 @@ function sight(a,b){
   for(const rect of TERRAIN){
     const t=segRectT(p1,p2,rect); if(t===null)continue;
     if (rect.t==='wall') return {los:false,cover:false,len};
-    if (t*len>1) cover=true;
+    if (t*len>COVER_MIN_DISTANCE) cover=true;
   }
   return {los:true,cover,len};
 }
@@ -460,7 +473,7 @@ const mat=document.createElement('canvas'); mat.width=cv.width; mat.height=cv.he
 (function(){
   const m=mat.getContext('2d');
   m.fillStyle='#2b332e'; m.fillRect(0,0,mat.width,mat.height);
-  for(let i=0;i<26000;i++){
+  for(let i=0;i<MAT_TEXTURE_DOTS;i++){
     m.fillStyle=Math.random()>.5?'rgba(255,255,255,.033)':'rgba(0,0,0,.05)';
     m.fillRect(Math.random()*mat.width,Math.random()*mat.height,1.6,1.6);
   }
@@ -636,7 +649,7 @@ function drawHoverName(){
 }
 function render(){
   ctx.save();
-  if(shake>0){ ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake); shake*=.88; if(shake<.4)shake=0; }
+  if(shake>0){ ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake); shake*=SHAKE_DAMPING; if(shake<SHAKE_MIN)shake=0; }
   ctx.drawImage(mat,0,0);
   ctx.fillStyle='rgba(92,127,158,.06)';ctx.fillRect(0,0,px(5),cv.height);
   ctx.fillStyle='rgba(180,85,58,.06)';ctx.fillRect(px(BW-5),0,px(5),cv.height);
@@ -655,14 +668,14 @@ render();
 // ============================================================
 function toBoard(ev){const r=cv.getBoundingClientRect();
   return {x:(ev.clientX-r.left)/r.width*BW,y:(ev.clientY-r.top)/r.height*BH};}
-function modelAt(p){for(const m of models) if(m.alive&&dist(m,p)<=m.r+.25) return m; return null;}
+function modelAt(p){for(const m of models) if(m.alive&&dist(m,p)<=m.r+SELECT_MARGIN) return m; return null;}
 let toastTimer=null;
 function toast(msg,ev){
   const t=document.getElementById('toast'),wrap=document.getElementById('boardWrap').getBoundingClientRect();
   if(ev){t.style.left=(ev.clientX-wrap.left)+'px';t.style.top=(ev.clientY-wrap.top)+'px';}
   else{t.style.left='50%';t.style.top='50%';}
   t.textContent=msg;t.classList.add('show');sfx.no();
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1500);
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),TOAST_MS);
 }
 cv.addEventListener('mousedown',ev=>{
   if(busy||over)return; audio();
@@ -689,11 +702,11 @@ cv.addEventListener('mouseleave',()=>{hoverModel=null;});
 window.addEventListener('mouseup',ev=>{
   if(!drag)return;
   const d=drag;drag=null;cv.style.cursor='default';
-  if(d.chk.d<=.15){refresh();return;}
+  if(d.chk.d<=DRAG_MIN_DISTANCE){refresh();return;}
   if(d.chk.ok){
     undoState={m:d.m,x:d.m.x,y:d.m.y,moved:d.m.moved};
     const to={...d.to};
-    d.m.anim={from:{x:d.m.x,y:d.m.y},to,t0:performance.now(),dur:180+d.chk.d*55};
+    d.m.anim={from:{x:d.m.x,y:d.m.y},to,t0:performance.now(),dur:MOVE_ANIM_BASE+d.chk.d*MOVE_ANIM_PER_INCH};
     d.m.x=to.x;d.m.y=to.y;d.m.ap--;d.m.moved=true;d.m.activated=true;
     journal(`<b>${d.m.name}</b> se déplace de ${d.chk.d.toFixed(1)}″.`);
     afterAction(d.m);
@@ -716,8 +729,8 @@ cv.addEventListener('click',ev=>{
 const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const field=document.getElementById('field');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*speed));
-const ROW={atk:22, def:92};
-const DX=110, GAP=44;
+const ROW=DIE_ROW;
+const DX=DIE_START_X, GAP=DIE_GAP;
 
 function makeDie(){
   const d=document.createElement('div'); d.className='die'; field.appendChild(d); return d;
@@ -737,7 +750,7 @@ function place(el,x,y,rot=0,scale=1){
 function declareShot(shooter,target,s){
   pending={shooter,target,s};
   busy=true; hoverModel=null;
-  const bs=Math.max(2,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
+  const bs=Math.max(MIN_HIT_TARGET,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
   document.getElementById('cbShooter').textContent=shooter.name;
   document.getElementById('cbTarget').textContent=target.name;
   document.getElementById('cbMeta').textContent=
@@ -766,7 +779,7 @@ async function fire(){
   document.getElementById('cbSkip').textContent='clique pour accélérer';
   field.style.display='block';
   field.querySelectorAll('.die').forEach(d=>d.remove());
-  const bs=Math.max(2,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
+  const bs=Math.max(MIN_HIT_TARGET,shooter.aimed?shooter.weapon.bs-1:shooter.weapon.bs);
   document.getElementById('labAtk').innerHTML=`Attaque<b>touche ${bs}+</b>`;
   document.getElementById('labDef').innerHTML=`Défense<b>sauve ${target.sv}+</b>`;
   const nAtk=document.getElementById('noteAtk'), nDef=document.getElementById('noteDef');
@@ -785,7 +798,7 @@ async function fire(){
   let hits=[],crits=[],miss=[];
   for(const d of atk){
     await sleep(130);
-    if(d.v===6){d.el.classList.add('crit');crits.push(d);sfx.hitDie();}
+    if(d.v===CRIT_VALUE){d.el.classList.add('crit');crits.push(d);sfx.hitDie();}
     else if(d.v>=bs&&d.v>1){d.el.classList.add('hit');hits.push(d);sfx.hitDie();}
     else {d.el.classList.add('miss');miss.push(d);}
   }
@@ -812,11 +825,11 @@ async function fire(){
   nDef.innerHTML=`<em>${target.name}</em> doit encaisser…`;
   nDef.classList.add('show');
   await sleep(340);
-  const def=await throwDice(3, ROW.def, 'right');
+  const def=await throwDice(DEFENSE_DICE, ROW.def, 'right');
   let saves=[],csaves=[];
   for(const d of def){
     await sleep(130);
-    if(d.v===6){d.el.classList.add('crit');csaves.push(d);sfx.save();}
+    if(d.v===CRIT_VALUE){d.el.classList.add('crit');csaves.push(d);sfx.save();}
     else if(d.v>=target.sv&&d.v>1){d.el.classList.add('save');saves.push(d);sfx.save();}
     else d.el.classList.add('miss');
   }
@@ -905,7 +918,7 @@ async function throwDice(n,row,from){
     out.push({el, x:DX+i*GAP, rot:(Math.random()-.5)*16, v:1});
   }
   sfx.throwDice();
-  const spin=setInterval(()=>out.forEach(d=>paintDie(d.el,1+Math.floor(Math.random()*6))),55);
+  const spin=setInterval(()=>out.forEach(d=>paintDie(d.el,1+Math.floor(Math.random()*6))),DIE_SPIN_INTERVAL);
   await sleep(40);
   out.forEach((d,i)=>setTimeout(()=>{place(d.el,d.x,row,d.rot,1);sfx.land();}, i*80*speed));
   await sleep(80*n+380);
@@ -916,7 +929,7 @@ async function throwDice(n,row,from){
 }
 async function endShot(shooter,dmg,target,s){
   shooter.ap--; shooter.shot=true; shooter.aimed=false; shooter.activated=true; undoState=null;
-  await sleep(dmg>0?1250:950);
+  await sleep(dmg>0?ENDSHOT_WAIT_DMG:ENDSHOT_WAIT_NODMG);
   document.getElementById('combat').classList.remove('show');
   field.querySelectorAll('.die').forEach(d=>d.remove());
   pending=null; busy=false; speed=1;
@@ -926,7 +939,7 @@ async function endShot(shooter,dmg,target,s){
 }
 document.getElementById('btnFire').onclick=ev=>{ev.stopPropagation();audio();fire();};
 document.getElementById('btnCancelShot').onclick=ev=>{ev.stopPropagation();cancelShot();};
-document.getElementById('combat').addEventListener('click',()=>{ if(pending&&field.style.display!=='none') speed=.28; });
+document.getElementById('combat').addEventListener('click',()=>{ if(pending&&field.style.display!=='none') speed=SPEED_FAST; });
 
 // ============================================================
 //  Déroulé du tour
@@ -949,7 +962,7 @@ function announceSide(sub){
   document.getElementById('flashTitle').textContent='Aux '+TEAMS[side].name;
   document.getElementById('flashSub').textContent=sub||`${remaining(side)} figurine${remaining(side)>1?'s':''} à activer`;
   f.classList.add('show');sfx.turn();
-  setTimeout(()=>f.classList.remove('show'),1000);
+  setTimeout(()=>f.classList.remove('show'),FLASH_SIDE_MS);
 }
 function newTurn(){
   if(turn>=MAXTURN){finish();return;}
@@ -961,7 +974,7 @@ function newTurn(){
   document.getElementById('flashTitle').textContent='Tour '+turn;
   document.getElementById('flashSub').textContent=turn===MAXTURN?'dernier tour':'toutes les figurines se réactivent';
   f.classList.add('show');sfx.turn();
-  setTimeout(()=>f.classList.remove('show'),1200);
+  setTimeout(()=>f.classList.remove('show'),FLASH_TURN_MS);
   journal(`<b>Tour ${turn}</b> — toutes les figurines se réactivent.`);
 }
 const remaining=t=>models.filter(m=>m.alive&&m.team===t&&!m.activated).length;
@@ -993,7 +1006,7 @@ function select(m){ if(!busy){selected=m;refresh();} }
 // ============================================================
 const events=[];
 function journal(html){
-  events.unshift(html); if(events.length>6)events.pop();
+  events.unshift(html); if(events.length>JOURNAL_MAX)events.pop();
   document.getElementById('journal').innerHTML=events.map(e=>`<li>${e}</li>`).join('');
 }
 function chips(team,box){
@@ -1068,7 +1081,7 @@ document.getElementById('btnAim').onclick=()=>{
   if(!selected||selected.ap<1||selected.aimed||selected.shot||pending)return;
   audio();selected.aimed=true;selected.ap--;selected.activated=true;undoState=null;
   tone(660,.12,'triangle',.1,880);
-  journal(`<b>${selected.name}</b> se met en joue : touche à ${Math.max(2,selected.weapon.bs-1)}+.`);
+  journal(`<b>${selected.name}</b> se met en joue : touche à ${Math.max(MIN_HIT_TARGET,selected.weapon.bs-1)}+.`);
   afterAction(selected);
 };
 document.getElementById('btnUndo').onclick=()=>{
@@ -1088,7 +1101,7 @@ window.addEventListener('keydown',ev=>{
   if(pending){
     if(ev.key==='Enter'){ev.preventDefault();if(document.getElementById('cbCta').style.display!=='none')fire();}
     else if(ev.key==='Escape'){if(document.getElementById('cbCta').style.display!=='none')cancelShot();}
-    else if(ev.key===' '){ev.preventDefault();speed=.28;}
+    else if(ev.key===' '){ev.preventDefault();speed=SPEED_FAST;}
     return;
   }
   if(busy)return;
