@@ -149,7 +149,6 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .pips{display:flex;gap:4px}
 .pips i{width:11px;height:11px;border-radius:50%;background:#39412f;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
 .pips i.on{background:var(--brass)}
-.pips.sm i{width:7px;height:7px}
 .act-sub{font-size:12.5px;color:var(--dim);margin:-4px 0 9px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .actions button{font-size:16px;padding:9px 6px;border-radius:3px;border:1px solid var(--line);
@@ -159,20 +158,18 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .actions button:disabled{opacity:.3;cursor:default}
 .actions button.wide{grid-column:span 2}
 .actions .k{opacity:.55;font-size:12px;margin-left:4px}
-.card{background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:3px;
-  padding:7px 10px;margin-bottom:6px;cursor:pointer;transition:background .12s,transform .12s,border-color .12s}
-.card:hover{background:#2d372a}
-.card.sel{border-color:var(--brass);background:#333d2d;transform:translateX(3px)}
-.card.played{opacity:.45}
-.card.dead{opacity:.3;filter:grayscale(1);cursor:default}
-.card.dead .cname{text-decoration:line-through}
-.card.aimed-at{box-shadow:0 0 0 1px var(--bad) inset}
-.card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.cname{font-family:'Barlow Condensed';font-size:17px;font-weight:600}
-.tagline{font-size:11.5px;color:var(--dim)}
-.stats{display:flex;gap:11px;margin-top:2px;font-family:'Barlow Condensed';font-size:14px;color:var(--dim)}
-.stats b{color:var(--paper);font-weight:600}
-.weap{font-size:12px;color:var(--dim);margin-top:2px}
+.urow{background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:3px;
+  padding:5px 9px;margin-bottom:5px;cursor:pointer;transition:background .12s,transform .12s,border-color .12s}
+.urow:hover{background:#2d372a}
+.urow.sel{border-color:var(--brass);background:#333d2d;transform:translateX(3px)}
+.urow.played{opacity:.45}
+.urow.dead{opacity:.3;filter:grayscale(1);cursor:default}
+.urow.dead .uname{text-decoration:line-through}
+.urow.aimed-at{box-shadow:0 0 0 1px var(--bad) inset}
+.urow-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.uname{font-family:'Barlow Condensed';font-size:15px;font-weight:600}
+.uhp{font-family:'Barlow Condensed';font-size:13px;color:var(--dim)}
+.usub{font-size:11px;color:var(--dim);margin-top:2px}
 .hpbar{height:4px;background:#161a15;margin-top:6px;border-radius:2px;overflow:hidden}
 .hpbar i{display:block;height:100%;background:var(--tc);transition:width .45s ease-out}
 .journal{list-style:none;margin:0;padding:0;font-size:13.5px;color:var(--dim);line-height:1.45}

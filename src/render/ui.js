@@ -23,19 +23,15 @@ function chips(team, box) {
 
 function card(m) {
   const t = TEAMS[m.team], el = document.createElement('div');
-  el.className = 'card' + (m === state.selected ? ' sel' : '') + (m.activated && m.alive ? ' played' : '') + (!m.alive ? ' dead' : '')
+  el.className = 'urow' + (m === state.selected ? ' sel' : '') + (m.activated && m.alive ? ' played' : '') + (!m.alive ? ' dead' : '')
     + (state.pending && state.pending.target === m ? ' aimed-at' : '');
   el.style.setProperty('--tc', t.color);
-  const w = m.weapon;
   const statut = !m.alive ? 'hors de combat' : m.activated ? 'activée'
-    : (m.team === state.side ? `${m.ap} action${m.ap > 1 ? 's' : ''} disponible${m.ap > 1 ? 's' : ''}` : 'en attente');
-  const pips = m.alive && !m.activated ? `<span class="pips sm">${'<i class="on"></i>'.repeat(m.ap)}${'<i></i>'.repeat(m.apl - m.ap)}</span>` : '';
+    : (m.team === state.side ? `${m.ap} PA` : 'en attente');
   el.innerHTML = `
-    <div class="card-top"><span class="cname">${m.name}</span>${pips}</div>
-    <div class="tagline">${m.role} · ${statut}${m.aimed ? ' · en joue' : ''}</div>
-    <div class="stats"><span>Dépl. <b>${m.M}″</b></span><span>Svg <b>${m.sv}+</b></span><span>PV <b>${m.hp}</b>/${m.w}</span></div>
-    <div class="weap">${w.name} — ${w.a} dés, touche ${w.bs}+, ${w.dn}/${w.dc} dégâts${w.range ? `, ${w.range}″` : ''}${w.heavy ? ', lourde' : ''}</div>
-    <div class="hpbar"><i style="width:${100 * m.hp / m.w}%"></i></div>`;
+    <div class="urow-top"><span class="uname">${m.name}</span><span class="uhp">${m.hp}/${m.w} PV</span></div>
+    <div class="hpbar"><i style="width:${100 * m.hp / m.w}%"></i></div>
+    <div class="usub">${statut} · ${m.weapon.name}${m.aimed ? ' · en joue' : ''}</div>`;
   if (m.alive) el.onclick = () => { if (!state.busy) select(m); };
   return el;
 }
