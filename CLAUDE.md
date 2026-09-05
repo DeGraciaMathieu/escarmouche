@@ -50,6 +50,9 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 ## Conventions de domaine
 
 - Distances et portées en **pouces** ; conversion en pixels par `px()` (`src/canvas.js`).
+- Le décor est un catalogue de plans `MAPS` (`state/game.js`) ; le joueur en choisit un à l'écran
+  de démarrage (`main.js`) et il est copié dans `state.terrain` (le plan actif, lu partout). Un
+  décor est un rectangle `{ x, y, w, h, t }` (`t` = `'wall'` bloquant ou `'low'` bas).
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
   `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe

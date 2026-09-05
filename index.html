@@ -170,6 +170,17 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .banner p{margin:0 0 16px;color:var(--dim);text-align:center;font-size:15px}
 .banner button{font-size:18px;padding:10px 24px;background:var(--brass);border:0;border-radius:3px;color:#191b12;cursor:pointer;display:block;margin:0 auto}
 
+.start{position:absolute;inset:0;display:none;place-items:center;background:rgba(10,13,10,.92);border-radius:6px;z-index:9}
+.start.show{display:grid}
+.start h2{font-family:'Barlow Condensed';font-size:38px;margin:0 0 4px;text-align:center}
+.start p{margin:0 0 18px;color:var(--dim);text-align:center;font-size:15px}
+.map-picks{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:560px}
+.map-picks button{width:168px;text-align:left;padding:12px 14px;border-radius:4px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
+.map-picks button:hover{border-color:var(--brass);background:#323c2e}
+.map-picks button b{display:block;font-family:'Barlow Condensed';font-size:19px;margin-bottom:3px}
+.map-picks button span{display:block;font-size:12px;color:var(--dim);line-height:1.4}
+
 /* colonne droite */
 .side-col{width:334px;display:flex;flex-direction:column;gap:12px;flex:none}
 .block{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:11px 12px}
@@ -282,6 +293,12 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
     <div class="banner" id="banner"><div>
       <h2 id="bannerTitle"></h2><p id="bannerSub"></p>
       <button onclick="location.reload()">Rejouer</button>
+    </div></div>
+
+    <div class="start" id="start"><div>
+      <h2>Escarmouche</h2>
+      <p>Choisis un plan de bataille</p>
+      <div class="map-picks" id="mapPicks"></div>
     </div></div>
   </div>
 

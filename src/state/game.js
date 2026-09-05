@@ -36,15 +36,41 @@ export const ROLE_LOADOUTS = {
   appui: ['canon', 'sniper', 'bolter'],
 };
 
-export const TERRAIN = [
-  { x: 6, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 6, y: 13.5, w: 1.2, h: 5, t: 'wall' },
-  { x: 22.8, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 22.8, y: 13.5, w: 1.2, h: 5, t: 'wall' },
-  { x: 13, y: 8.5, w: 4, h: 5, t: 'wall' }, { x: 10, y: 0.8, w: 3.4, h: 1.2, t: 'wall' }, { x: 16.6, y: 20, w: 3.4, h: 1.2, t: 'wall' },
-  { x: 2, y: 9, w: 1, h: 4, t: 'low' }, { x: 27, y: 9, w: 1, h: 4, t: 'low' },
-  { x: 10.6, y: 5.4, w: 4, h: 0.8, t: 'low' }, { x: 15.4, y: 15.8, w: 4, h: 0.8, t: 'low' },
-  { x: 19.4, y: 10.4, w: 0.8, h: 3, t: 'low' }, { x: 9.8, y: 10.4, w: 0.8, h: 3, t: 'low' },
-  { x: 14.2, y: 2.6, w: 0.8, h: 3, t: 'low' }, { x: 15, y: 18, w: 0.8, h: 2.4, t: 'low' },
-];
+// Catalogue de plans (décor). Le plan actif est copié dans `state.terrain` au démarrage
+// (main.js), selon l'écran de choix. `(x, y)` = coin haut-gauche, `w`/`h` = étendue en pouces.
+export const MAPS = {
+  // Plan d'origine : murs et couvert épars.
+  classique: {
+    name: 'Classique',
+    desc: 'Murs et couvert épars — le plan d’origine.',
+    terrain: [
+      { x: 6, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 6, y: 13.5, w: 1.2, h: 5, t: 'wall' },
+      { x: 22.8, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 22.8, y: 13.5, w: 1.2, h: 5, t: 'wall' },
+      { x: 13, y: 8.5, w: 4, h: 5, t: 'wall' }, { x: 10, y: 0.8, w: 3.4, h: 1.2, t: 'wall' }, { x: 16.6, y: 20, w: 3.4, h: 1.2, t: 'wall' },
+      { x: 2, y: 9, w: 1, h: 4, t: 'low' }, { x: 27, y: 9, w: 1, h: 4, t: 'low' },
+      { x: 10.6, y: 5.4, w: 4, h: 0.8, t: 'low' }, { x: 15.4, y: 15.8, w: 4, h: 0.8, t: 'low' },
+      { x: 19.4, y: 10.4, w: 0.8, h: 3, t: 'low' }, { x: 9.8, y: 10.4, w: 0.8, h: 3, t: 'low' },
+      { x: 14.2, y: 2.6, w: 0.8, h: 3, t: 'low' }, { x: 15, y: 18, w: 0.8, h: 2.4, t: 'low' },
+    ],
+  },
+  // Grille 3×3 de salles séparées par des cloisons percées de portes (brèche de 3″), symétrique.
+  secteur: {
+    name: 'Secteur',
+    desc: 'Grille de salles reliées par des portes.',
+    terrain: [
+      { x: 11.2, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 11.2, y: 5, w: 0.8, h: 4.5, t: 'wall' },
+      { x: 11.2, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 11.2, y: 20, w: 0.8, h: 2, t: 'wall' },
+      { x: 18, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 18, y: 5, w: 0.8, h: 4.5, t: 'wall' },
+      { x: 18, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 18, y: 20, w: 0.8, h: 2, t: 'wall' },
+      { x: 5, y: 6.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 6.6, w: 3.9, h: 0.8, t: 'wall' },
+      { x: 16.5, y: 6.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 6.6, w: 1.6, h: 0.8, t: 'wall' },
+      { x: 5, y: 14.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 14.6, w: 3.9, h: 0.8, t: 'wall' },
+      { x: 16.5, y: 14.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 14.6, w: 1.6, h: 0.8, t: 'wall' },
+      { x: 14.2, y: 2.6, w: 1.6, h: 0.8, t: 'low' }, { x: 14.2, y: 18.6, w: 1.6, h: 0.8, t: 'low' },
+      { x: 7.4, y: 10.2, w: 0.8, h: 1.6, t: 'low' }, { x: 21.8, y: 10.2, w: 0.8, h: 1.6, t: 'low' },
+    ],
+  },
+};
 
 const mk = o => ({ r: BASE_RADIUS, apl: ACTIONS_PER_ACTIVATION, ap: ACTIONS_PER_ACTIVATION, aimed: false, moved: false, shot: false, activated: false, alive: true, anim: null, flash: 0, ...o, hp: o.w });
 
@@ -84,6 +110,7 @@ export const state = {
   undoState: null,
   pending: null,      // tir déclaré, en attente de confirmation
   duel: null,         // duel de corps à corps en cours (état interactif)
+  terrain: [],        // plan de décor actif, choisi au démarrage (main.js)
   speed: 1,           // accéléré si le joueur clique pendant la résolution
   shake: 0,
   models: [],

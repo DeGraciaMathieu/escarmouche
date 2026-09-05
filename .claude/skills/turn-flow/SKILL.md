@@ -25,12 +25,15 @@ Objet `state` unique, seul dépôt des variables mutables partagées :
 | `hoverModel` | figurine sous le curseur |
 | `undoState` | instantané pour annuler un déplacement |
 | `pending` | tir déclaré en attente `{shooter, target, s}` |
+| `duel` | duel de corps à corps en cours `{atk, def, s}` |
 | `speed` | multiplicateur d'animation |
 | `shake` | intensité du tremblement d'écran |
 | `models` | toutes les figurines (rempli par `main` via `createModels`) |
+| `terrain` | plan de décor actif (choisi au démarrage depuis `MAPS`) |
 | `rng` | générateur à graine (injecté par `main`) |
 
-Données figées : `TEAMS`, `TERRAIN`. Fabrique de l'effectif : `createModels()`.
+Données figées : `TEAMS`. Catalogues : `WEAPONS`, `MELEE_WEAPONS`, `MAPS` (plans de décor,
+choisis à l'écran de démarrage). Fabrique de l'effectif : `createModels()`.
 
 ## Orchestration — `src/loop/turn.js`
 

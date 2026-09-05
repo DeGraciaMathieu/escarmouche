@@ -1,6 +1,6 @@
 import { BW, BH, SELECT_MARGIN, DRAG_MIN_DISTANCE, MOVE_ANIM_BASE, MOVE_ANIM_PER_INCH, TOAST_MS, SPEED_FAST } from '../config.js';
 import { cv } from '../canvas.js';
-import { TERRAIN, state } from '../state/game.js';
+import { state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
 import { canTarget, canFight, inControlRange } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
@@ -38,16 +38,16 @@ cv.addEventListener('mousedown', ev => {
   else {
     // figurine adverse : si elle est en ligne de vue, on garde le tireur sélectionné
     // pour que le clic ouvre la modale de tir au lieu de changer la sélection
-    const chk = (state.selected && state.selected.team === state.side) ? canTarget(state.selected, m, TERRAIN) : { ok: false };
+    const chk = (state.selected && state.selected.team === state.side) ? canTarget(state.selected, m, state.terrain) : { ok: false };
     if (!chk.ok) select(m);
   }
 });
 cv.addEventListener('mousemove', ev => {
   const p = toBoard(ev), m = modelAt(p);
-  if (state.drag) { state.drag.to = p; state.drag.chk = moveCheck(state.drag.m, p, state.models, TERRAIN); state.hoverModel = null; cv.style.cursor = 'grabbing'; return; }
+  if (state.drag) { state.drag.to = p; state.drag.chk = moveCheck(state.drag.m, p, state.models, state.terrain); state.hoverModel = null; cv.style.cursor = 'grabbing'; return; }
   state.hoverModel = m;
   cv.style.cursor = !m ? 'default'
-    : (state.selected && m.team !== state.selected.team && canTarget(state.selected, m, TERRAIN).ok) ? 'crosshair'
+    : (state.selected && m.team !== state.selected.team && canTarget(state.selected, m, state.terrain).ok) ? 'crosshair'
       : (m.team === state.side && !m.activated) ? 'grab' : 'pointer';
 });
 cv.addEventListener('mouseleave', () => { state.hoverModel = null; });
@@ -70,11 +70,11 @@ cv.addEventListener('click', ev => {
   const p = toBoard(ev), m = modelAt(p);
   if (!m || !state.selected || m.team === state.selected.team) return;
   if (state.selected.team !== state.side) { toast('cette figurine ne joue pas ce tour', ev); return; }
-  const chk = canTarget(state.selected, m, TERRAIN);
+  const chk = canTarget(state.selected, m, state.terrain);
   if (!chk.ok) { toast(chk.why, ev); return; }
   // au contact → corps à corps (prioritaire) ; au-delà → tir
   if (inControlRange(state.selected, m)) {
-    const f = canFight(state.selected, m, TERRAIN);
+    const f = canFight(state.selected, m, state.terrain);
     if (!f.ok) { toast(f.why, ev); return; }
     declareFight(state.selected, m, f.s);
   } else declareShot(state.selected, m, chk.s);
