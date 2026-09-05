@@ -57,7 +57,9 @@ tremblement, application des PV, dégâts flottants, morts) — visible car la m
 `state.busy` reste vrai jusqu'à la fin du cinématique.
 
 Toutes les durées, décalages de dés, fréquences de son et intensités de tremblement sont des
-constantes de `config.js` (section « Cadence de la séquence de tir » et suivantes).
+constantes de `config.js` (section « Cadence de la séquence de tir » et suivantes). La cadence
+d'ensemble se règle d'un seul cran avec `COMBAT_PACE` (facteur appliqué à chaque `sleep` ;
+`> 1` = plus posé), sans toucher aux constantes individuelles.
 
 ## Modifier la mécanique de tir
 

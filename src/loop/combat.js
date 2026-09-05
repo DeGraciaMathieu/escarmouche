@@ -1,5 +1,5 @@
 import {
-  DEFENSE_DICE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST,
+  DEFENSE_DICE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST, COMBAT_PACE,
   ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG, DICE_FACES,
   DIE_REVEAL_STEP, ATTACK_SETTLE, ATTACK_NOTE_HOLD, DEFENSE_INTRO, COVER_DIE_DELAY,
   DEFENSE_NOTE_HOLD, CANCEL_ALIGN, CANCEL_POP, DAMAGE_STEP, DAMAGE_SETTLE, DOWN_DELAY,
@@ -23,7 +23,7 @@ import { checkEnd, afterAction } from './turn.js';
 
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const field = document.getElementById('field');
-const sleep = ms => new Promise(r => setTimeout(r, ms * state.speed));
+const sleep = ms => new Promise(r => setTimeout(r, ms * COMBAT_PACE * state.speed));
 const ROW = DIE_ROW;
 const DX = DIE_START_X, GAP = DIE_GAP;
 
@@ -236,7 +236,7 @@ async function throwDice(n, row, from) {
   sfx.throwDice();
   const spin = setInterval(() => out.forEach(d => paintDie(d.el, 1 + Math.floor(Math.random() * DICE_FACES))), DIE_SPIN_INTERVAL);
   await sleep(SPIN_HOLD);
-  out.forEach((d, i) => setTimeout(() => { place(d.el, d.x, row, d.rot, 1); sfx.land(); }, i * DIE_DROP_STEP * state.speed));
+  out.forEach((d, i) => setTimeout(() => { place(d.el, d.x, row, d.rot, 1); sfx.land(); }, i * DIE_DROP_STEP * COMBAT_PACE * state.speed));
   await sleep(DIE_DROP_STEP * n + DROP_SETTLE);
   clearInterval(spin);
   out.forEach(d => { d.v = 1 + Math.floor(state.rng() * DICE_FACES); paintDie(d.el, d.v); d.el.classList.add('land'); });

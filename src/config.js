@@ -52,6 +52,7 @@ export const DIE_GAP = 44;                  // espacement horizontal entre deux 
 export const DIE_ROW = { atk: 22, def: 92 }; // lignes Y des dés d'attaque et de défense (px)
 
 // --- Vitesse d'animation
+export const COMBAT_PACE = 1.3; // cadence globale de la séquence de tir (>1 = plus posé)
 export const SPEED_FAST = 0.28; // facteur d'accélération quand le joueur clique pendant la résolution
 
 // --- Durées d'affichage (ms)
