@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/run-tests.sh\"",
+            "timeout": 120,
+            "statusMessage": "Lancement des tests…"
+          },
+          {
+            "type": "agent",
+            "prompt": "Tu es le vérificateur de cohérence de la documentation d'Escarmouche. La documentation vivante est le bloc `.legend` d'index.html (la prose qui décrit les règles : symboles de rôle ★/▲/●, socle terni déjà activé, et « Aux dés : 6 = critique, une sauvegarde annule une touche, deux annulent une critique »), ainsi que le libellé « tour sur 4 » du bandeau HUD. Ces règles proviennent de src/config.js (CRIT_VALUE, SAVES_PER_CRIT, MAXTURN) et src/rules/combat.js (resolveShot, isCrit/isHit/isSave). IGNORE totalement les textes rendus dynamiquement : les cartes de figurines, les prompts, le journal et tout ce que refresh()/card() génère à partir des données — ils ne peuvent pas dériver. Seule la prose écrite à la main dans index.html doit rester exacte. Lance : git diff HEAD -- src/config.js src/rules/ index.html. Si rien de pertinent n'a changé, ou si la légende décrit toujours fidèlement le code, réponds exactement : accept. Sinon réponds : block, puis liste chaque passage périmé — cite-le, donne sa localisation, et indique la correction que le code impose désormais. Ne réécris pas la documentation toi-même et ne signale aucun problème de style.",
+            "model": "claude-sonnet-4-6",
+            "timeout": 120,
+            "statusMessage": "Vérification de la synchro documentation…"
+          }
+        ]
+      }
+    ]
+  }
+}
