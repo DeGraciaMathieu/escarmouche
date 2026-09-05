@@ -257,7 +257,7 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 import {
   PPI, BW, BH, MAXTURN,
   BASE_RADIUS, ACTIONS_PER_ACTIVATION,
-  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR, COVER_MIN_DISTANCE,
+  MOVE_EPSILON, TERRAIN_MARGIN_FACTOR,
   SELECT_MARGIN, DRAG_MIN_DISTANCE,
   CRIT_VALUE, DEFENSE_DICE, MIN_HIT_TARGET,
   JOURNAL_MAX,
@@ -270,8 +270,11 @@ import {
 import { createRng } from './src/rules/rng.js';
 import { dist, inflate, pointInRect, segRectT } from './src/rules/geometry.js';
 import { aliveOf as aliveOfRule, remaining as remainingRule } from './src/rules/squad.js';
+import { sight as sightRule, canShoot as canShootRule } from './src/rules/sight.js';
 const aliveOf=t=>aliveOfRule(models,t);
 const remaining=t=>remainingRule(models,t);
+const sight=(a,b)=>sightRule(a,b,TERRAIN);
+const canShoot=(m,target)=>canShootRule(m,target,TERRAIN);
 
 // ============================================================
 //  Plateau et données
@@ -336,26 +339,6 @@ function moveCheck(m,to){
   for(const o of models){ if(o===m||!o.alive)continue;
     if (dist(o,to)<o.r+m.r) return {ok:false,why:'place occupée',d}; }
   return {ok:true,d};
-}
-function sight(a,b){
-  const p1={x:a.x,y:a.y},p2={x:b.x,y:b.y},len=dist(p1,p2); let cover=false;
-  for(const rect of TERRAIN){
-    const t=segRectT(p1,p2,rect); if(t===null)continue;
-    if (rect.t==='wall') return {los:false,cover:false,len};
-    if (t*len>COVER_MIN_DISTANCE) cover=true;
-  }
-  return {los:true,cover,len};
-}
-function canShoot(m,target){
-  if(!m||!target||!target.alive||!m.alive) return {ok:false,why:'—'};
-  if(m.team===target.team) return {ok:false,why:'—'};
-  if(m.ap<1) return {ok:false,why:"plus de point d'action"};
-  if(m.shot) return {ok:false,why:'a déjà tiré ce tour'};
-  if(m.weapon.heavy&&m.moved) return {ok:false,why:'arme lourde : elle a bougé'};
-  const s=sight(m,target);
-  if(!s.los) return {ok:false,why:'ligne de vue bloquée',s};
-  if(m.weapon.range&&s.len>m.weapon.range) return {ok:false,why:`hors de portée (${m.weapon.range}″)`,s};
-  return {ok:true,s};
 }
 
 // ============================================================
