@@ -8,22 +8,22 @@ export const TEAMS = {
 // Catalogue d'armes : chaque arme est un objet plat de caractéristiques, lu tel quel par
 // weaponCanFire (portée, lourde) et resolveShot (dés, touche, dégâts). Partagé en lecture seule.
 export const WEAPONS = {
-  pm:       { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 12 },
+  pm:       { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 14 },
   fusil:    { name: 'Fusil de combat', a: 4, bs: 3, dn: 3, dc: 4 },
-  canon:    { name: 'Canon long', a: 4, bs: 2, dn: 4, dc: 5, heavy: true },
+  canon:    { name: 'Canon long', a: 4, bs: 3, dn: 4, dc: 5, heavy: true },
   scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 },
-  carabine: { name: 'Carabine', a: 4, bs: 4, dn: 3, dc: 4 },
-  bolter:   { name: 'Bolter', a: 4, bs: 3, dn: 4, dc: 5, range: 18 },
-  assaut:   { name: "Fusil d'assaut", a: 5, bs: 4, dn: 3, dc: 4, range: 16, tracer: 'assaut' },
+  carabine: { name: 'Carabine', a: 5, bs: 4, dn: 3, dc: 4, range: 14 },
+  bolter:   { name: 'Bolter', a: 3, bs: 3, dn: 4, dc: 5, range: 18 },
+  assaut:   { name: "Fusil d'assaut", a: 4, bs: 4, dn: 4, dc: 5, range: 20, tracer: 'assaut' },
   sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true, tracer: 'sniper' },
-  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 10, overheat: true, tracer: 'plasma' },
+  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 12, overheat: true, tracer: 'plasma' },
 };
 
-// Ensemble cohérent d'armes autorisées pour chaque rôle.
+// Ensemble cohérent d'armes autorisées pour chaque rôle (trois maximum par rôle).
 export const ROLE_LOADOUTS = {
-  meneur: ['pm', 'scie', 'bolter', 'plasma'],
+  meneur: ['pm', 'scie', 'plasma'],
   ligne: ['fusil', 'carabine', 'assaut'],
-  appui: ['canon', 'sniper'],
+  appui: ['canon', 'sniper', 'bolter'],
 };
 
 export const TERRAIN = [
