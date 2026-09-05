@@ -26,6 +26,7 @@ export const SELECT_MARGIN = 0.25;      // marge de sélection au clic au-delà 
 export const DRAG_MIN_DISTANCE = 0.15;  // distance mini de glisser pour déclencher un déplacement (pouces)
 
 // --- Combat
+export const CONTROL_RANGE = 2;   // portée de contrôle (pouces) : au contact → corps à corps
 export const CRIT_VALUE = 6;      // valeur de dé = critique
 export const DEFENSE_DICE = 3;    // nombre de dés de sauvegarde
 export const MIN_HIT_TARGET = 2;  // seuil de touche minimal (2+)

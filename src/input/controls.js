@@ -2,7 +2,7 @@ import { BW, BH, SELECT_MARGIN, DRAG_MIN_DISTANCE, MOVE_ANIM_BASE, MOVE_ANIM_PER
 import { cv } from '../canvas.js';
 import { TERRAIN, state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
-import { canTarget } from '../rules/sight.js';
+import { canTarget, canFight, inControlRange } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
 import { engagedModel } from '../rules/turn.js';
 import { effectiveBs } from '../rules/combat.js';
@@ -10,6 +10,7 @@ import { sfx, audio, tone } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
 import { select, afterAction, endActivation } from '../loop/turn.js';
 import { declareShot, cancelShot, fire } from '../loop/combat.js';
+import { declareFight, cancelFight, fight } from '../loop/melee.js';
 
 function toBoard(ev) {
   const r = cv.getBoundingClientRect();
@@ -71,7 +72,12 @@ cv.addEventListener('click', ev => {
   if (state.selected.team !== state.side) { toast('cette figurine ne joue pas ce tour', ev); return; }
   const chk = canTarget(state.selected, m, TERRAIN);
   if (!chk.ok) { toast(chk.why, ev); return; }
-  declareShot(state.selected, m, chk.s);
+  // au contact → corps à corps (prioritaire) ; au-delà → tir
+  if (inControlRange(state.selected, m)) {
+    const f = canFight(state.selected, m, TERRAIN);
+    if (!f.ok) { toast(f.why, ev); return; }
+    declareFight(state.selected, m, f.s);
+  } else declareShot(state.selected, m, chk.s);
 });
 
 document.getElementById('btnAim').onclick = () => {
@@ -99,6 +105,12 @@ window.addEventListener('keydown', ev => {
     if (ev.key === 'Enter') { ev.preventDefault(); if (document.getElementById('cbCta').style.display !== 'none') fire(); }
     else if (ev.key === 'Escape') { if (document.getElementById('cbCta').style.display !== 'none') cancelShot(); }
     else if (ev.key === ' ') { ev.preventDefault(); state.speed = SPEED_FAST; }
+    return;
+  }
+  if (state.duel) {
+    const cta = document.getElementById('duCta').style.display !== 'none';
+    if (ev.key === 'Enter') { ev.preventDefault(); if (cta) fight(); }
+    else if (ev.key === 'Escape') { if (cta) cancelFight(); }
     return;
   }
   if (state.busy) return;

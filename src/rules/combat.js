@@ -38,3 +38,61 @@ export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc 
     damage: rc * dc + rh * dn,
   };
 }
+
+// ============================================================
+//  Corps à corps — duel alterné frapper / contrer (façon Kill Team)
+// ============================================================
+
+// Classe les dés de mêlée d'un camp en touches normales et critiques (les échecs sont écartés).
+export const classifyMelee = (rolls, ws) => ({
+  hits: rolls.filter(v => isHit(v, ws)).length,
+  crits: rolls.filter(isCrit).length,
+});
+
+const hasDice = s => s.hits + s.crits > 0;
+
+// Fabrique l'état initial d'un duel à partir des deux lots de dés lancés. L'attaquant résout
+// en premier ; si un camp n'a aucune réussite, l'autre résout les siennes.
+export function createMelee({ atkRolls, defRolls, atkWeapon, defWeapon, atkHp, defHp }) {
+  const atk = { ...classifyMelee(atkRolls, atkWeapon.ws), dn: atkWeapon.dn, dc: atkWeapon.dc, hp: atkHp };
+  const def = { ...classifyMelee(defRolls, defWeapon.ws), dn: defWeapon.dn, dc: defWeapon.dc, hp: defHp };
+  const turn = hasDice(atk) ? 'atk' : hasDice(def) ? 'def' : null;
+  return { turn, done: turn === null, dead: null, atk, def };
+}
+
+// Actions légales du camp dont c'est le tour : frapper avec l'un de ses dés, ou contrer un dé
+// adverse. Une normale ne défausse qu'une normale adverse ; une critique défausse n'importe
+// quel dé adverse — seule une critique bloque une critique.
+export function meleeOptions(duel) {
+  if (duel.done || !duel.turn) return [];
+  const me = duel[duel.turn], foe = duel[duel.turn === 'atk' ? 'def' : 'atk'];
+  const opts = [];
+  for (const die of ['crit', 'hit']) {
+    if ((die === 'crit' ? me.crits : me.hits) <= 0) continue;
+    opts.push({ kind: 'strike', die });
+    if (die === 'crit' && foe.crits > 0) opts.push({ kind: 'parry', die, target: 'crit' });
+    if (foe.hits > 0) opts.push({ kind: 'parry', die, target: 'hit' });
+  }
+  return opts;
+}
+
+// Applique une action et rend un nouvel état (sans muter l'argument). Frapper inflige les
+// dégâts du dé (dn/dc de l'arme du frappeur) ; contrer défausse une réussite adverse. Une mort
+// (0 PV) arrête le duel ; sinon la main passe à l'adversaire s'il lui reste des dés, faute de
+// quoi le camp courant résout les siens.
+export function applyMeleeAction(duel, action) {
+  const side = duel.turn, foeSide = side === 'atk' ? 'def' : 'atk';
+  const me = { ...duel[side] }, foe = { ...duel[foeSide] };
+  if (action.die === 'crit') me.crits--; else me.hits--;
+  let dead = duel.dead;
+  if (action.kind === 'strike') {
+    foe.hp = Math.max(0, foe.hp - (action.die === 'crit' ? me.dc : me.dn));
+    if (foe.hp <= 0) dead = foeSide;
+  } else if (action.target === 'crit') foe.crits--; else foe.hits--;
+
+  const next = { ...duel, [side]: me, [foeSide]: foe, dead };
+  if (dead) { next.done = true; return next; }
+  const other = hasDice(foe) ? foeSide : hasDice(me) ? side : null;
+  next.turn = other; next.done = other === null;
+  return next;
+}

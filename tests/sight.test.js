@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sight, canShoot, canTarget, weaponCanFire } from '../src/rules/sight.js';
+import { sight, canShoot, canTarget, weaponCanFire, canFight, inControlRange } from '../src/rules/sight.js';
 
-const shooter = (o = {}) => ({ team: 'A', alive: true, ap: 2, shot: false, moved: false, weapon: { a: 4, bs: 3 }, x: 0, y: 5, ...o });
+const shooter = (o = {}) => ({ team: 'A', alive: true, ap: 2, shot: false, moved: false, weapon: { a: 4, bs: 3 }, meleeWeapon: { a: 4, ws: 3 }, x: 0, y: 5, ...o });
 const target = (o = {}) => ({ team: 'B', alive: true, x: 10, y: 5, ...o });
 
 test('un mur sur la ligne bloque la vue', () => {
@@ -97,4 +97,24 @@ test('on ne peut pas cibler un ennemi derrière un mur', () => {
 test('une arme fait feu si la cible est dans sa portée, pas au-delà', () => {
   assert.equal(weaponCanFire({ range: 12 }, false, { len: 10 }).ok, true);
   assert.equal(weaponCanFire({ range: 8 }, false, { len: 10 }).ok, false);
+});
+
+test('un ennemi au contact et en vue peut être engagé au corps à corps', () => {
+  const chk = canFight(shooter(), target({ x: 1.5, y: 5 }), []); // 1.5″ ≤ portée de contrôle
+  assert.equal(chk.ok, true);
+});
+
+test('on ne peut pas engager un ennemi hors de la portée de contrôle', () => {
+  const chk = canFight(shooter(), target({ x: 10, y: 5 }), []); // 10″ > portée de contrôle
+  assert.equal(chk.ok, false);
+});
+
+test('on ne peut pas engager derrière un mur, même au contact', () => {
+  const wall = [{ x: 0.7, y: 0, w: 0.3, h: 10, t: 'wall' }];
+  assert.equal(canFight(shooter(), target({ x: 1.5, y: 5 }), wall).ok, false);
+});
+
+test('la portée de contrôle se juge sur la distance entre les deux figurines', () => {
+  assert.equal(inControlRange({ x: 0, y: 0 }, { x: 1.5, y: 0 }), true);
+  assert.equal(inControlRange({ x: 0, y: 0 }, { x: 3, y: 0 }), false);
 });

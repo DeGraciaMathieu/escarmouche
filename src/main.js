@@ -4,6 +4,7 @@ import { render } from './loop/render-loop.js';
 import { refresh, journal } from './render/ui.js';
 import { autoSelect } from './loop/turn.js';
 import './loop/combat.js';    // enregistre les gestionnaires du panneau de combat
+import './loop/melee.js';     // enregistre les gestionnaires du duel de corps à corps
 import './input/controls.js'; // enregistre souris, clavier et boutons d'action
 
 // Point d'entrée : c'est ici — et ici seulement — qu'on décide la graine du hasard.

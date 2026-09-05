@@ -31,7 +31,7 @@ function card(m) {
   el.innerHTML = `
     <div class="urow-top"><span class="uname">${m.name}</span><span class="uhp">${m.hp}/${m.w} PV</span></div>
     <div class="hpbar"><i style="width:${100 * m.hp / m.w}%"></i></div>
-    <div class="usub">${statut} · ${m.weapon.name}${m.aimed ? ' · en joue' : ''}</div>`;
+    <div class="usub">${statut} · ${m.weapon.name} / ${m.meleeWeapon.name}${m.aimed ? ' · en joue' : ''}</div>`;
   if (m.alive) el.onclick = () => { if (!state.busy) select(m); };
   return el;
 }
@@ -71,9 +71,10 @@ export function refresh() {
   const p = document.getElementById('promptTxt');
   if (state.over) p.textContent = 'Partie terminée.';
   else if (state.pending) p.innerHTML = `Tir déclaré sur <b>${state.pending.target.name}</b> — confirme pour lancer les dés.`;
+  else if (state.duel) p.innerHTML = `Corps à corps : <b>${state.duel.atk.name}</b> ⚔ <b>${state.duel.def.name}</b>.`;
   else if (state.busy) p.textContent = 'Résolution du tir…';
   else if (!state.selected) p.innerHTML = `Aux <b>${TEAMS[state.side].name}</b> — clique une figurine au halo doré pour l'activer.`;
   else if (state.selected.team !== state.side) p.innerHTML = `<b>${state.selected.name}</b> est dans l'escouade adverse.`;
   else if (state.selected.activated && state.selected.ap <= 0) p.innerHTML = `<b>${state.selected.name}</b> a fini. Il reste ${remaining(state.models, state.side)} figurine${remaining(state.models, state.side) > 1 ? 's' : ''} à activer.`;
-  else p.innerHTML = `<b>${state.selected.name}</b> — glisse-la pour te déplacer (${state.selected.M}″ max)${state.selected.shot ? '' : ', ou clique un réticule adverse pour déclarer un tir'}.`;
+  else p.innerHTML = `<b>${state.selected.name}</b> — glisse-la pour te déplacer (${state.selected.M}″ max)${state.selected.shot ? '' : ', ou clique un adversaire (au contact : corps à corps, sinon tir)'}.`;
 }

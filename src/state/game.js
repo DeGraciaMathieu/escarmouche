@@ -19,6 +19,16 @@ export const WEAPONS = {
   plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 12, overheat: true, tracer: 'plasma' },
 };
 
+// Catalogue d'armes de mêlée : `a` dés d'attaque lancés contre la valeur Touche `ws`, dégâts
+// `dn` par touche normale et `dc` par critique. Lu par createMelee (rules/combat.js). Chaque
+// figurine en porte une, fixe, en plus de son arme de tir.
+export const MELEE_WEAPONS = {
+  crosse:   { name: 'Crosse', a: 3, ws: 4, dn: 2, dc: 3 },
+  couteau:  { name: 'Couteau de combat', a: 4, ws: 3, dn: 3, dc: 4 },
+  machette: { name: 'Machette', a: 4, ws: 3, dn: 3, dc: 5 },
+  hache:    { name: "Hache d'abordage", a: 4, ws: 3, dn: 4, dc: 6 },
+};
+
 // Ensemble cohérent d'armes autorisées pour chaque rôle (trois maximum par rôle).
 export const ROLE_LOADOUTS = {
   meneur: ['pm', 'scie', 'plasma'],
@@ -42,19 +52,19 @@ const mk = o => ({ r: BASE_RADIUS, apl: ACTIONS_PER_ACTIVATION, ap: ACTIONS_PER_
 export function createModels() {
   return [
     mk({ id: 1, team: 'A', name: 'Sergent Kael', role: 'meneur', M: 5, sv: 3, w: 12, x: 3, y: 7,
-      weapon: WEAPONS.pm }),
+      weapon: WEAPONS.pm, meleeWeapon: MELEE_WEAPONS.couteau }),
     mk({ id: 2, team: 'A', name: 'Fusilier Dorn', role: 'ligne', M: 5, sv: 3, w: 12, x: 4.4, y: 11,
-      weapon: WEAPONS.fusil }),
+      weapon: WEAPONS.fusil, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 3, team: 'A', name: 'Tireur Vess', role: 'appui', M: 4, sv: 3, w: 12, x: 3, y: 15,
-      weapon: WEAPONS.canon }),
+      weapon: WEAPONS.canon, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 4, team: 'B', name: 'Chef Sarn', role: 'meneur', M: 7, sv: 4, w: 10, x: 27, y: 6,
-      weapon: WEAPONS.scie }),
+      weapon: WEAPONS.scie, meleeWeapon: MELEE_WEAPONS.hache }),
     mk({ id: 5, team: 'B', name: 'Pillard Kro', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 9.6,
-      weapon: WEAPONS.carabine }),
+      weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
     mk({ id: 6, team: 'B', name: 'Pillard Yun', role: 'ligne', M: 7, sv: 5, w: 8, x: 25.8, y: 13,
-      weapon: WEAPONS.carabine }),
+      weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
     mk({ id: 7, team: 'B', name: 'Pillard Tass', role: 'ligne', M: 7, sv: 5, w: 8, x: 27, y: 16.5,
-      weapon: WEAPONS.carabine }),
+      weapon: WEAPONS.carabine, meleeWeapon: MELEE_WEAPONS.machette }),
   ];
 }
 
@@ -69,6 +79,7 @@ export const state = {
   hoverModel: null,
   undoState: null,
   pending: null,      // tir déclaré, en attente de confirmation
+  duel: null,         // duel de corps à corps en cours (état interactif)
   speed: 1,           // accéléré si le joueur clique pendant la résolution
   shake: 0,
   models: [],

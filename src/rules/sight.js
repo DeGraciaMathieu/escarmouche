@@ -1,4 +1,4 @@
-import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE, MASK_MIN_DISTANCE } from '../config.js';
+import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE, MASK_MIN_DISTANCE, CONTROL_RANGE } from '../config.js';
 import { dist, segRectT, distPointRect } from './geometry.js';
 
 // Ligne de vue de a vers b à travers le décor. Un mur la bloque. Un décor bas traversé produit,
@@ -49,4 +49,17 @@ export function canShoot(m, target, terrain) {
   if (!t.ok) return t;
   const w = weaponCanFire(m.weapon, m.moved, t.s);
   return w.ok ? { ok: true, s: t.s } : { ok: false, why: w.why, s: t.s };
+}
+
+// Deux figurines sont au contact si elles sont à portée de contrôle l'une de l'autre.
+export const inControlRange = (a, b) => dist(a, b) <= CONTROL_RANGE;
+
+// Détermine si m peut engager target au corps à corps : cible adverse en vue (comme au tir),
+// à portée de contrôle, l'attaquant devant posséder une arme de mêlée.
+export function canFight(m, target, terrain) {
+  const t = canTarget(m, target, terrain);
+  if (!t.ok) return t;
+  if (!m.meleeWeapon) return { ok: false, why: "pas d'arme de mêlée", s: t.s };
+  if (!inControlRange(m, target)) return { ok: false, why: `hors de portée de contrôle (${CONTROL_RANGE}″)`, s: t.s };
+  return { ok: true, s: t.s };
 }
