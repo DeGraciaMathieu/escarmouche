@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone de tir — escarmouche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#e6e1d3; --dim:#a29c8e; --brass:#c9a227;
+  --panel:#20261f; --panel-2:#262e24; --line:#3a4239;
+  --good:#8fbf6a; --warn:#d9b03a; --bad:#c4503a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(1200px 700px at 50% -10%, #242b25 0%, #131713 70%), #131713;
+  color:var(--paper); font-family:'Barlow',system-ui,sans-serif;
+  display:flex;justify-content:center;align-items:flex-start;padding:20px;gap:18px;
+}
+button{font-family:'Barlow Condensed',system-ui,sans-serif}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* bandeau d'état */
+.hud{display:flex;gap:12px}
+.hud-turn{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px 14px;
+  display:flex;flex-direction:column;justify-content:center;min-width:104px}
+.hud-turn b{font-family:'Barlow Condensed';font-size:24px;font-weight:600;line-height:1}
+.hud-turn span{font-size:12px;color:var(--dim)}
+.squad{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px 12px;
+  display:flex;flex-direction:column;gap:6px;position:relative;transition:background .18s,border-color .18s}
+.squad.active{border-color:var(--brass);background:var(--panel-2)}
+.squad.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brass)}
+.squad-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.squad-name{font-family:'Barlow Condensed';font-size:18px;font-weight:600}
+.squad-state{font-size:12.5px;color:var(--dim)}
+.squad.active .squad-state{color:var(--brass)}
+.chips{display:flex;gap:5px}
+.chip{width:15px;height:15px;border-radius:50%;border:2px solid var(--tc);background:var(--tc);position:relative;cursor:default}
+.chip.played{background:transparent;opacity:.5}
+.chip.dead{background:transparent;border-color:#4a5147;opacity:.75}
+.chip.dead::after{content:'';position:absolute;inset:2px;border-top:2px solid #6b7267;transform:rotate(-45deg)}
+.chip.now{box-shadow:0 0 0 3px rgba(201,162,39,.35)}
+
+/* plateau */
+.board-wrap{position:relative;padding:13px;background:linear-gradient(#3a3126,#241e17);border-radius:6px;
+  box-shadow:0 24px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07)}
+canvas{display:block;width:100%;height:auto;border-radius:2px;box-shadow:inset 0 0 60px rgba(0,0,0,.55)}
+.prompt{display:flex;align-items:center;gap:12px;min-height:38px;background:var(--panel);
+  border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:3px;padding:8px 13px}
+.prompt .txt{font-size:15px;line-height:1.35}
+.prompt .keys{margin-left:auto;font-size:12px;color:var(--dim);white-space:nowrap}
+kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:3px;padding:1px 5px}
+
+.toast{position:absolute;transform:translate(-50%,-140%);pointer-events:none;background:var(--bad);color:#fff;
+  font-family:'Barlow Condensed';font-size:15px;padding:5px 11px;border-radius:3px;opacity:0;
+  transition:opacity .16s,transform .16s;white-space:nowrap;z-index:5}
+.toast.show{opacity:1;transform:translate(-50%,-170%)}
+.flash{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:6;opacity:0;transition:opacity .25s}
+.flash.show{opacity:1}
+.flash div{background:rgba(14,18,14,.9);border:1px solid var(--fc);border-left:5px solid var(--fc);
+  padding:14px 30px;border-radius:3px;text-align:center}
+.flash h3{font-family:'Barlow Condensed';font-size:27px;margin:0;font-weight:600}
+.flash p{margin:2px 0 0;font-size:14px;color:var(--dim)}
+
+/* ---------- panneau de combat ---------- */
+.combat{
+  position:absolute;left:50%;bottom:20px;transform:translateX(-50%) translateY(14px);
+  width:590px;background:rgba(12,16,12,.96);border:1px solid var(--line);border-radius:4px;
+  box-shadow:0 20px 46px rgba(0,0,0,.65);padding:14px 18px 16px;display:none;opacity:0;
+  transition:opacity .2s,transform .2s;z-index:7;
+}
+.combat.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+.cb-head{display:flex;align-items:center;gap:10px;font-family:'Barlow Condensed';font-size:19px;padding-bottom:9px;
+  border-bottom:1px solid var(--line);margin-bottom:10px}
+.cb-head .arrow{color:var(--brass)}
+.cb-head .meta{margin-left:auto;font-size:14px;color:var(--dim)}
+.cb-brief{display:flex;gap:22px;font-size:13.5px;color:var(--dim);margin-bottom:12px;line-height:1.5}
+.cb-brief b{color:var(--paper);font-weight:600;font-family:'Barlow Condensed';font-size:15px}
+.cb-brief .col{flex:1}
+.cb-cta{display:flex;gap:8px;align-items:center}
+.cb-cta button{font-size:17px;padding:9px 20px;border-radius:3px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer}
+.cb-cta button.fire{background:var(--brass);border-color:var(--brass);color:#191b12;font-weight:600}
+.cb-cta button.fire:hover{background:#dcb536}
+.cb-cta .k{margin-left:auto;font-size:12px;color:var(--dim)}
+
+.field{position:relative;height:158px;margin:2px 0 4px}
+.f-label{position:absolute;left:0;width:96px;text-align:right;font-family:'Barlow Condensed';
+  font-size:15px;color:var(--dim);line-height:1.15}
+.f-label b{display:block;color:var(--paper);font-weight:600}
+.f-note{position:absolute;font-family:'Barlow Condensed';font-size:15px;color:var(--dim);
+  opacity:0;transition:opacity .25s}
+.f-note.show{opacity:1}
+.f-note em{font-style:normal;color:var(--paper)}
+.die{position:absolute;width:36px;height:36px;border-radius:5px;background:#ded8c8;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:5px;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.22),0 3px 5px rgba(0,0,0,.45);
+  transition:transform .42s cubic-bezier(.2,.8,.3,1), opacity .3s;}
+.die i{background:#20261f;border-radius:50%;width:6px;height:6px;align-self:center;justify-self:center}
+.die.hit{background:#cf9f34}
+.die.crit{background:#efc94f;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 0 0 2px var(--brass),0 3px 5px rgba(0,0,0,.45)}
+.die.miss{background:#6f6a5e;opacity:.45}
+.die.save{background:#7fa6c4}
+.die.cover{background:#6f9a78}
+.die.pop{animation:pop .34s ease-out forwards}
+@keyframes pop{0%{filter:brightness(2.4)}60%{filter:brightness(1)}100%{transform:scale(.2);opacity:0}}
+.die.land{animation:land .22s ease-out}
+@keyframes land{0%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+.die.pulse{animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{from{box-shadow:inset 0 -2px 0 rgba(0,0,0,.22),0 0 0 0 rgba(232,128,74,.7),0 3px 5px rgba(0,0,0,.45)}
+                 to{box-shadow:inset 0 -2px 0 rgba(0,0,0,.22),0 0 0 6px rgba(232,128,74,0),0 3px 5px rgba(0,0,0,.45)}}
+.tally{position:absolute;right:4px;top:52px;text-align:right;font-family:'Barlow Condensed';opacity:0;transition:opacity .2s}
+.tally.show{opacity:1}
+.tally b{display:block;font-size:38px;line-height:.95;color:var(--brass)}
+.tally span{font-size:13px;color:var(--dim)}
+.cb-verdict{font-family:'Barlow Condensed';font-size:20px;min-height:26px;text-align:center;padding-top:2px}
+.cb-verdict em{font-style:normal;color:var(--brass)}
+.cb-skip{position:absolute;right:14px;bottom:10px;font-size:11.5px;color:#6d7468}
+
+.banner{position:absolute;inset:0;display:none;place-items:center;background:rgba(10,13,10,.85);border-radius:6px;z-index:8}
+.banner.show{display:grid}
+.banner h2{font-family:'Barlow Condensed';font-size:38px;margin:0 0 4px;text-align:center}
+.banner p{margin:0 0 16px;color:var(--dim);text-align:center;font-size:15px}
+.banner button{font-size:18px;padding:10px 24px;background:var(--brass);border:0;border-radius:3px;color:#191b12;cursor:pointer;display:block;margin:0 auto}
+
+/* colonne droite */
+.side-col{width:334px;display:flex;flex-direction:column;gap:12px;flex:none}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:11px 12px}
+.block h2{font-family:'Barlow Condensed';font-size:15px;font-weight:600;margin:0 0 8px;color:var(--dim)}
+.act-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.act-name{font-family:'Barlow Condensed';font-size:20px;font-weight:600}
+.act-name.empty{color:var(--dim);font-weight:500}
+.pips{display:flex;gap:4px}
+.pips i{width:11px;height:11px;border-radius:50%;background:#39412f;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+.pips i.on{background:var(--brass)}
+.pips.sm i{width:7px;height:7px}
+.act-sub{font-size:12.5px;color:var(--dim);margin:-4px 0 9px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.actions button{font-size:16px;padding:9px 6px;border-radius:3px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
+.actions button:hover:not(:disabled){background:#323c2e;border-color:var(--brass)}
+.actions button.on{background:var(--brass);color:#191b12;border-color:var(--brass)}
+.actions button:disabled{opacity:.3;cursor:default}
+.actions button.wide{grid-column:span 2}
+.actions .k{opacity:.55;font-size:12px;margin-left:4px}
+.card{background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:3px;
+  padding:7px 10px;margin-bottom:6px;cursor:pointer;transition:background .12s,transform .12s,border-color .12s}
+.card:hover{background:#2d372a}
+.card.sel{border-color:var(--brass);background:#333d2d;transform:translateX(3px)}
+.card.played{opacity:.45}
+.card.dead{opacity:.3;filter:grayscale(1);cursor:default}
+.card.dead .cname{text-decoration:line-through}
+.card.aimed-at{box-shadow:0 0 0 1px var(--bad) inset}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cname{font-family:'Barlow Condensed';font-size:17px;font-weight:600}
+.tagline{font-size:11.5px;color:var(--dim)}
+.stats{display:flex;gap:11px;margin-top:2px;font-family:'Barlow Condensed';font-size:14px;color:var(--dim)}
+.stats b{color:var(--paper);font-weight:600}
+.weap{font-size:12px;color:var(--dim);margin-top:2px}
+.hpbar{height:4px;background:#161a15;margin-top:6px;border-radius:2px;overflow:hidden}
+.hpbar i{display:block;height:100%;background:var(--tc);transition:width .45s ease-out}
+.journal{list-style:none;margin:0;padding:0;font-size:13.5px;color:var(--dim);line-height:1.45}
+.journal li{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.journal li:first-child{color:var(--paper)}
+.journal li:last-child{border:0}
+.journal b{color:var(--paper);font-weight:500}
+.legend{font-size:12.5px;color:var(--dim);line-height:1.6}
+.legend span{color:var(--paper)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:1200px){body{flex-direction:column;align-items:center}.side-col{width:100%;max-width:920px}}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="hud">
+    <div class="hud-turn"><b id="turnNum">1</b><span>tour sur 4</span></div>
+    <div class="squad" id="squadA" style="--tc:#5c7f9e">
+      <div class="squad-top"><span class="squad-name">Garde de Fer</span><span class="squad-state" id="stateA"></span></div>
+      <div class="chips" id="chipsA"></div>
+    </div>
+    <div class="squad" id="squadB" style="--tc:#b4553a">
+      <div class="squad-top"><span class="squad-name">Écumeurs</span><span class="squad-state" id="stateB"></span></div>
+      <div class="chips" id="chipsB"></div>
+    </div>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <canvas id="cv" width="900" height="660"></canvas>
+    <div class="toast" id="toast"></div>
+    <div class="flash" id="flash"><div><h3 id="flashTitle"></h3><p id="flashSub"></p></div></div>
+
+    <div class="combat" id="combat">
+      <div class="cb-head">
+        <span id="cbShooter"></span><span class="arrow">→</span><span id="cbTarget"></span>
+        <span class="meta" id="cbMeta"></span>
+      </div>
+      <div id="cbBrief" class="cb-brief"></div>
+      <div id="cbCta" class="cb-cta">
+        <button class="fire" id="btnFire">Ouvrir le feu</button>
+        <button id="btnCancelShot">Annuler</button>
+        <span class="k"><kbd>Entrée</kbd> tirer · <kbd>Échap</kbd> annuler</span>
+      </div>
+      <div class="field" id="field" style="display:none">
+        <div class="f-label" id="labAtk" style="top:34px"></div>
+        <div class="f-label" id="labDef" style="top:104px"></div>
+        <div class="f-note" id="noteAtk" style="left:110px;top:2px"></div>
+        <div class="f-note" id="noteDef" style="left:110px;top:74px"></div>
+        <div class="tally" id="tally"><b id="tallyNum">0</b><span>dégâts</span></div>
+      </div>
+      <div class="cb-verdict" id="cbVerdict"></div>
+      <div class="cb-skip" id="cbSkip"></div>
+    </div>
+
+    <div class="banner" id="banner"><div>
+      <h2 id="bannerTitle"></h2><p id="bannerSub"></p>
+      <button onclick="location.reload()">Rejouer</button>
+    </div></div>
+  </div>
+
+  <div class="prompt">
+    <span class="txt" id="promptTxt"></span>
+    <span class="keys"><kbd>Tab</kbd> figurine suivante · <kbd>V</kbd> viser · <kbd>Z</kbd> annuler · <kbd>Espace</kbd> terminer</span>
+  </div>
+</div>
+
+<div class="side-col">
+  <div class="block">
+    <div class="act-head">
+      <span class="act-name empty" id="actName">Aucune figurine sélectionnée</span>
+      <span class="pips" id="actPips"></span>
+    </div>
+    <div class="act-sub" id="actSub"></div>
+    <div class="actions">
+      <button id="btnAim">Viser<span class="k">V</span></button>
+      <button id="btnUndo">Annuler le déplacement<span class="k">Z</span></button>
+      <button id="btnEnd" class="wide">Terminer l'activation<span class="k">Espace</span></button>
+    </div>
+  </div>
+  <div class="block"><h2>Journal</h2><ul class="journal" id="journal"></ul></div>
+  <div class="block">
+    <h2>Garde de Fer</h2><div id="rosterA"></div>
+    <h2 style="margin-top:10px">Écumeurs</h2><div id="rosterB"></div>
+  </div>
+  <div class="block legend">
+    <span>★</span> meneur · <span>▲</span> appui · <span>●</span> ligne<br>
+    Un socle terni avec un jeton sombre a déjà été activé ce tour.<br>
+    Aux dés : <span>6</span> = critique, une sauvegarde annule une touche, deux annulent une critique.
+  </div>
+</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
