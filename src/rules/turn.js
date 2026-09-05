@@ -19,6 +19,16 @@ export function engagedModel(models, side) {
   return models.find(m => m.alive && m.team === side && m.activated && m.ap > 0) || null;
 }
 
+// Une figurine peut agir (déplacer, viser, tirer, combattre) si elle est vivante, de son camp,
+// qu'il lui reste un point d'action, et qu'aucune AUTRE figurine du camp n'est déjà engagée dans
+// son activation. Reste vrai en cours d'activation — elle a déjà agi mais garde un PA (ex. se
+// déplacer une seconde fois).
+export function canAct(m, models, side) {
+  if (!m || !m.alive || m.team !== side || m.ap <= 0) return false;
+  const busy = engagedModel(models, side);
+  return !busy || busy === m;
+}
+
 // Vainqueur par anéantissement : rend l'escouade adverse si l'une est entièrement hors de
 // combat, sinon null.
 export function annihilationWinner(models) {

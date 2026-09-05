@@ -4,7 +4,7 @@ import { state } from '../state/game.js';
 import { dist } from '../rules/geometry.js';
 import { canTarget, canFight, inControlRange } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
-import { engagedModel } from '../rules/turn.js';
+import { engagedModel, canAct } from '../rules/turn.js';
 import { sfx, audio } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
 import { select, endActivation } from '../loop/turn.js';
@@ -31,12 +31,17 @@ function toast(msg, ev) {
 cv.addEventListener('mousedown', ev => {
   if (state.busy || state.over || isAiControlled(state.side)) return; audio();
   const p = toBoard(ev), m = modelAt(p); if (!m) return;
-  if (m.team === state.side && !m.activated) {
-    const busy = engagedModel(state.models, state.side);
-    if (busy) { select(busy); toast("termine l'activation en cours", ev); return; }
-    select(m); if (m.ap > 0) { state.drag = { m, to: { x: m.x, y: m.y }, chk: { ok: false, d: 0 } }; sfx.pick(); }
-  } else if (m.team === state.side) { select(m); toast('déjà activée ce tour', ev); }
-  else {
+  if (m.team === state.side) {
+    if (!canAct(m, state.models, state.side)) {
+      // soit une autre figurine est engagée (finir son activation), soit plus de PA (activée)
+      const busy = engagedModel(state.models, state.side);
+      if (busy && busy !== m) { select(busy); toast("termine l'activation en cours", ev); return; }
+      select(m); toast('déjà activée ce tour', ev); return;
+    }
+    // il reste un PA : on peut agir, y compris se déplacer une seconde fois dans l'activation
+    select(m);
+    state.drag = { m, to: { x: m.x, y: m.y }, chk: { ok: false, d: 0 } }; sfx.pick();
+  } else {
     // figurine adverse : si elle est en ligne de vue, on garde le tireur sélectionné
     // pour que le clic ouvre la modale de tir au lieu de changer la sélection
     const chk = (state.selected && state.selected.team === state.side) ? canTarget(state.selected, m, state.terrain) : { ok: false };

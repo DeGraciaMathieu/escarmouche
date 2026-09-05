@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideActivationEnd, engagedModel, annihilationWinner, attritionWinner } from '../src/rules/turn.js';
+import { decideActivationEnd, engagedModel, canAct, annihilationWinner, attritionWinner } from '../src/rules/turn.js';
 
 const m = (team, o = {}) => ({ team, alive: true, activated: false, ap: 2, hp: 10, ...o });
 
@@ -13,6 +13,30 @@ test('une figurine entamée mais pas terminée reste engagée : on ne peut pas e
 test('une figurine aux points épuisés n\'est plus engagée : la main peut passer', () => {
   const models = [m('A', { activated: true, ap: 0 }), m('B')];
   assert.equal(engagedModel(models, 'A'), null);
+});
+
+test('une figurine qui a déjà bougé mais garde un PA peut encore agir (2 actions par activation)', () => {
+  const bougee = m('A', { activated: true, moved: true, ap: 1 }); // a dépensé 1 PA sur un déplacement
+  assert.equal(canAct(bougee, [bougee, m('B')], 'A'), true); // régression : rebouger reste permis
+});
+
+test('une figurine sans PA ne peut plus agir', () => {
+  const finie = m('A', { activated: true, ap: 0 });
+  assert.equal(canAct(finie, [finie, m('B')], 'A'), false);
+});
+
+test('on ne peut pas agir avec une figurine tant qu\'une autre est engagée, mais l\'engagée oui', () => {
+  const engagee = m('A', { activated: true, ap: 1 });
+  const autre = m('A');
+  const models = [engagee, autre, m('B')];
+  assert.equal(canAct(autre, models, 'A'), false);   // bloquée par l'activation en cours
+  assert.equal(canAct(engagee, models, 'A'), true);  // l'engagée peut poursuivre
+});
+
+test('on ne peut pas agir avec une figurine du camp adverse ou morte', () => {
+  const ennemie = m('B', { ap: 2 }), morte = m('A', { alive: false });
+  assert.equal(canAct(ennemie, [ennemie], 'A'), false);
+  assert.equal(canAct(morte, [morte], 'A'), false);
 });
 
 test('quand l\'adverse a encore des figurines, la main passe à l\'autre camp', () => {
