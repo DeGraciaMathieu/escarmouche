@@ -9,12 +9,11 @@ export const TEAMS = {
 // weaponCanFire (portée, lourde) et resolveShot (dés, touche, dégâts). Partagé en lecture seule.
 export const WEAPONS = {
   pm:       { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 14 },
-  fusil:    { name: 'Fusil de combat', a: 4, bs: 3, dn: 3, dc: 4 },
   canon:    { name: 'Canon long', a: 4, bs: 3, dn: 4, dc: 5, heavy: true },
   scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 },
-  carabine: { name: 'Carabine', a: 5, bs: 4, dn: 3, dc: 4, range: 14 },
+  carabine: { name: 'Carabine', a: 6, bs: 4, dn: 2, dc: 3, range: 10 },
   bolter:   { name: 'Bolter', a: 3, bs: 3, dn: 4, dc: 5, range: 18 },
-  assaut:   { name: "Fusil d'assaut", a: 4, bs: 4, dn: 4, dc: 5, range: 20, tracer: 'assaut' },
+  assaut:   { name: "Fusil d'assaut", a: 3, bs: 3, dn: 4, dc: 5, range: 20, tracer: 'assaut' },
   sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true, tracer: 'sniper' },
   plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 12, overheat: true, tracer: 'plasma' },
 };
@@ -32,7 +31,7 @@ export const MELEE_WEAPONS = {
 // Ensemble cohérent d'armes autorisées pour chaque rôle (trois maximum par rôle).
 export const ROLE_LOADOUTS = {
   meneur: ['pm', 'scie', 'plasma'],
-  ligne: ['fusil', 'carabine', 'assaut'],
+  ligne: ['carabine', 'assaut'],
   appui: ['canon', 'sniper', 'bolter'],
 };
 
@@ -80,7 +79,7 @@ export function createModels() {
     mk({ id: 1, team: 'A', name: 'Sergent Kael', role: 'meneur', M: 5, sv: 3, w: 12, x: 3, y: 7,
       weapon: WEAPONS.pm, meleeWeapon: MELEE_WEAPONS.couteau }),
     mk({ id: 2, team: 'A', name: 'Fusilier Dorn', role: 'ligne', M: 5, sv: 3, w: 12, x: 4.4, y: 11,
-      weapon: WEAPONS.fusil, meleeWeapon: MELEE_WEAPONS.crosse }),
+      weapon: WEAPONS.assaut, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 3, team: 'A', name: 'Tireur Vess', role: 'appui', M: 4, sv: 3, w: 12, x: 3, y: 15,
       weapon: WEAPONS.canon, meleeWeapon: MELEE_WEAPONS.crosse }),
     mk({ id: 8, team: 'A', name: 'Fusilier Bram', role: 'ligne', M: 5, sv: 3, w: 12, x: 4.4, y: 4,

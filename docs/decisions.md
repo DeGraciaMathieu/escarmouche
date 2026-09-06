@@ -90,8 +90,12 @@ pas changer le jeu.
 - **Sélection automatique de cible / d'activation** (`autoSelect`, `loop/turn.js`) : l'ordre
   dépend de l'ordre interne du tableau `models`, sans critère de priorité explicite.
   Conservé tel quel.
-- **Armes sans portée** (`Fusil de combat`, `Carabine`) : aucune propriété `range`, donc
-  portée illimitée. Comportement d'origine conservé (voir Questions ouvertes).
+- **Armes sans portée** (`Canon long`) : aucune propriété `range`, donc portée illimitée.
+  Comportement d'origine conservé (voir Questions ouvertes).
+- **Armes de la ligne** : le `Fusil de combat` (trop proche de la carabine et du fusil d'assaut)
+  a été retiré ; la ligne choisit désormais entre `Carabine` (volume à courte portée : `a6`,
+  `bs4`, `dn2/dc3`, 10″) et `Fusil d'assaut` (peu de tirs mais lourds à moyenne portée : `a3`,
+  `bs3`, `dn4/dc5`, 20″), deux profils volontairement opposés.
 - **Facteur de marge de collision `0.92`** (`TERRAIN_MARGIN_FACTOR`) : valeur empirique non
   commentée à l'origine ; extraite en constante mais non modifiée.
 
