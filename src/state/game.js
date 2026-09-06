@@ -94,6 +94,37 @@ export const MAPS = {
       ...skin('barricade', { x: 14.2, y: 2.6, w: 1.6, h: 0.8, t: 'low' }, { x: 14.2, y: 18.6, w: 1.6, h: 0.8, t: 'low' }),
     ],
   },
+  // Complexe fortifié : bunker central à trois portes, deux salles verrouillées à porte unique,
+  // couloir central et lanes hautes. Symétrique autour de l'axe vertical (x = 15). Portes = brèches
+  // de 3″ (passage libre après inflation ≈ 1,9″). Objectifs (15,6) / (9,15) / (21,15) à l'intérieur.
+  bastion: {
+    name: 'Bastion',
+    desc: 'Bunker à trois portes et deux salles verrouillées.',
+    terrain: [
+      // Bunker central (objectif 15,6) : murs sur les 4 côtés, portes de 4″ gauche/droite/bas
+      // (≈2,9″ de passage libre après inflation). Façade haute close.
+      ...skin('building',
+        { x: 11.5, y: 2.5, w: 7, h: 0.7, t: 'wall' },
+        { x: 11.5, y: 9.5, w: 1.5, h: 0.7, t: 'wall' }, { x: 17, y: 9.5, w: 1.5, h: 0.7, t: 'wall' },     // bas, porte 13–17
+        { x: 11.5, y: 3.2, w: 0.7, h: 0.8, t: 'wall' }, { x: 11.5, y: 8, w: 0.7, h: 2.2, t: 'wall' },     // gauche, porte 4–8
+        { x: 17.8, y: 3.2, w: 0.7, h: 0.8, t: 'wall' }, { x: 17.8, y: 8, w: 0.7, h: 2.2, t: 'wall' }),    // droite, porte 4–8
+      // Salle gauche verrouillée (objectif 9,15) : porte unique en haut (7–11) vers le couloir.
+      ...skin('building',
+        { x: 5.5, y: 13.3, w: 1.5, h: 0.7, t: 'wall' }, { x: 11, y: 13.3, w: 1.5, h: 0.7, t: 'wall' },
+        { x: 5.5, y: 18.8, w: 7, h: 0.7, t: 'wall' },
+        { x: 5.5, y: 13.3, w: 0.7, h: 6.2, t: 'wall' }, { x: 11.8, y: 13.3, w: 0.7, h: 6.2, t: 'wall' }),
+      // Salle droite verrouillée (objectif 21,15), miroir : porte unique en haut (19–23).
+      ...skin('building',
+        { x: 17.5, y: 13.3, w: 1.5, h: 0.7, t: 'wall' }, { x: 23, y: 13.3, w: 1.5, h: 0.7, t: 'wall' },
+        { x: 17.5, y: 18.8, w: 7, h: 0.7, t: 'wall' },
+        { x: 17.5, y: 13.3, w: 0.7, h: 6.2, t: 'wall' }, { x: 23.8, y: 13.3, w: 0.7, h: 6.2, t: 'wall' }),
+      // Pylônes hauts : partitionnent la bande supérieure en lanes.
+      ...skin('ruin', { x: 9.5, y: 0, w: 0.7, h: 3.5, t: 'wall' }, { x: 19.8, y: 0, w: 0.7, h: 3.5, t: 'wall' }),
+      // Couvert bas, hors des couloirs de porte : approche haute/basse et flancs du bunker.
+      ...skin('barricade', { x: 13.4, y: 1, w: 3.2, h: 0.7, t: 'low' }, { x: 13.4, y: 20.3, w: 3.2, h: 0.7, t: 'low' }),
+      ...skin('crates', { x: 6.2, y: 8, w: 1.4, h: 1.4, t: 'low' }, { x: 22.4, y: 8, w: 1.4, h: 1.4, t: 'low' }),
+    ],
+  },
   // Avant-poste industriel : conteneurs, bâtiment central, cuves et couvert épars, assemblé de pièces.
   avantPoste: {
     name: 'Avant-poste',
