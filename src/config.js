@@ -54,7 +54,13 @@ export const AI_PRIO_AIM = 3;
 export const AI_PRIO_SHOOT = 2;
 export const AI_PRIO_MOVE = 1;
 export const AI_PRIO_END = 0;
-export const AI_TARGET_HP_WEIGHT = 1000; // au tir, poids des PV de la cible (achever les plus faibles avant de départager à la distance)
+// Départage tactique du tir (choix de cible) : achever prime, puis dégâts attendus, puis distance.
+export const AI_W_KILL = 1000000;   // bonus si le tir peut achever la cible (sécuriser un kill/point)
+export const AI_W_DAMAGE = 100;     // poids des dégâts attendus
+export const AI_W_DIST = 1;         // départage par la proximité
+export const AI_COVER_FACTOR = 0.5; // les dégâts attendus sur une cible à couvert sont réduits de moitié
+// Positionnement : valeur (en « pouces de progression » vers le but) d'une destination à couvert.
+export const AI_W_COVER = 2;
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal

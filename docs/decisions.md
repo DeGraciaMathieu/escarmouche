@@ -145,9 +145,18 @@ pas changer le jeu.
   objectif) : le nombre nécessaire pour départager un objectif disputé est reporté à l'incrément 3.
   Priorités inchangées → tir/mêlée priment sur la marche vers un objectif (on ne sacrifie pas un
   kill). Les tests IA restent le contrat d'iso-comportement ; 3 macro-tests ajoutés pour la zone.
-- **Incréments suivants (à venir)** : 2) ciblage & positionnement (tactique : chance de touche,
-  traits d'arme, couvert) ; 3) ordre d'activation, coordination (nombre par objectif) & tempo
-  selon le score/tour.
+- **Incrément 2 (fait)** : ciblage & positionnement (tactique). Le tir est noté par des **dégâts
+  attendus** heuristiques (`expectedDamage` : dés × chance de touche via `effectiveBs`, moins les
+  sauvegardes attendues ; masquage −1 réussite, couvert +1 dé de save et facteur `AI_COVER_FACTOR`,
+  saturation ignore le couvert) ; **achever** une cible prime (`AI_W_KILL`), puis les dégâts, puis
+  la proximité. Le déplacement préfère, à progression comparable, une destination **à couvert** de
+  l'ennemi le plus proche (`coverAt` sonde `sight`, poids `AI_W_COVER`) — effet net : l'IA infléchit
+  vers le couvert quand l'axe direct est comparable ou barré. L'heuristique de dégâts ignore
+  volontairement crits/traits fins (perforante partiellement via `defenseDice`) : elle sert à
+  **comparer** des cibles, pas à prédire (les dés restent lancés par `resolveShot`). L'arme lourde
+  reste gérée par l'échelle (tir prioritaire ; si hors de portée, bouger ne coûte aucun tir).
+- **Incrément suivant (à venir)** : 3) ordre d'activation, coordination (nombre de figurines par
+  objectif disputé) & tempo selon le score/tour.
 - **Poids et priorités** dans `config.js` (`AI_PRIO_*`, `AI_TARGET_HP_WEIGHT`) : valeurs de
   départ, ajustables ; le grand écart entre priorités garantit que l'ordre prime le départage.
 

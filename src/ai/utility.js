@@ -1,7 +1,9 @@
 import { dist } from '../rules/geometry.js';
-import { canShoot, canFight } from '../rules/sight.js';
+import { canShoot, canFight, sight } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
-import { AI_PRIO_FIGHT, AI_PRIO_AIM, AI_PRIO_SHOOT, AI_PRIO_MOVE, AI_PRIO_END, AI_TARGET_HP_WEIGHT, OBJECTIVE_RANGE } from '../config.js';
+import { attackDice, defenseDice, effectiveBs } from '../rules/combat.js';
+import { AI_PRIO_FIGHT, AI_PRIO_AIM, AI_PRIO_SHOOT, AI_PRIO_MOVE, AI_PRIO_END,
+  AI_W_KILL, AI_W_DAMAGE, AI_W_DIST, AI_COVER_FACTOR, AI_W_COVER, OBJECTIVE_RANGE, DICE_FACES } from '../config.js';
 
 // ============================================================
 //  Moteur d'utilité de l'IA — PUR (aucun DOM, aucun hasard).
@@ -10,6 +12,38 @@ import { AI_PRIO_FIGHT, AI_PRIO_AIM, AI_PRIO_SHOOT, AI_PRIO_MOVE, AI_PRIO_END, A
 // ============================================================
 
 const nearest = (m, list) => list.reduce((a, b) => (dist(m, b) < dist(m, a) ? b : a));
+
+// Dégâts attendus (heuristique) d'un tir de `m` sur `target` vu par `s` : dés d'attaque × chance
+// de touche × dégâts, moins les sauvegardes attendues. Le masquage retire une réussite, le couvert
+// ajoute un dé de sauvegarde (sauf saturation) et réduit l'efficacité. Sert à comparer des cibles,
+// pas à prédire le résultat réel (les dés restent lancés par resolveShot).
+function expectedDamage(m, target, s) {
+  const w = m.weapon;
+  const hitChance = (DICE_FACES - effectiveBs(w.bs, m.aimed) + 1) / DICE_FACES;
+  const hits = attackDice(w) * hitChance - (s.masked ? 1 : 0);
+  const covered = s.cover && !w.saturate;
+  const saveDice = defenseDice(w) + (covered ? 1 : 0);
+  const saveChance = (DICE_FACES - target.sv + 1) / DICE_FACES;
+  const net = Math.max(0, hits - saveDice * saveChance);
+  return net * w.dn * (covered ? AI_COVER_FACTOR : 1);
+}
+
+// Valeur d'un tir : achever la cible prime (sécurise un kill), puis maximiser les dégâts attendus,
+// puis départager par la proximité.
+function shootValue(m, target, s) {
+  const dmg = expectedDamage(m, target, s);
+  return (dmg >= target.hp ? AI_W_KILL : 0) + dmg * AI_W_DAMAGE - dist(m, target) * AI_W_DIST;
+}
+
+// La destination `p` met-elle `m` à l'abri de l'ennemi le plus proche (vue coupée, couvert ou
+// masquage) ? Rend 1 si oui, 0 sinon. On sonde `sight` depuis l'ennemi vers la destination.
+function coverAt(p, m, enemies, terrain, models) {
+  if (!enemies.length) return 0;
+  const foe = nearest(p, enemies);
+  const others = models.filter(x => x !== m);
+  const s = sight(foe, { x: p.x, y: p.y, r: m.r, alive: true }, terrain, others);
+  return (!s.los || s.cover || s.masked) ? 1 : 0;
+}
 
 // Destinations candidates pour se rapprocher de `target` : le long de l'axe (distances
 // décroissantes) puis en éventail, pour contourner un obstacle.
@@ -24,16 +58,16 @@ function approachDestinations(m, target) {
   return cands;
 }
 
-// Meilleur déplacement pour se rapprocher de `target` (destination légale la plus proche du but),
-// ou null si aucune n'est atteignable.
-function bestApproach(m, target, models, terrain) {
-  let best = null, bestD = Infinity;
+// Meilleur déplacement vers `target` : on maximise la progression vers le but tout en préférant,
+// à progression comparable, une destination à couvert de l'ennemi. Rend null si rien d'atteignable.
+function bestApproach(m, target, enemies, models, terrain) {
+  let best = null, bestScore = -Infinity;
   for (const p of approachDestinations(m, target)) {
     const chk = moveCheck(m, p, models, terrain);
     if (!chk.ok) continue;
     const to = chk.path[chk.path.length - 1];
-    const nd = dist(target, to);
-    if (nd < bestD) { bestD = nd; best = { dest: p, d: nd }; }
+    const score = -dist(target, to) + AI_W_COVER * coverAt(to, m, enemies, terrain, models);
+    if (score > bestScore) { bestScore = score; best = { dest: p, d: dist(target, to) }; }
   }
   return best;
 }
@@ -53,10 +87,10 @@ export function candidateActions(state, m, side, goal = { kind: 'attack' }) {
       const f = canFight(m, e, terrain);
       if (f.ok) cands.push({ priority: AI_PRIO_FIGHT, value: -dist(m, e), intention: { type: 'fight', model: m, target: e, s: f.s } });
     }
-    // Tir : départagé en achevant les cibles les plus faibles d'abord, puis les plus proches.
+    // Tir : départagé par la valeur du tir (achever, dégâts attendus, proximité).
     for (const e of enemies) {
       const sh = canShoot(m, e, terrain, models);
-      if (sh.ok) cands.push({ priority: AI_PRIO_SHOOT, value: -(e.hp * AI_TARGET_HP_WEIGHT + dist(m, e)), intention: { type: 'shoot', model: m, target: e, s: sh.s } });
+      if (sh.ok) cands.push({ priority: AI_PRIO_SHOOT, value: shootValue(m, e, sh.s), intention: { type: 'shoot', model: m, target: e, s: sh.s } });
     }
     // Viser : seulement s'il reste un tir à faire, un PA à dépenser et qu'on n'est pas déjà en joue.
     if (!m.aimed && m.ap >= 2 && cands.some(c => c.priority === AI_PRIO_SHOOT)) {
@@ -70,7 +104,7 @@ export function candidateActions(state, m, side, goal = { kind: 'attack' }) {
     ? (dist(m, goal.at) > OBJECTIVE_RANGE ? goal.at : null)
     : nearest(m, enemies);
   if (moveTarget) {
-    const approach = bestApproach(m, moveTarget, models, terrain);
+    const approach = bestApproach(m, moveTarget, enemies, models, terrain);
     if (approach) cands.push({ priority: AI_PRIO_MOVE, value: -approach.d, intention: { type: 'move', model: m, dest: approach.dest } });
   }
 

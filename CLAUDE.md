@@ -37,8 +37,9 @@ qu'un humain (`loop/actions.js` : `moveModel`, `aim` ; + `declareShot`/`fire`,
 niveaux : `ai/plan.js` (stratégique) assigne à chaque figurine un **but** — `{ kind:'seize', at }`
 tenir/prendre un objectif, ou `{ kind:'attack' }` engager l'ennemi (`planSquad(state, side)`) ; puis
 `ai/utility.js` (tactique) génère les actions candidates de la figurine et les **note**
-(`{ priority, value }` : priorité la plus haute, puis départage tactique), la cible de déplacement
-dépendant du but. `ai/decide.js` fait la colle : figurine à activer → but → action de meilleure
+(`{ priority, value }` : priorité la plus haute, puis départage tactique — dégâts attendus et
+bonus d'« achever » au tir, préférence pour une destination à couvert au déplacement), la cible de
+déplacement dépendant du but. `ai/decide.js` fait la colle : figurine à activer → but → action de meilleure
 utilité (`decide(state, side) → intention`). Un ordonnanceur (`ai/runner.js`) observe `state` et
 agit à son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
 importé que par `main.js` (câblage) et par `input/` (qui consulte `isAiControlled` pour bloquer
