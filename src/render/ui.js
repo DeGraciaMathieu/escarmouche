@@ -67,14 +67,4 @@ export function refresh() {
   const own = state.selected && state.selected.team === state.side && state.selected.alive && !state.over && !state.pending;
   document.getElementById('btnUndo').disabled = !(own && state.undoState && state.undoState.m === state.selected && !state.selected.shot);
   document.getElementById('btnEnd').disabled = !(own && state.selected.ap > 0);
-
-  const p = document.getElementById('promptTxt');
-  if (state.over) p.textContent = 'Partie terminée.';
-  else if (state.pending) p.innerHTML = `Tir déclaré sur <b>${state.pending.target.name}</b> — confirme pour lancer les dés.`;
-  else if (state.duel) p.innerHTML = `Corps à corps : <b>${state.duel.atk.name}</b> ⚔ <b>${state.duel.def.name}</b>.`;
-  else if (state.busy) p.textContent = 'Résolution du tir…';
-  else if (!state.selected) p.innerHTML = `Aux <b>${TEAMS[state.side].name}</b> — clique une figurine au halo doré pour l'activer.`;
-  else if (state.selected.team !== state.side) p.innerHTML = `<b>${state.selected.name}</b> est dans l'escouade adverse.`;
-  else if (state.selected.activated && state.selected.ap <= 0) p.innerHTML = `<b>${state.selected.name}</b> a fini. Il reste ${remaining(state.models, state.side)} figurine${remaining(state.models, state.side) > 1 ? 's' : ''} à activer.`;
-  else p.innerHTML = `<b>${state.selected.name}</b> — glisse-la pour te déplacer (${state.selected.M}″ max)${state.selected.shot ? '' : ', ou clique un adversaire (au contact : corps à corps, sinon tir)'}.`;
 }

@@ -12,6 +12,9 @@
   --paper:#e6e1d3; --dim:#a29c8e; --brass:#c9a227;
   --panel:#20261f; --panel-2:#262e24; --line:#3a4239;
   --good:#8fbf6a; --warn:#d9b03a; --bad:#c4503a;
+  /* hauteur occupée par tout sauf le plateau (marges du body, bandeau, barre d'aide, gouttières,
+     cadre) : sert à plafonner la largeur du plateau pour qu'il tienne dans la fenêtre sans scroll */
+  --board-chrome:170px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -29,7 +32,7 @@ button{font-family:'Barlow Condensed',system-ui,sans-serif}
    bandeau d'état et la barre d'aide portent un texte de longueur variable — sans width:0 leur
    max-content dicterait la largeur du .stage et le plateau (width:100%) changerait de taille à
    chaque message. width:0 + min-width:100% : ils remplissent la colonne sans jamais l'élargir. */
-.hud,.prompt{width:0;min-width:100%}
+.hud{width:0;min-width:100%}
 
 /* bandeau d'état */
 .hud{display:flex;gap:12px}
@@ -58,10 +61,7 @@ button{font-family:'Barlow Condensed',system-ui,sans-serif}
 .board-wrap{position:relative;padding:13px;background:linear-gradient(#3a3126,#241e17);border-radius:6px;
   box-shadow:0 24px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07)}
 canvas{display:block;width:100%;height:auto;border-radius:2px;box-shadow:inset 0 0 60px rgba(0,0,0,.55)}
-.prompt{display:flex;align-items:center;gap:12px;min-height:38px;background:var(--panel);
-  border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:3px;padding:8px 13px}
-.prompt .txt{font-size:15px;line-height:1.35}
-.prompt .keys{margin-left:auto;font-size:12px;color:var(--dim);white-space:nowrap}
+.hotkeys{font-size:12px;color:var(--dim);line-height:1.8;padding:2px}
 kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px solid var(--line);
   border-bottom-width:2px;border-radius:3px;padding:1px 5px}
 
@@ -225,6 +225,13 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .hpbar i{display:block;height:100%;background:var(--tc);transition:width .45s ease-out}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:1200px){body{flex-direction:column;align-items:center}.side-col{width:100%;max-width:920px}}
+/* Layout côte-à-côte : on plafonne la largeur de .stage d'après la hauteur de la fenêtre. Le
+   plateau (width:100%) et les bandeaux (min-width:100% de .stage) rétrécissent ensemble pour que
+   tout tienne à l'écran. Ratio du plateau 30:22 ; +26px = padding gauche/droite du cadre. */
+@media (min-width:1201px){
+  .stage{max-width:calc((100vh - var(--board-chrome)) * 30 / 22 + 26px)}
+  .side-col{max-height:calc(100vh - 40px);overflow-y:auto}
+}
 </style>
 </head>
 <body>
@@ -310,10 +317,6 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
     </div></div>
   </div>
 
-  <div class="prompt">
-    <span class="txt" id="promptTxt"></span>
-    <span class="keys"><kbd>Tab</kbd> figurine suivante · <kbd>V</kbd> viser · <kbd>Z</kbd> annuler · <kbd>Espace</kbd> terminer</span>
-  </div>
 </div>
 
 <div class="side-col">
@@ -334,6 +337,7 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
     <h2>Garde de Fer</h2><div id="rosterA"></div>
     <h2 style="margin-top:10px">Écumeurs</h2><div id="rosterB"></div>
   </div>
+  <div class="hotkeys"><kbd>Tab</kbd> figurine suivante · <kbd>V</kbd> viser · <kbd>Z</kbd> annuler · <kbd>Espace</kbd> terminer</div>
 </div>
 
 <script type="module" src="./src/main.js"></script>
