@@ -47,7 +47,7 @@ export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés
 
 // --- Médaillon (jeton-photo de figurine, dessiné par drawModel)
 export const MEDAL_DISC_COLOR = '#efece5'; // fond du disque, prolonge le fond blanc de la photo
-export const MEDAL_IMG_SCALE = 1.6;        // agrandissement de la photo dans le disque (cadrage calibré)
+export const MEDAL_IMG_SCALE = 2.1;        // agrandissement de la photo dans le disque : cadrage serré sur casque/torse pour rester lisible à petite taille
 export const MEDAL_IMG_Y_OFFSET = 0.33;    // décalage vertical du centre de l'image (fraction de sa
                                            // hauteur non mise à l'échelle) pour cadrer casque/épaules/arme
 
