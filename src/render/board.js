@@ -1,5 +1,5 @@
 import { cv, ctx, px } from '../canvas.js';
-import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS, MEDAL_DISC_COLOR, MEDAL_IMG_SCALE, MEDAL_IMG_Y_OFFSET } from '../config.js';
+import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS, MEDAL_VIEW_SCALE, MEDAL_DISC_COLOR, MEDAL_IMG_SCALE, MEDAL_IMG_Y_OFFSET } from '../config.js';
 import { TEAMS, state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { sfx } from '../audio.js';
 import { sight, canTarget, canReachAny } from '../rules/sight.js';
@@ -212,7 +212,7 @@ export function drawModel(m) {
   const p = modelPos(m), isSel = m === state.selected, held = state.drag && state.drag.m === m;
   const playable = !state.over && m.team === state.side && !m.activated && m.alive && !state.busy;
   const lift = p.lift * .9 + (isSel ? .35 : 0) + (held ? .9 : 0);
-  const cx = px(p.x), cy = px(p.y) - lift * 7, R = px(m.r), col = TEAMS[m.team];
+  const cx = px(p.x), cy = px(p.y) - lift * 7, R = px(m.r) * MEDAL_VIEW_SCALE, col = TEAMS[m.team];
   if (playable && !isSel) {
     const pulse = .5 + .5 * Math.sin(performance.now() / 560);
     ctx.beginPath(); ctx.arc(cx, cy, R + 6 + pulse * 2.5, 0, 7);

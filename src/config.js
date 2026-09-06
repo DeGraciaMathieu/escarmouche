@@ -46,6 +46,7 @@ export const KILL_POINTS = 1;        // points gagnés en mettant une figurine e
 export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés en fin de tour
 
 // --- Médaillon (jeton-photo de figurine, dessiné par drawModel)
+export const MEDAL_VIEW_SCALE = 1.35;      // agrandissement VISUEL du jeton (dessin seulement ; le rayon de socle m.r, donc les règles et le clic, ne changent pas)
 export const MEDAL_DISC_COLOR = '#efece5'; // fond du disque, prolonge le fond blanc de la photo
 export const MEDAL_IMG_SCALE = 2.1;        // agrandissement de la photo dans le disque : cadrage serré sur casque/torse pour rester lisible à petite taille
 export const MEDAL_IMG_Y_OFFSET = 0.33;    // décalage vertical du centre de l'image (fraction de sa

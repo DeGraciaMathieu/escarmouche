@@ -1,4 +1,5 @@
 import { createRng } from './rules/rng.js';
+import { cv, resize } from './canvas.js';
 import { state, createModels, MAPS } from './state/game.js';
 import { render } from './loop/render-loop.js';
 import { refresh, journal } from './render/ui.js';
@@ -37,4 +38,6 @@ for (const [key, m] of Object.entries(MAPS)) {
 }
 document.getElementById('start').classList.add('show');
 
+// Recale le backing dès que la taille affichée du canvas change (mise en page, redimensionnement).
+new ResizeObserver(resize).observe(cv);
 render();
