@@ -80,9 +80,11 @@ la main humaine pendant le tour de l'IA).
   (ou une sauvegarde critique) annulent une critique, le couvert offre une sauvegarde de plus,
   le masquage retire une réussite à l'attaquant. Ces règles vivent dans `src/rules/combat.js`
   (`resolveShot`) et nulle part ailleurs.
-- Couvert et masquage sont deux effets **exclusifs** d'un décor bas traversé, décidés par la
-  géométrie dans `rules/sight.js` : couvert si le décor est proche de la cible, masquage s'il est
-  au milieu de la ligne (loin des deux) ; le couvert prime. Seuils en `config.js`.
+- Couvert et masquage sont deux effets **exclusifs** décidés par la géométrie dans `rules/sight.js` :
+  un décor bas traversé donne le couvert s'il est proche de la cible, le masquage s'il est au milieu
+  de la ligne (loin des deux). Une **figurine tierce vivante** dont le socle coupe la ligne (et à plus
+  de `INTERVENING_MIN_DISTANCE` de chaque extrémité) donne aussi le couvert — au tir seulement
+  (`canFight` ne passe pas les figurines à `sight`). Le couvert prime le masquage. Seuils en `config.js`.
 - Corps à corps : au contact (`CONTROL_RANGE`, `rules/sight.js` → `canFight`/`inControlRange`),
   un clic ouvre un **duel** au lieu d'un tir (mêlée prioritaire, pas de tir au contact). Les deux
   figurines lancent leurs dés ; on résout en alternance **frapper/contrer** en commençant par

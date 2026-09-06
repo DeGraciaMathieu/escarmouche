@@ -57,11 +57,11 @@ export function decide(state, side) {
       return { type: 'fight', model: m, target: t, s: canFight(m, t, terrain).s };
     }
     // 2) tir : viser d'abord si un PA le permet, puis tirer la meilleure cible
-    const shootable = enemies.filter(e => canShoot(m, e, terrain).ok);
+    const shootable = enemies.filter(e => canShoot(m, e, terrain, models).ok);
     if (shootable.length) {
       if (!m.aimed && m.ap >= 2) return { type: 'aim', model: m };
       const t = bestTarget(m, shootable);
-      return { type: 'shoot', model: m, target: t, s: canShoot(m, t, terrain).s };
+      return { type: 'shoot', model: m, target: t, s: canShoot(m, t, terrain, models).s };
     }
   }
   // 3) se rapprocher de l'ennemi le plus proche

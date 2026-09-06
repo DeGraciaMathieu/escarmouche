@@ -139,7 +139,7 @@ export function drawTargets() {
   if (state.selected.team !== state.side || state.selected.ap < 1 || state.selected.shot) return;
   for (const e of state.models) {
     if (!e.alive || e.team === state.selected.team) continue;
-    const chk = canTarget(state.selected, e, state.terrain), cx = px(e.x), cy = px(e.y), R = px(e.r) + 9;
+    const chk = canTarget(state.selected, e, state.terrain, state.models), cx = px(e.x), cy = px(e.y), R = px(e.r) + 9;
     ctx.save();
     if (chk.ok) {
       ctx.strokeStyle = chk.s.cover ? 'rgba(217,176,58,.9)' : chk.s.masked ? 'rgba(180,144,201,.9)' : 'rgba(143,191,106,.95)'; ctx.lineWidth = 1.8;
@@ -202,7 +202,7 @@ export function drawFiringLine() {
 export function drawSight() {
   if (!state.selected || !state.hoverModel || state.drag || state.busy) return;
   if (state.hoverModel.team === state.selected.team) return;
-  const chk = canShoot(state.selected, state.hoverModel, state.terrain), s = chk.s || sight(state.selected, state.hoverModel, state.terrain);
+  const chk = canShoot(state.selected, state.hoverModel, state.terrain, state.models), s = chk.s || sight(state.selected, state.hoverModel, state.terrain, state.models);
   const a = { x: px(state.selected.x), y: px(state.selected.y) }, b = { x: px(state.hoverModel.x), y: px(state.hoverModel.y) };
   let col, label;
   if (!s.los) { col = '#c4503a'; label = 'vue bloquée'; }

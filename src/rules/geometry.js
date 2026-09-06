@@ -27,6 +27,14 @@ export function distPointRect(p, r) {
   return Math.hypot(dx, dy);
 }
 
+// Distance du point p au segment a→b (au point le plus proche du segment, pas de la droite).
+export function distPointSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy;
+  if (len2 === 0) return dist(p, a);
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
 // Paramètre t (0..1) du premier point où le segment p1→p2 rencontre le rectangle r, ou null.
 export function segRectT(p1, p2, r) {
   if (pointInRect(p1, r)) return 0;

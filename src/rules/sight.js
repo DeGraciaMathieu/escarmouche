@@ -1,13 +1,15 @@
-import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE, MASK_MIN_DISTANCE, CONTROL_RANGE } from '../config.js';
-import { dist, segRectT, distPointRect } from './geometry.js';
+import { COVER_MIN_DISTANCE, COVER_TARGET_DISTANCE, MASK_MIN_DISTANCE, INTERVENING_MIN_DISTANCE, CONTROL_RANGE } from '../config.js';
+import { dist, segRectT, distPointRect, distPointSeg } from './geometry.js';
 
-// Ligne de vue de a vers b à travers le décor. Un mur la bloque. Un décor bas traversé produit,
-// selon sa position, l'un de deux effets (exclusifs, le couvert primant) :
+// Ligne de vue de a vers b à travers le décor et les figurines. Un mur la bloque. Un décor bas
+// traversé produit, selon sa position, l'un de deux effets (exclusifs, le couvert primant) :
 // - couvert : à plus de COVER_MIN_DISTANCE du tireur ET à moins de COVER_TARGET_DISTANCE de la
 //   cible (elle s'abrite) → +1 sauvegarde ;
 // - masquage : à plus de MASK_MIN_DISTANCE de CHACUNE des deux unités (obstacle au milieu de la
 //   ligne) → l'attaquant retire une réussite.
-export function sight(a, b, terrain) {
+// Une figurine tierce vivante dont le socle coupe la ligne (et à plus de INTERVENING_MIN_DISTANCE
+// de chaque extrémité) donne aussi le couvert. `models` optionnel : sans lui, seul le décor compte.
+export function sight(a, b, terrain, models = []) {
   const p1 = { x: a.x, y: a.y }, p2 = { x: b.x, y: b.y }, len = dist(p1, p2);
   let cover = false, masked = false;
   for (const rect of terrain) {
@@ -17,6 +19,10 @@ export function sight(a, b, terrain) {
     if (t * len > COVER_MIN_DISTANCE && distPointRect(p2, rect) < COVER_TARGET_DISTANCE) cover = true;
     else if (distPointRect(p1, rect) > MASK_MIN_DISTANCE && distPointRect(p2, rect) > MASK_MIN_DISTANCE) masked = true;
   }
+  for (const m of models) {
+    if (m === a || m === b || !m.alive) continue;
+    if (distPointSeg(m, p1, p2) < m.r && dist(m, p1) > INTERVENING_MIN_DISTANCE && dist(m, p2) > INTERVENING_MIN_DISTANCE) cover = true;
+  }
   if (cover) masked = false;                    // exclusifs : le couvert prime sur le masquage
   return { los: true, cover, masked, len };
 }
@@ -24,12 +30,12 @@ export function sight(a, b, terrain) {
 // Peut-on prendre cette figurine pour cible, indépendamment de l'arme choisie :
 // camp adverse, points d'action, tir déjà fait, ligne de vue dégagée. La portée et
 // l'arme lourde dépendent de l'arme et sont jugées par weaponCanFire.
-export function canTarget(m, target, terrain) {
+export function canTarget(m, target, terrain, models = []) {
   if (!m || !target || !target.alive || !m.alive) return { ok: false, why: '—' };
   if (m.team === target.team) return { ok: false, why: '—' };
   if (m.ap < 1) return { ok: false, why: "plus de point d'action" };
   if (m.shot) return { ok: false, why: 'a déjà tiré ce tour' };
-  const s = sight(m, target, terrain);
+  const s = sight(m, target, terrain, models);
   if (!s.los) return { ok: false, why: 'ligne de vue bloquée', s };
   return { ok: true, s };
 }
@@ -44,8 +50,8 @@ export function weaponCanFire(weapon, moved, s) {
 }
 
 // Détermine si m peut tirer sur target avec son arme équipée.
-export function canShoot(m, target, terrain) {
-  const t = canTarget(m, target, terrain);
+export function canShoot(m, target, terrain, models = []) {
+  const t = canTarget(m, target, terrain, models);
   if (!t.ok) return t;
   const w = weaponCanFire(m.weapon, m.moved, t.s);
   return w.ok ? { ok: true, s: t.s } : { ok: false, why: w.why, s: t.s };

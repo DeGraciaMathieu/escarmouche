@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sight, canShoot, canTarget, weaponCanFire, canFight, inControlRange } from '../src/rules/sight.js';
+import { BASE_RADIUS } from '../src/config.js';
 
 const shooter = (o = {}) => ({ team: 'A', alive: true, ap: 2, shot: false, moved: false, weapon: { a: 4, bs: 3 }, meleeWeapon: { a: 4, ws: 3 }, x: 0, y: 5, ...o });
 const target = (o = {}) => ({ team: 'B', alive: true, x: 10, y: 5, ...o });
+const inter = (o = {}) => ({ alive: true, r: BASE_RADIUS, x: 5, y: 5, ...o }); // figurine tierce, sur la ligne x=0→10, y=5
 
 test('un mur sur la ligne bloque la vue', () => {
   const wall = [{ x: 4, y: 0, w: 2, h: 10, t: 'wall' }];
@@ -54,6 +56,50 @@ test('un décor bas collé au tireur ne donne pas le couvert', () => {
   const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low);
   assert.equal(s.los, true);
   assert.equal(s.cover, false);
+});
+
+test('une figurine sur la ligne de tir met la cible à couvert', () => {
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, [], [inter()]);
+  assert.equal(s.los, true);
+  assert.equal(s.cover, true);
+  assert.equal(s.masked, false);
+});
+
+test('le tireur et la cible ne se comptent pas comme figurines interposées', () => {
+  const a = { x: 0, y: 5 }, b = { x: 10, y: 5 };
+  assert.equal(sight(a, b, [], [a, b]).cover, false);
+});
+
+test('une figurine morte sur la ligne ne donne pas le couvert', () => {
+  assert.equal(sight({ x: 0, y: 5 }, { x: 10, y: 5 }, [], [inter({ alive: false })]).cover, false);
+});
+
+test('une figurine hors de la ligne ne donne pas le couvert', () => {
+  assert.equal(sight({ x: 0, y: 5 }, { x: 10, y: 5 }, [], [inter({ y: 7 })]).cover, false); // à 2″ de la ligne
+});
+
+test('une figurine à moins d\'1″ d\'une extrémité ne donne pas le couvert', () => {
+  assert.equal(sight({ x: 0, y: 5 }, { x: 10, y: 5 }, [], [inter({ x: 0.5 })]).cover, false); // à 0.5″ du tireur
+});
+
+test('un mur prime sur le couvert d\'une figurine interposée', () => {
+  const wall = [{ x: 4, y: 0, w: 2, h: 10, t: 'wall' }];
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, wall, [inter()]);
+  assert.equal(s.los, false);
+  assert.equal(s.cover, false);
+});
+
+test('le couvert d\'une figurine annule le masquage du décor', () => {
+  const low = [{ x: 4.5, y: 0, w: 1, h: 10, t: 'low' }]; // masquerait seul
+  const s = sight({ x: 0, y: 5 }, { x: 10, y: 5 }, low, [inter()]);
+  assert.equal(s.cover, true);
+  assert.equal(s.masked, false);
+});
+
+test('le corps à corps ignore les figurines interposées (tir seulement)', () => {
+  const chk = canFight(shooter(), target({ x: 1.5, y: 5 }), []); // au contact
+  assert.equal(chk.ok, true);
+  assert.equal(chk.s.cover, false); // la mêlée ne reçoit jamais le couvert d'une figurine
 });
 
 test('une cible ennemie à vue dégagée et à portée peut être visée', () => {
