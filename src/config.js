@@ -49,8 +49,8 @@ export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés
 export const MEDAL_VIEW_SCALE = 1.35;      // agrandissement VISUEL du jeton (dessin seulement ; le rayon de socle m.r, donc les règles et le clic, ne changent pas)
 export const MEDAL_DISC_COLOR = '#efece5'; // fond du disque, prolonge le fond blanc de la photo
 export const MEDAL_IMG_SCALE = 2.1;        // agrandissement de la photo dans le disque : cadrage serré sur casque/torse pour rester lisible à petite taille
-export const MEDAL_IMG_Y_OFFSET = 0.33;    // décalage vertical du centre de l'image (fraction de sa
-                                           // hauteur non mise à l'échelle) pour cadrer casque/épaules/arme
+export const MEDAL_IMG_Y_OFFSET = 0.45;    // décalage vertical du centre de l'image (fraction de sa
+                                           // hauteur non mise à l'échelle) : plus grand = image descendue = cadrage remonté sur le visage
 
 // --- Intelligence artificielle (mode 1 joueur)
 export const AI_ACT_DELAY = 1100; // délai de réflexion entre deux actions de l'IA (ms)
