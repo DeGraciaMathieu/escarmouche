@@ -35,6 +35,16 @@ export const SAVES_PER_CRIT = 2;  // sauvegardes normales nécessaires pour annu
 export const OVERHEAT_ROLL = 1;   // résultat du dé de surchauffe qui blesse le tireur
 export const OVERHEAT_DAMAGE = 2; // dégâts subis par le tireur en cas de surchauffe
 
+// --- Objectifs et score
+// Marqueurs d'objectif (positions en pouces). Disposés symétriquement autour de l'axe vertical
+// du plateau (x = BW/2) pour rester équilibrés entre le camp A (gauche) et le camp B (droite),
+// et à l'écart des décors centraux des plans existants.
+export const OBJECTIVES = [{ x: 15, y: 6 }, { x: 9, y: 15 }, { x: 21, y: 15 }];
+export const OBJECTIVE_RANGE = 3;    // portée de contrôle d'un objectif (pouces)
+export const OBJECTIVE_RADIUS = 0.7; // rayon visuel du marqueur (pouces)
+export const KILL_POINTS = 1;        // points gagnés en mettant une figurine ennemie hors de combat
+export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés en fin de tour
+
 // --- Intelligence artificielle (mode 1 joueur)
 export const AI_ACT_DELAY = 1100; // délai de réflexion entre deux actions de l'IA (ms)
 

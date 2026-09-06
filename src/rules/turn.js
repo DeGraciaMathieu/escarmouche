@@ -38,12 +38,8 @@ export function annihilationWinner(models) {
   return null;
 }
 
-// Vainqueur à la fin de la partie : plus de figurines debout, sinon plus de PV cumulés,
-// sinon match nul (null).
-export function attritionWinner(models) {
-  const a = models.filter(m => m.alive && m.team === 'A');
-  const b = models.filter(m => m.alive && m.team === 'B');
-  if (a.length !== b.length) return a.length > b.length ? 'A' : 'B';
-  const ha = a.reduce((s, m) => s + m.hp, 0), hb = b.reduce((s, m) => s + m.hp, 0);
-  return ha === hb ? null : (ha > hb ? 'A' : 'B');
+// Vainqueur aux points à la fin de la partie : plus grand total, sinon match nul (null).
+export function scoreWinner(score) {
+  if (score.A === score.B) return null;
+  return score.A > score.B ? 'A' : 'B';
 }

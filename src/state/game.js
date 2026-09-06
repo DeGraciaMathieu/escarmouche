@@ -140,6 +140,7 @@ export function createModels() {
 export const state = {
   turn: 1,
   side: 'A',
+  score: { A: 0, B: 0 }, // total de points de chaque camp (éliminations + objectifs)
   selected: null,
   busy: false,
   over: false,

@@ -19,7 +19,7 @@ import { weaponCanFire } from '../rules/sight.js';
 import { sfx, audio, tone } from '../audio.js';
 import { addFx, tracerColor } from '../render/fx.js';
 import { refresh, journal } from '../render/ui.js';
-import { checkEnd, afterAction } from './turn.js';
+import { checkEnd, afterAction, registerKill } from './turn.js';
 
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const field = document.getElementById('field');
@@ -351,7 +351,7 @@ async function playCinematic(plan) {
     refresh();
     if (plan.targetDown) {
       await sleep(DOWN_DELAY);
-      target.alive = false; sfx.down();
+      target.alive = false; sfx.down(); registerKill(shooter.team);
       addFx({ type: 'float', x: target.x, y: target.y, text: 'hors de combat', color: '#e6e1d3', dur: FX_FLOAT_DOWN_MS, size: FLOAT_SMALL_SIZE });
       journal(`<b>${target.name}</b> est mis hors de combat.`);
     }

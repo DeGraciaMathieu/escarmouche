@@ -10,7 +10,7 @@ import { createMelee, meleeOptions, applyMeleeAction } from '../rules/combat.js'
 import { sfx } from '../audio.js';
 import { addFx } from '../render/fx.js';
 import { refresh, journal } from '../render/ui.js';
-import { checkEnd, afterAction, endActivation } from './turn.js';
+import { checkEnd, afterAction, endActivation, registerKill } from './turn.js';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms * COMBAT_PACE));
 const roll = n => Array.from({ length: n }, () => 1 + Math.floor(state.rng() * DICE_FACES));
@@ -103,7 +103,7 @@ function playStep(action, before, after) {
   victim.flash = TARGET_FLASH; state.shake = crit ? SHAKE_CRIT : SHAKE_HIT;
   sfx.wound();
   journal(`<b>${modelOf(before.turn).name}</b> frappe <b>${victim.name}</b> : ${dmg} dégâts${crit ? ' (critique)' : ''}.`);
-  if (after.dead === struckSide) { victim.alive = false; sfx.down(); }
+  if (after.dead === struckSide) { victim.alive = false; sfx.down(); registerKill(modelOf(before.turn).team); }
 }
 
 // Lance les dés des deux camps, joue le duel interactif, applique le dénouement.

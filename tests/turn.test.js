@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decideActivationEnd, engagedModel, canAct, annihilationWinner, attritionWinner } from '../src/rules/turn.js';
+import { decideActivationEnd, engagedModel, canAct, annihilationWinner, scoreWinner } from '../src/rules/turn.js';
 
 const m = (team, o = {}) => ({ team, alive: true, activated: false, ap: 2, hp: 10, ...o });
 
@@ -59,17 +59,11 @@ test('une escouade anéantie donne la victoire à l\'autre', () => {
   assert.equal(annihilationWinner(models), 'B');
 });
 
-test('à la fin de la partie, l\'escouade la plus nombreuse l\'emporte', () => {
-  const models = [m('A'), m('A'), m('B')];
-  assert.equal(attritionWinner(models), 'A');
+test('à la fin de la partie, le camp au plus grand total de points l\'emporte', () => {
+  assert.equal(scoreWinner({ A: 5, B: 3 }), 'A');
+  assert.equal(scoreWinner({ A: 2, B: 6 }), 'B');
 });
 
-test('à égalité de figurines, le plus de PV cumulés l\'emporte', () => {
-  const models = [m('A', { hp: 12 }), m('B', { hp: 5 })];
-  assert.equal(attritionWinner(models), 'A');
-});
-
-test('même nombre de figurines et mêmes PV donnent un match nul', () => {
-  const models = [m('A', { hp: 10 }), m('B', { hp: 10 })];
-  assert.equal(attritionWinner(models), null);
+test('à égalité de points, la partie est nulle', () => {
+  assert.equal(scoreWinner({ A: 4, B: 4 }), null);
 });

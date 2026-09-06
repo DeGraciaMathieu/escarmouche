@@ -1,9 +1,22 @@
-import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS } from '../config.js';
+import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_POINTS, KILL_POINTS } from '../config.js';
 import { TEAMS, state } from '../state/game.js';
-import { decideActivationEnd, annihilationWinner, attritionWinner } from '../rules/turn.js';
-import { aliveOf, remaining } from '../rules/squad.js';
+import { decideActivationEnd, annihilationWinner, scoreWinner } from '../rules/turn.js';
+import { scoreObjectives } from '../rules/objective.js';
+import { remaining } from '../rules/squad.js';
 import { sfx } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
+
+// Crédite le camp d'un kill (figurine ennemie mise hors de combat). Appelé par les résolutions
+// de tir et de corps à corps au moment où la victime tombe.
+export function registerKill(killerTeam) { state.score[killerTeam] += KILL_POINTS; }
+
+// Objectifs contrôlés à la fin du tour qui s'achève : ajoute les points et journalise le bilan.
+function scoreEndOfTurn() {
+  const held = scoreObjectives(state.models, OBJECTIVES, OBJECTIVE_RANGE);
+  state.score.A += held.A * OBJECTIVE_POINTS;
+  state.score.B += held.B * OBJECTIVE_POINTS;
+  if (held.A || held.B) journal(`<b>Fin du tour ${state.turn}</b> — objectifs tenus : ${TEAMS.A.name} ${held.A}, ${TEAMS.B.name} ${held.B}.`);
+}
 
 // Après une action : on termine l'activation si plus de points, sinon on rafraîchit.
 // Si l'action se clôt sur un déplacement encore animé, on attend la fin du glissement avant de
@@ -37,6 +50,7 @@ function announceSide(sub) {
 }
 
 function newTurn() {
+  scoreEndOfTurn();
   if (state.turn >= MAXTURN) { finish(); return; }
   state.turn++;
   state.models.forEach(m => { m.activated = false; m.ap = m.apl; m.aimed = false; m.moved = false; m.shot = false; });
@@ -57,11 +71,9 @@ export function checkEnd() { const w = annihilationWinner(state.models); if (w) 
 function finish(forced) {
   state.over = true; state.selected = null; state.pending = null;
   document.getElementById('combat').classList.remove('show');
-  let win = forced, sub = '';
-  if (!win) {
-    win = attritionWinner(state.models);
-    sub = `Fin du tour ${MAXTURN} — ${aliveOf(state.models, 'A').length} contre ${aliveOf(state.models, 'B').length} figurines debout`;
-  } else sub = 'Escouade adverse anéantie';
+  const win = forced || scoreWinner(state.score);
+  const scoreLine = `Score final — ${TEAMS.A.name} ${state.score.A} · ${TEAMS.B.name} ${state.score.B}`;
+  const sub = forced ? `Escouade adverse anéantie · ${scoreLine}` : scoreLine;
   document.getElementById('bannerTitle').textContent = win ? TEAMS[win].name + " l'emporte" : 'Match nul';
   document.getElementById('bannerSub').textContent = sub;
   document.getElementById('banner').classList.add('show');
