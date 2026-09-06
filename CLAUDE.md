@@ -91,8 +91,9 @@ manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObject
 - Rendu d'une figurine : un **jeton-photo circulaire** (« médaillon ») dessiné sur le canvas par
   `drawMedallion` (`render/board.js`) — photo cadrée (constantes `MEDAL_*` de `config.js`) sur fond
   clair, cerclée de la couleur du camp ; les halos, l'arc de PV, les pips d'AP et la coche
-  « a agi » restent gérés par `drawModel`. Les photos sont une par camp dans `assets/units/`
-  (`team-A.png` / `team-B.png`). Vue de dessus, pas d'inclinaison 3D.
+  « a agi » restent gérés par `drawModel`. Chaque camp a un **vivier de photos** dans
+  `assets/units/` (`team-A*.png` / `team-B*.png`) ; `board.js` en choisit une par figurine de façon
+  déterministe (par `id`) pour varier les socles. Vue de dessus, pas d'inclinaison 3D.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
   l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
   La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).

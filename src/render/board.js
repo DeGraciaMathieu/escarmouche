@@ -184,16 +184,20 @@ function tag(x, y, text, bg = '#c9a227', fg = '#191b12') {
   ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y);
 }
 
-// Photos de figurine préchargées, une par camp (fond blanc conservé, cadrées par le pipeline).
-const UNIT_IMG = { A: new Image(), B: new Image() };
-UNIT_IMG.A.src = 'assets/units/team-A.png';
-UNIT_IMG.B.src = 'assets/units/team-B.png';
+// Photos de figurine préchargées (fond blanc conservé, cadrées par le pipeline). Chaque camp a un
+// vivier de photos pour varier les figurines ; chacune en choisit une de façon déterministe par
+// son id (stable d'une frame à l'autre).
+const loadImg = src => { const i = new Image(); i.src = 'assets/units/' + src; return i; };
+const UNIT_IMG = {
+  A: ['team-A.png', 'team-A2.png'].map(loadImg),
+  B: ['team-B.png'].map(loadImg),
+};
+const portraitFor = m => { const pool = UNIT_IMG[m.team]; return pool[m.id % pool.length]; };
 
 // Jeton-photo circulaire (« médaillon ») d'une figurine, centré en (cx, cy), rayon R. La photo
 // est agrandie et décalée pour cadrer casque/épaules/arme, sur un fond qui prolonge le blanc de la
 // photo, puis cerclée de la couleur du camp. Tant que l'image n'est pas chargée, seul le fond est posé.
-function drawMedallion(cx, cy, R, col, team) {
-  const img = UNIT_IMG[team];
+function drawMedallion(cx, cy, R, col, img) {
   ctx.save();
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.clip();
   ctx.fillStyle = MEDAL_DISC_COLOR; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
@@ -226,7 +230,7 @@ export function drawModel(m) {
   ctx.fillStyle = 'rgba(0,0,0,' + (.42 - lift * .08) + ')';
   ctx.beginPath(); ctx.ellipse(px(p.x) + 3 + lift * 4, px(p.y) + 4 + lift * 5, R * (1 + lift * .12), R * .72 * (1 + lift * .12), 0, 0, 7); ctx.fill();
   const done = m.activated && !isSel; if (done) ctx.globalAlpha = .5;
-  drawMedallion(cx, cy, R, col, m.team);
+  drawMedallion(cx, cy, R, col, portraitFor(m));
   if (m.flash > 0) {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7);
     ctx.fillStyle = 'rgba(255,255,255,' + Math.min(.8, m.flash) + ')'; ctx.fill();
