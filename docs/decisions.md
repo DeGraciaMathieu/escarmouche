@@ -106,6 +106,27 @@ pas changer le jeu.
   quels). Palettes de skin laissées dans `render/board.js` (cosmétiques), comme les couleurs de
   décor d'origine.
 
+## Système de points (objectifs + éliminations)
+
+- **Catégories retenues** : éliminations et contrôle de zone (le « territoire ennemi » a été
+  écarté pour cette première version).
+- **Modèle de zone** : marqueurs d'objectif ponctuels, contrôlés à la majorité de figurines à
+  portée (`OBJECTIVE_RANGE`), fidèle à Kill Team. Alternative écartée : une zone centrale unique.
+- **Cadence** : score de zone marqué **en fin de chaque tour**, kills crédités à l'instant ;
+  vainqueur = plus grand total en fin de tour 4.
+- **Victoire aux points remplace l'attrition** : `attritionWinner` (survivants puis PV cumulés)
+  est supprimé au profit de `scoreWinner` (total le plus élevé). Égalité de points = match nul,
+  **sans départage secondaire**. L'anéantissement reste une victoire immédiate.
+- **Positions des objectifs** : liste fixe `OBJECTIVES` en config, **indépendante du plan** de
+  décor, disposée symétriquement autour de l'axe vertical (fairness camp A gauche / B droite) et
+  choisie pour rester dans des zones dégagées des trois plans existants. Non paramétrable par
+  plan (pas demandé) ; le marqueur central peut jouxter un décor selon le plan — les valeurs sont
+  des constantes nommées, ajustables.
+- **Barème** : `KILL_POINTS` et `OBJECTIVE_POINTS` valent 1 (valeurs de départ, à équilibrer).
+  Une auto-élimination par surchauffe ne rapporte de point à personne.
+- **IA** : non modifiée — l'IA ne cherche pas encore les objectifs, mais ses kills et sa présence
+  sur un marqueur comptent normalement (mêmes actions et même décompte de fin de tour).
+
 ## Open questions
 
 Décisions que le code ne tranche pas et qui n'ont pas été prises. Jamais résolues par

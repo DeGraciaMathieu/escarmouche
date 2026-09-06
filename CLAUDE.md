@@ -93,6 +93,16 @@ la main humaine pendant le tour de l'IA).
   de la ligne (loin des deux). Une **figurine tierce vivante** dont le socle coupe la ligne (et à plus
   de `INTERVENING_MIN_DISTANCE` de chaque extrémité) donne aussi le couvert — au tir seulement
   (`canFight` ne passe pas les figurines à `sight`). Le couvert prime le masquage. Seuils en `config.js`.
+- Score et objectifs : chaque camp accumule des points dans `state.score` (`{ A, B }`). Une
+  **élimination** rapporte `KILL_POINTS` au camp responsable (crédité par `registerKill` dans
+  `loop/turn.js`, appelé depuis les résolutions de tir et de mêlée ; une auto-élimination par
+  surchauffe ne rapporte rien). Le **contrôle de zone** rapporte `OBJECTIVE_POINTS` par marqueur
+  d'objectif tenu, compté **en fin de chaque tour** (`scoreEndOfTurn`). Les marqueurs sont une
+  liste fixe `OBJECTIVES` (config, positions en pouces), symétriques autour de l'axe vertical du
+  plateau. On contrôle un marqueur si l'on a **plus de figurines vivantes** que l'adversaire dans
+  un rayon `OBJECTIVE_RANGE` (règle pure `rules/objective.js` → `controlOf`/`scoreObjectives` ;
+  égalité = disputé). La **victoire** finale (fin du tour `MAXTURN`) revient au plus grand total
+  (`scoreWinner`, égalité = match nul) ; l'anéantissement reste une victoire immédiate.
 - Corps à corps : au contact (`CONTROL_RANGE`, `rules/sight.js` → `canFight`/`inControlRange`),
   un clic ouvre un **duel** au lieu d'un tir (mêlée prioritaire, pas de tir au contact). Les deux
   figurines lancent leurs dés ; on résout en alternance **frapper/contrer** en commençant par
