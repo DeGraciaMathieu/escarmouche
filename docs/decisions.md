@@ -127,6 +127,24 @@ pas changer le jeu.
 - **IA** : non modifiée — l'IA ne cherche pas encore les objectifs, mais ses kills et sa présence
   sur un marqueur comptent normalement (mêmes actions et même décompte de fin de tour).
 
+## Refonte de l'IA (moteur d'utilité, à deux niveaux)
+
+- **Objectif** : rendre l'IA plus tactique (qualité d'activation) et stratégique (jouer les
+  objectifs, coordonner l'escouade). Approche retenue : fonction d'utilité + décision à deux
+  niveaux (plan de camp → action tactique), implémentée **par incréments**.
+- **Incrément 0 (fait)** : squelette **iso-comportement**. `ai/decide.js` délègue à un nouveau
+  moteur `ai/utility.js` (`candidateActions` + `bestAction`) qui reproduit exactement l'ancienne
+  échelle (mêlée > viser > tirer > se rapprocher > terminer) via des priorités `AI_PRIO_*` et un
+  départage tactique (`value`). Les 10 tests IA existants restent verts : ils servent de contrat
+  d'iso-comportement. `decideMelee` inchangé.
+- **`ai/plan.js` volontairement différé** à l'incrément 1 (objectifs) : on n'introduit pas de
+  module mort tant qu'il ne pilote pas de comportement.
+- **Incréments suivants (à venir)** : 1) conscience des objectifs (stratégique) ; 2) ciblage &
+  positionnement (tactique : chance de touche, traits d'arme, couvert) ; 3) ordre d'activation &
+  tempo selon le score/tour.
+- **Poids et priorités** dans `config.js` (`AI_PRIO_*`, `AI_TARGET_HP_WEIGHT`) : valeurs de
+  départ, ajustables ; le grand écart entre priorités garantit que l'ordre prime le départage.
+
 ## Open questions
 
 Décisions que le code ne tranche pas et qui n'ont pas été prises. Jamais résolues par

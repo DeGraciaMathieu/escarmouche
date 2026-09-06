@@ -47,6 +47,14 @@ export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés
 
 // --- Intelligence artificielle (mode 1 joueur)
 export const AI_ACT_DELAY = 1100; // délai de réflexion entre deux actions de l'IA (ms)
+// Priorités d'action : l'IA choisit l'action candidate de plus haute priorité, puis départage à
+// la valeur tactique. La mêlée au contact prime (règle du jeu : pas de tir au contact).
+export const AI_PRIO_FIGHT = 4;
+export const AI_PRIO_AIM = 3;
+export const AI_PRIO_SHOOT = 2;
+export const AI_PRIO_MOVE = 1;
+export const AI_PRIO_END = 0;
+export const AI_TARGET_HP_WEIGHT = 1000; // au tir, poids des PV de la cible (achever les plus faibles avant de départager à la distance)
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal
