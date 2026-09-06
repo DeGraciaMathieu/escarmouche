@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { decide, decideMelee } from '../src/ai/decide.js';
 import { candidateActions, bestAction } from '../src/ai/utility.js';
+import { planSquad } from '../src/ai/plan.js';
 import { createMelee } from '../src/rules/combat.js';
-import { OBJECTIVES } from '../src/config.js';
+import { OBJECTIVES, MAXTURN } from '../src/config.js';
 import { dist } from '../src/rules/geometry.js';
 
 const OBJ = OBJECTIVES[0]; // objectif de référence pour les scénarios de zone
@@ -94,6 +95,37 @@ test('au déplacement, l\'IA infléchit sa trajectoire vers le flanc à couvert'
   const avecCouvert = pick([wall, cover]);
   assert.equal(avecCouvert.type, 'move');
   assert.ok(avecCouvert.dest.x > sansCouvert.dest.x); // la trajectoire dévie vers le couvert (est)
+});
+
+test('l\'IA active en premier la figurine qui peut tirer, pas celle qui doit se déplacer', () => {
+  const shooter = ai({ x: 0, y: 5, ap: 1, moved: true });                     // a un tir
+  const walker = ai({ x: 0, y: 20, weapon: { a: 4, bs: 3, dn: 3, range: 3 } }); // ennemi hors de portée
+  const e = foe({ x: 5, y: 5 });                                              // à portée du tireur seulement
+  const it = decide(st([walker, shooter, e]), 'B'); // le marcheur est en tête de liste
+  assert.equal(it.type, 'shoot');
+  assert.equal(it.model, shooter);
+});
+
+test('un objectif disputé reçoit plusieurs figurines (coordination)', () => {
+  const contested = OBJECTIVES[0];
+  const own = [ai({ x: 14, y: 6 }), ai({ x: 16, y: 6 }), ai({ x: 9, y: 14 }), ai({ x: 21, y: 14 }), ai({ x: 2, y: 2 })];
+  const e = foe({ x: contested.x, y: contested.y }); // un défenseur sur l'objectif
+  const goals = planSquad(st([...own, e]), 'B');
+  const dessus = own.filter(m => { const g = goals.get(m); return g.kind === 'seize' && g.at === contested; });
+  assert.equal(dessus.length, 2);
+});
+
+test('au dernier tour, les figurines en trop renforcent les objectifs au lieu d\'attaquer', () => {
+  const own = [ai({ x: 4, y: 4 }), ai({ x: 4, y: 11 }), ai({ x: 4, y: 18 }), ai({ x: 6, y: 8 }), ai({ x: 6, y: 14 })];
+  const e = foe({ x: 25, y: 11 }); // ennemi loin des objectifs
+
+  const dernier = st([...own, e]); dernier.turn = MAXTURN;
+  const g = planSquad(dernier, 'B');
+  assert.ok(own.every(m => g.get(m).kind === 'seize')); // personne n'attaque au buzzer
+
+  const debut = st([...own, e]); debut.turn = 1;
+  const g2 = planSquad(debut, 'B');
+  assert.ok(own.some(m => g2.get(m).kind === 'attack')); // à un tour normal, des attaquants restent
 });
 
 const meleeState = (o) => createMelee({

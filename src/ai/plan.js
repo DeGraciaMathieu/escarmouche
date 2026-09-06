@@ -1,6 +1,5 @@
-import { OBJECTIVES, OBJECTIVE_RANGE } from '../config.js';
+import { OBJECTIVES, OBJECTIVE_RANGE, AI_MAX_PER_OBJECTIVE, MAXTURN } from '../config.js';
 import { dist } from '../rules/geometry.js';
-import { controlOf } from '../rules/objective.js';
 
 // ============================================================
 //  Plan de camp de l'IA — niveau stratégique, PUR.
@@ -8,7 +7,7 @@ import { controlOf } from '../rules/objective.js';
 //  Buts : { kind:'seize', at } (prendre/tenir un objectif) ou { kind:'attack' } (engager l'ennemi).
 // ============================================================
 
-// Figurine libre la plus proche du point `o` (non déjà assignée).
+// Figurine libre la plus proche du point `o` (non déjà assignée), ou null.
 function nearestFree(own, taken, o) {
   let best = null, bestD = Infinity;
   for (const m of own) {
@@ -19,35 +18,43 @@ function nearestFree(own, taken, o) {
   return best;
 }
 
-// Figurine libre la plus proche du point `o` mais déjà à portée `range` (pour tenir un objectif
-// déjà contrôlé sans le quitter).
-function nearestWithin(own, taken, o, range) {
-  let best = null, bestD = Infinity;
-  for (const m of own) {
-    if (taken.has(m) || dist(m, o) > range) continue;
-    const d = dist(m, o);
-    if (d < bestD) { bestD = d; best = m; }
-  }
-  return best;
+// Objectif le plus proche d'une figurine.
+function nearestObjective(m) {
+  return OBJECTIVES.reduce((a, b) => (dist(m, b) < dist(m, a) ? b : a));
 }
 
-// Assigne un but à chaque figurine vivante du camp `side`. Pour chaque objectif : on garde le
-// tenant le plus proche s'il est à nous, sinon on y envoie la figurine libre la plus proche pour
-// le (re)prendre. Les figurines non assignées engagent l'ennemi. Rend une Map(model → goal).
+// Nombre d'ennemis à portée d'un objectif.
+function enemiesAt(models, o, side) {
+  return models.filter(m => m.alive && m.team !== side && dist(m, o) <= OBJECTIVE_RANGE).length;
+}
+
+// Assigne un but à chaque figurine vivante du camp `side`. On sécurise d'abord les objectifs les
+// moins défendus (points les plus faciles), en y envoyant assez de figurines pour départager le
+// défenseur (`enemis + 1`, plafonné à AI_MAX_PER_OBJECTIVE), les plus proches d'abord — ce qui
+// garde naturellement en place les tenants déjà à portée. Au dernier tour, les figurines restantes
+// renforcent les objectifs (le score se fige à la fin du tour) ; sinon elles engagent l'ennemi.
 export function planSquad(state, side) {
   const { models } = state;
   const own = models.filter(m => m.alive && m.team === side);
   const goals = new Map();
   const taken = new Set();
 
-  for (const o of OBJECTIVES) {
-    const controlled = controlOf(models, o, OBJECTIVE_RANGE) === side;
-    const cand = controlled
-      ? nearestWithin(own, taken, o, OBJECTIVE_RANGE)
-      : nearestFree(own, taken, o);
-    if (cand) { goals.set(cand, { kind: 'seize', at: o }); taken.add(cand); }
+  const ranked = OBJECTIVES
+    .map(o => ({ o, need: Math.min(AI_MAX_PER_OBJECTIVE, enemiesAt(models, o, side) + 1) }))
+    .sort((a, b) => a.need - b.need);
+
+  for (const { o, need } of ranked) {
+    for (let k = 0; k < need; k++) {
+      const cand = nearestFree(own, taken, o);
+      if (!cand) break;
+      goals.set(cand, { kind: 'seize', at: o }); taken.add(cand);
+    }
   }
 
-  for (const m of own) if (!taken.has(m)) goals.set(m, { kind: 'attack' });
+  const lastTurn = state.turn === MAXTURN;
+  for (const m of own) {
+    if (taken.has(m)) continue;
+    goals.set(m, lastTurn ? { kind: 'seize', at: nearestObjective(m) } : { kind: 'attack' });
+  }
   return goals;
 }

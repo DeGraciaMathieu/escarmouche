@@ -39,9 +39,11 @@ tenir/prendre un objectif, ou `{ kind:'attack' }` engager l'ennemi (`planSquad(s
 `ai/utility.js` (tactique) génère les actions candidates de la figurine et les **note**
 (`{ priority, value }` : priorité la plus haute, puis départage tactique — dégâts attendus et
 bonus d'« achever » au tir, préférence pour une destination à couvert au déplacement), la cible de
-déplacement dépendant du but. `ai/decide.js` fait la colle : figurine à activer → but → action de meilleure
-utilité (`decide(state, side) → intention`). Un ordonnanceur (`ai/runner.js`) observe `state` et
-agit à son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
+déplacement dépendant du but. `ai/plan.js` **coordonne** aussi l'escouade (assez de figurines par objectif, tempo de dernier
+tour). `ai/decide.js` fait la colle : il **choisit l'ordre d'activation** (la figurine dont la
+meilleure action a la plus haute utilité, sinon poursuit la figurine engagée) puis rend son action
+(`decide(state, side) → intention`). Un ordonnanceur (`ai/runner.js`) observe `state` et agit à
+son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
 importé que par `main.js` (câblage) et par `input/` (qui consulte `isAiControlled` pour bloquer
 la main humaine pendant le tour de l'IA).
 

@@ -155,8 +155,19 @@ pas changer le jeu.
   volontairement crits/traits fins (perforante partiellement via `defenseDice`) : elle sert à
   **comparer** des cibles, pas à prédire (les dés restent lancés par `resolveShot`). L'arme lourde
   reste gérée par l'échelle (tir prioritaire ; si hors de portée, bouger ne coûte aucun tir).
-- **Incrément suivant (à venir)** : 3) ordre d'activation, coordination (nombre de figurines par
-  objectif disputé) & tempo selon le score/tour.
+- **Incrément 3 (fait)** : ordre d'activation, coordination & tempo. `decide` n'active plus la
+  première figurine venue mais celle **dont la meilleure action a la plus haute utilité** (kill /
+  objectif d'abord, repositionnements ensuite ; une figurine déjà engagée est poursuivie). `planSquad`
+  **coordonne** : objectifs les moins défendus d'abord, `ennemis + 1` figurines par objectif
+  (plafond `AI_MAX_PER_OBJECTIVE`), les plus proches — ce qui garde en place les tenants. **Tempo** :
+  au dernier tour (`MAXTURN`), les figurines en trop renforcent les objectifs au lieu d'attaquer
+  (le score se fige à la fin du tour). Le tempo reste simple (basé sur le tour, pas encore sur
+  l'écart de score) : une pondération fine agressivité/prudence selon `state.score` est laissée
+  pour plus tard si besoin.
+- **Refonte IA : terminée** (incréments 0→3). L'IA est désormais à deux niveaux (plan de camp
+  stratégique + moteur d'utilité tactique), joue les objectifs, coordonne, cible par dégâts
+  attendus, se met à couvert et ordonne ses activations. Réglages (poids `AI_*`) = valeurs de
+  départ, à équilibrer en jeu.
 - **Poids et priorités** dans `config.js` (`AI_PRIO_*`, `AI_TARGET_HP_WEIGHT`) : valeurs de
   départ, ajustables ; le grand écart entre priorités garantit que l'ordre prime le départage.
 

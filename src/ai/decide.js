@@ -9,16 +9,27 @@ import { planSquad } from './plan.js';
 //  Rend une INTENTION, jamais un effet. Exécutée par le runner.
 // ============================================================
 
-// Intention suivante de l'IA du camp `side` : engager la figurine active (celle en cours
-// d'activation, sinon la première non activée), lire son but dans le plan de camp, et retenir
-// son action de meilleure utilité.
+// Intention suivante de l'IA du camp `side`. Si une figurine est déjà engagée, on la poursuit ;
+// sinon on choisit, parmi les figurines non activées, celle dont la meilleure action a la plus
+// haute utilité (on active en premier celle qui accomplit le plus — kill, objectif — et on garde
+// les repositionnements pour la fin). Chaque figurine agit selon son but (plan de camp).
 export function decide(state, side) {
   const { models } = state;
-  const m = engagedModel(models, side) || models.find(x => x.alive && x.team === side && !x.activated);
-  if (!m) return { type: 'none' };
-  if (m.ap <= 0) return { type: 'end', model: m };
-  const goal = planSquad(state, side).get(m) || { kind: 'attack' };
-  return bestAction(candidateActions(state, m, side, goal)).intention;
+  const plan = planSquad(state, side);
+  const engaged = engagedModel(models, side);
+  const actable = engaged ? [engaged] : models.filter(x => x.alive && x.team === side && !x.activated);
+  if (!actable.length) return { type: 'none' };
+
+  let choice = null, choiceBest = null;
+  for (const m of actable) {
+    if (m.ap <= 0) continue;
+    const best = bestAction(candidateActions(state, m, side, plan.get(m) || { kind: 'attack' }));
+    if (!choiceBest || best.priority > choiceBest.priority
+        || (best.priority === choiceBest.priority && best.value > choiceBest.value)) {
+      choice = m; choiceBest = best;
+    }
+  }
+  return choice ? choiceBest.intention : { type: 'end', model: actable[0] };
 }
 
 // Choix de l'IA dans un duel (état vivant `duel`) : contrer une critique adverse seulement si

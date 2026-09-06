@@ -61,6 +61,9 @@ export const AI_W_DIST = 1;         // départage par la proximité
 export const AI_COVER_FACTOR = 0.5; // les dégâts attendus sur une cible à couvert sont réduits de moitié
 // Positionnement : valeur (en « pouces de progression » vers le but) d'une destination à couvert.
 export const AI_W_COVER = 2;
+// Coordination : nombre maximal de figurines envoyées sur un même objectif (assez pour départager
+// un défenseur, sans vider l'escouade sur un seul marqueur).
+export const AI_MAX_PER_OBJECTIVE = 2;
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal
