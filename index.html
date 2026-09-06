@@ -78,12 +78,12 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 
 /* ---------- panneau de combat ---------- */
 .combat{
-  position:absolute;left:50%;bottom:20px;transform:translateX(-50%) translateY(14px);
+  position:absolute;left:50%;top:50%;transform:translate(-50%,calc(-50% + 14px));
   width:590px;background:rgba(12,16,12,.96);border:1px solid var(--line);border-radius:4px;
   box-shadow:0 20px 46px rgba(0,0,0,.65);padding:14px 18px 16px;display:none;opacity:0;
   transition:opacity .2s,transform .2s;z-index:7;
 }
-.combat.show{display:block;opacity:1;transform:translateX(-50%) translateY(0)}
+.combat.show{display:block;opacity:1;transform:translate(-50%,-50%)}
 .cb-head{display:flex;align-items:center;gap:10px;font-family:'Barlow Condensed';font-size:19px;padding-bottom:9px;
   border-bottom:1px solid var(--line);margin-bottom:10px}
 .cb-head .arrow{color:var(--brass)}
