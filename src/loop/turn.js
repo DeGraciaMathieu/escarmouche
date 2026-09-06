@@ -6,7 +6,16 @@ import { sfx } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
 
 // Après une action : on termine l'activation si plus de points, sinon on rafraîchit.
-export function afterAction(m) { if (m.ap <= 0) endActivation(); else refresh(); }
+// Si l'action se clôt sur un déplacement encore animé, on attend la fin du glissement avant de
+// changer de camp (on gèle l'IA et la main humaine via `state.busy` pendant l'attente).
+export function afterAction(m) {
+  if (m.ap > 0) { refresh(); return; }
+  if (m.anim) {
+    state.busy = true;
+    const delay = Math.max(0, m.anim.t0 + m.anim.dur - performance.now());
+    setTimeout(() => { state.busy = false; endActivation(); }, delay);
+  } else endActivation();
+}
 
 export function endActivation() {
   if (state.selected) { state.selected.activated = true; state.selected.ap = 0; state.selected.aimed = false; }
