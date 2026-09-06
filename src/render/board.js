@@ -1,8 +1,9 @@
 import { cv, ctx, px } from '../canvas.js';
-import { MAT_TEXTURE_DOTS } from '../config.js';
+import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS } from '../config.js';
 import { TEAMS, state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { sfx } from '../audio.js';
 import { sight, canTarget, canReachAny } from '../rules/sight.js';
+import { controlOf } from '../rules/objective.js';
 import { weaponsForRole } from '../rules/loadout.js';
 import { dist } from '../rules/geometry.js';
 
@@ -126,6 +127,26 @@ const SKINS = {
   container: drawContainer, ruin: drawRuin, building: drawBuilding,
   tank: drawTank, barricade: drawBarricade, crates: drawCrates,
 };
+
+// Marqueurs d'objectif : halo de portée + palet losangé teinté par le camp qui le contrôle
+// (doré si disputé). Dessiné entre le décor et les figurines.
+export function drawObjectives() {
+  for (const o of OBJECTIVES) {
+    const cx = px(o.x), cy = px(o.y), owner = controlOf(state.models, o, OBJECTIVE_RANGE);
+    const col = owner ? TEAMS[owner].color : '#c9a227';
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, px(OBJECTIVE_RANGE), 0, 7);
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = col + '66'; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.setLineDash([]);
+    const r = px(OBJECTIVE_RADIUS);
+    ctx.translate(cx, cy); ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(-r + 2, -r + 2, r * 2, r * 2);
+    ctx.fillStyle = col; ctx.fillRect(-r, -r, r * 2, r * 2);
+    ctx.strokeStyle = '#15180f'; ctx.lineWidth = 2; ctx.strokeRect(-r, -r, r * 2, r * 2);
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(-r * .32, -r * .32, r * .64, r * .64);
+    ctx.restore();
+  }
+}
 
 // Point situé à la fraction `frac` (0..1) le long d'une polyligne, par longueur cumulée.
 function pointAlong(path, frac) {

@@ -47,6 +47,7 @@ export function refresh() {
     const left = remaining(state.models, t), al = aliveOf(state.models, t).length;
     document.getElementById('state' + t).textContent = state.over ? `${al} debout`
       : (t === state.side ? `à jouer · ${left} figurine${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}` : `${left} en attente`);
+    document.getElementById('score' + t).textContent = `${state.score[t]} pt`;
     chips(t, document.getElementById('chips' + t));
   }
   const ra = document.getElementById('rosterA'), rb = document.getElementById('rosterB');

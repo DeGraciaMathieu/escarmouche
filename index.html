@@ -45,6 +45,8 @@ button{font-family:'Barlow Condensed',system-ui,sans-serif}
 .squad-name{font-family:'Barlow Condensed';font-size:18px;font-weight:600}
 .squad-state{font-size:12.5px;color:var(--dim)}
 .squad.active .squad-state{color:var(--brass)}
+.squad-score{font-family:'Barlow Condensed';font-weight:600;font-size:15px;color:#191b12;
+  background:var(--tc);border-radius:3px;padding:1px 8px;line-height:1.5}
 .chips{display:flex;gap:5px}
 .chip{width:15px;height:15px;border-radius:50%;border:2px solid var(--tc);background:var(--tc);position:relative;cursor:default}
 .chip.played{background:transparent;opacity:.5}
@@ -231,11 +233,13 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
   <div class="hud">
     <div class="hud-turn"><b id="turnNum">1</b><span>tour sur 4</span></div>
     <div class="squad" id="squadA" style="--tc:#5c7f9e">
-      <div class="squad-top"><span class="squad-name">Garde de Fer</span><span class="squad-state" id="stateA"></span></div>
+      <div class="squad-top"><span class="squad-name">Garde de Fer</span><span class="squad-score" id="scoreA">0 pt</span></div>
+      <div class="squad-state" id="stateA"></div>
       <div class="chips" id="chipsA"></div>
     </div>
     <div class="squad" id="squadB" style="--tc:#b4553a">
-      <div class="squad-top"><span class="squad-name">Écumeurs</span><span class="squad-state" id="stateB"></span></div>
+      <div class="squad-top"><span class="squad-name">Écumeurs</span><span class="squad-score" id="scoreB">0 pt</span></div>
+      <div class="squad-state" id="stateB"></div>
       <div class="chips" id="chipsB"></div>
     </div>
   </div>
