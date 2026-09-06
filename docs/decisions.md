@@ -98,6 +98,13 @@ pas changer le jeu.
   `bs3`, `dn4/dc5`, 20″), deux profils volontairement opposés.
 - **Facteur de marge de collision `0.92`** (`TERRAIN_MARGIN_FACTOR`) : valeur empirique non
   commentée à l'origine ; extraite en constante mais non modifiée.
+- **Skins de décor** : le `variant` est purement cosmétique (rendu seulement) ; les règles
+  n'y touchent pas. Les plans existants (`classique`, `secteur`) sont habillés via `skin()` sur
+  leurs rects d'origine pour **préserver leur géométrie équilibrée** ; le nouveau plan
+  `avantPoste` est composé de pièces via `place()`. Le skin `tank` est posé sur un rect `wall`
+  (une cuve est un bloqueur de vue). La rotation des pièces n'est pas gérée (gabarits posés tels
+  quels). Palettes de skin laissées dans `render/board.js` (cosmétiques), comme les couleurs de
+  décor d'origine.
 
 ## Open questions
 

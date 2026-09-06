@@ -16,7 +16,7 @@ logique de règle n'y vit. Le temps (`performance.now()`) et l'aléa cosmétique
 | --- | --- | --- |
 | Contexte, conversion pouces→px | `src/canvas.js` | `cv`, `ctx`, `px` |
 | Texture du tapis (pré-rendue) | `src/render/board.js` | `mat` (IIFE au chargement) |
-| Décor | `src/render/board.js` | `drawTerrain` |
+| Décor (dispatch par skin, repli `wall`/`low`) | `src/render/board.js` | `drawTerrain`, map `SKINS` |
 | Position animée d'une figurine | `src/render/board.js` | `modelPos` |
 | Une figurine (socle, rôle, PV, halo) | `src/render/board.js` | `drawModel` |
 | Réticules de cibles valides | `src/render/board.js` | `drawTargets` |

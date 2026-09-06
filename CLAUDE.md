@@ -61,7 +61,11 @@ la main humaine pendant le tour de l'IA).
 - Distances et portées en **pouces** ; conversion en pixels par `px()` (`src/canvas.js`).
 - Le décor est un catalogue de plans `MAPS` (`state/game.js`) ; le joueur en choisit un à l'écran
   de démarrage (`main.js`) et il est copié dans `state.terrain` (le plan actif, lu partout). Un
-  décor est un rectangle `{ x, y, w, h, t }` (`t` = `'wall'` bloquant ou `'low'` bas).
+  décor est un rectangle `{ x, y, w, h, t }` (`t` = `'wall'` bloquant ou `'low'` bas), avec un
+  champ `variant` **purement cosmétique** en option (lu seulement par `drawTerrain`, ignoré des
+  règles). Les plans s'assemblent à partir du catalogue de pièces `PIECES` via `place(key, x, y)`
+  (ou du helper `skin(variant, ...rects)` pour habiller des rects écrits en dur). Ajouter un skin
+  = une routine de rendu dans `render/board.js` (map `SKINS`), aucune règle touchée.
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
   `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe

@@ -37,19 +37,43 @@ export const ROLE_LOADOUTS = {
 
 // Catalogue de plans (décor). Le plan actif est copié dans `state.terrain` au démarrage
 // (main.js), selon l'écran de choix. `(x, y)` = coin haut-gauche, `w`/`h` = étendue en pouces.
+// Catalogue de pièces de décor. Chaque pièce porte une apparence (`variant`, lue seulement par
+// drawTerrain) et une géométrie relative (rects en pouces ; `dx`/`dy` = décalage depuis le point
+// de pose). `place(key, x, y)` renvoie les rects absolus, prêts à figurer dans un plan.
+export const PIECES = {
+  container: { variant: 'container', rects: [{ dx: 0, dy: 0, w: 4, h: 1.8, t: 'wall' }] },
+  ruin:      { variant: 'ruin', rects: [{ dx: 0, dy: 0, w: 3, h: 1, t: 'wall' }, { dx: 0, dy: 1, w: 1, h: 2.6, t: 'wall' }] },
+  building:  { variant: 'building', rects: [{ dx: 0, dy: 0, w: 4.5, h: 4.5, t: 'wall' }] },
+  tank:      { variant: 'tank', rects: [{ dx: 0, dy: 0, w: 2.2, h: 2.2, t: 'wall' }] },
+  barricade: { variant: 'barricade', rects: [{ dx: 0, dy: 0, w: 4, h: 0.8, t: 'low' }] },
+  crates:    { variant: 'crates', rects: [{ dx: 0, dy: 0, w: 2, h: 2, t: 'low' }] },
+};
+
+// Pose une pièce du catalogue en (x, y) : rects absolus portant son `variant`.
+export function place(key, x, y) {
+  const p = PIECES[key];
+  return p.rects.map(r => ({ x: x + r.dx, y: y + r.dy, w: r.w, h: r.h, t: r.t, variant: p.variant }));
+}
+
+// Applique un skin (variant) à des rects écrits en dur, sans changer leur géométrie.
+const skin = (variant, ...rects) => rects.map(r => ({ ...r, variant }));
+
 export const MAPS = {
   // Plan d'origine : murs et couvert épars.
   classique: {
     name: 'Classique',
     desc: 'Murs et couvert épars — le plan d’origine.',
     terrain: [
-      { x: 6, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 6, y: 13.5, w: 1.2, h: 5, t: 'wall' },
-      { x: 22.8, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 22.8, y: 13.5, w: 1.2, h: 5, t: 'wall' },
-      { x: 13, y: 8.5, w: 4, h: 5, t: 'wall' }, { x: 10, y: 0.8, w: 3.4, h: 1.2, t: 'wall' }, { x: 16.6, y: 20, w: 3.4, h: 1.2, t: 'wall' },
-      { x: 2, y: 9, w: 1, h: 4, t: 'low' }, { x: 27, y: 9, w: 1, h: 4, t: 'low' },
-      { x: 10.6, y: 5.4, w: 4, h: 0.8, t: 'low' }, { x: 15.4, y: 15.8, w: 4, h: 0.8, t: 'low' },
-      { x: 19.4, y: 10.4, w: 0.8, h: 3, t: 'low' }, { x: 9.8, y: 10.4, w: 0.8, h: 3, t: 'low' },
-      { x: 14.2, y: 2.6, w: 0.8, h: 3, t: 'low' }, { x: 15, y: 18, w: 0.8, h: 2.4, t: 'low' },
+      ...skin('ruin',
+        { x: 6, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 6, y: 13.5, w: 1.2, h: 5, t: 'wall' },
+        { x: 22.8, y: 3.5, w: 1.2, h: 5, t: 'wall' }, { x: 22.8, y: 13.5, w: 1.2, h: 5, t: 'wall' }),
+      ...skin('building', { x: 13, y: 8.5, w: 4, h: 5, t: 'wall' }),
+      ...skin('container', { x: 10, y: 0.8, w: 3.4, h: 1.2, t: 'wall' }, { x: 16.6, y: 20, w: 3.4, h: 1.2, t: 'wall' }),
+      ...skin('barricade', { x: 10.6, y: 5.4, w: 4, h: 0.8, t: 'low' }, { x: 15.4, y: 15.8, w: 4, h: 0.8, t: 'low' }),
+      ...skin('crates',
+        { x: 2, y: 9, w: 1, h: 4, t: 'low' }, { x: 27, y: 9, w: 1, h: 4, t: 'low' },
+        { x: 19.4, y: 10.4, w: 0.8, h: 3, t: 'low' }, { x: 9.8, y: 10.4, w: 0.8, h: 3, t: 'low' },
+        { x: 14.2, y: 2.6, w: 0.8, h: 3, t: 'low' }, { x: 15, y: 18, w: 0.8, h: 2.4, t: 'low' }),
     ],
   },
   // Grille 3×3 de salles séparées par des cloisons percées de portes (brèche de 3″), symétrique.
@@ -57,16 +81,31 @@ export const MAPS = {
     name: 'Secteur',
     desc: 'Grille de salles reliées par des portes.',
     terrain: [
-      { x: 11.2, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 11.2, y: 5, w: 0.8, h: 4.5, t: 'wall' },
-      { x: 11.2, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 11.2, y: 20, w: 0.8, h: 2, t: 'wall' },
-      { x: 18, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 18, y: 5, w: 0.8, h: 4.5, t: 'wall' },
-      { x: 18, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 18, y: 20, w: 0.8, h: 2, t: 'wall' },
-      { x: 5, y: 6.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 6.6, w: 3.9, h: 0.8, t: 'wall' },
-      { x: 16.5, y: 6.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 6.6, w: 1.6, h: 0.8, t: 'wall' },
-      { x: 5, y: 14.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 14.6, w: 3.9, h: 0.8, t: 'wall' },
-      { x: 16.5, y: 14.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 14.6, w: 1.6, h: 0.8, t: 'wall' },
-      { x: 14.2, y: 2.6, w: 1.6, h: 0.8, t: 'low' }, { x: 14.2, y: 18.6, w: 1.6, h: 0.8, t: 'low' },
-      { x: 7.4, y: 10.2, w: 0.8, h: 1.6, t: 'low' }, { x: 21.8, y: 10.2, w: 0.8, h: 1.6, t: 'low' },
+      ...skin('ruin',
+        { x: 11.2, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 11.2, y: 5, w: 0.8, h: 4.5, t: 'wall' },
+        { x: 11.2, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 11.2, y: 20, w: 0.8, h: 2, t: 'wall' },
+        { x: 18, y: 0, w: 0.8, h: 2, t: 'wall' }, { x: 18, y: 5, w: 0.8, h: 4.5, t: 'wall' },
+        { x: 18, y: 12.5, w: 0.8, h: 4.5, t: 'wall' }, { x: 18, y: 20, w: 0.8, h: 2, t: 'wall' },
+        { x: 5, y: 6.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 6.6, w: 3.9, h: 0.8, t: 'wall' },
+        { x: 16.5, y: 6.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 6.6, w: 1.6, h: 0.8, t: 'wall' },
+        { x: 5, y: 14.6, w: 1.6, h: 0.8, t: 'wall' }, { x: 9.6, y: 14.6, w: 3.9, h: 0.8, t: 'wall' },
+        { x: 16.5, y: 14.6, w: 3.9, h: 0.8, t: 'wall' }, { x: 23.4, y: 14.6, w: 1.6, h: 0.8, t: 'wall' }),
+      ...skin('crates', { x: 7.4, y: 10.2, w: 0.8, h: 1.6, t: 'low' }, { x: 21.8, y: 10.2, w: 0.8, h: 1.6, t: 'low' }),
+      ...skin('barricade', { x: 14.2, y: 2.6, w: 1.6, h: 0.8, t: 'low' }, { x: 14.2, y: 18.6, w: 1.6, h: 0.8, t: 'low' }),
+    ],
+  },
+  // Avant-poste industriel : conteneurs, bâtiment central, cuves et couvert épars, assemblé de pièces.
+  avantPoste: {
+    name: 'Avant-poste',
+    desc: 'Dépôt industriel : conteneurs, cuves et ruines.',
+    terrain: [
+      ...place('container', 6, 3), ...place('container', 20, 3),
+      ...place('container', 6, 17.2), ...place('container', 20, 17.2),
+      ...place('building', 12.75, 8.75),
+      ...place('ruin', 5, 9.5), ...place('ruin', 22, 9.5),
+      ...place('tank', 9.5, 12), ...place('tank', 18.3, 6),
+      ...place('barricade', 11, 5.5), ...place('barricade', 15, 16),
+      ...place('crates', 6, 7), ...place('crates', 22, 13), ...place('crates', 13.5, 14),
     ],
   },
 };
