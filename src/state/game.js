@@ -9,13 +9,13 @@ export const TEAMS = {
 // weaponCanFire (portée, lourde) et resolveShot (dés, touche, dégâts). Partagé en lecture seule.
 export const WEAPONS = {
   pm:       { name: 'Pistolet-mitrailleur', a: 4, bs: 3, dn: 3, dc: 4, range: 14 },
-  canon:    { name: 'Canon long', a: 4, bs: 3, dn: 4, dc: 5, heavy: true },
-  scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8 },
-  carabine: { name: 'Carabine', a: 6, bs: 4, dn: 2, dc: 3, range: 10 },
-  bolter:   { name: 'Bolter', a: 3, bs: 3, dn: 4, dc: 5, range: 18 },
+  canon:    { name: 'Canon long', a: 4, bs: 3, dn: 4, dc: 5, heavy: true, brutal: true },
+  scie:     { name: 'Fusil scié', a: 5, bs: 3, dn: 3, dc: 4, range: 8, saturate: true },
+  carabine: { name: 'Carabine', a: 6, bs: 4, dn: 2, dc: 3, range: 10, precision: 1 },
+  bolter:   { name: 'Bolter', a: 3, bs: 3, dn: 4, dc: 5, range: 18, ap: 1 },
   assaut:   { name: "Fusil d'assaut", a: 3, bs: 3, dn: 4, dc: 5, range: 20, tracer: 'assaut' },
-  sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true, tracer: 'sniper' },
-  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 12, overheat: true, tracer: 'plasma' },
+  sniper:   { name: 'Sniper', a: 2, bs: 2, dn: 5, dc: 6, range: 30, heavy: true, lethal: 5, ap: 1, tracer: 'sniper' },
+  plasma:   { name: 'Pistolet plasma', a: 3, bs: 3, dn: 4, dc: 6, range: 12, overheat: true, devastating: 3, tracer: 'plasma' },
 };
 
 // Catalogue d'armes de mêlée : `a` dés d'attaque lancés contre la valeur Touche `ws`, dégâts

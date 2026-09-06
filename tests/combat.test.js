@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { effectiveBs, resolveShot, resolveOverheat } from '../src/rules/combat.js';
+import { effectiveBs, resolveShot, resolveOverheat, attackDice, defenseDice } from '../src/rules/combat.js';
 
 // arme type : dn=3 dégâts par touche, dc=4 si critique
 const shot = (o) => resolveShot({ bs: 3, sv: 4, cover: false, dn: 3, dc: 4, ...o });
@@ -79,6 +79,55 @@ test('un 1 ne touche jamais, même en visant', () => {
   const r = shot({ atkRolls: [1, 1], defRolls: [1, 1, 1], bs: 2 });
   assert.equal(r.hits, 0);
   assert.equal(r.crits, 0);
+});
+
+// --- Traits d'arme ---------------------------------------------------------
+
+test('Létale x+ : un dé sous 6 mais ≥ x compte comme critique', () => {
+  const r = shot({ atkRolls: [5, 4], defRolls: [1, 1, 1], critOn: 5 }); // 5 = crit, 4 = touche normale
+  assert.equal(r.crits, 1);
+  assert.equal(r.hits, 1);
+  assert.equal(r.damage, 4 + 3);
+});
+
+test('Perforante x : le défenseur lance x dés de moins', () => {
+  assert.equal(defenseDice({ a: 3 }), 3);
+  assert.equal(defenseDice({ a: 3, ap: 1 }), 2);
+  assert.equal(defenseDice({ a: 3, ap: 5 }), 0); // plancher 0
+});
+
+test('Brutale : les sauvegardes normales n\'annulent rien', () => {
+  const r = shot({ atkRolls: [5], defRolls: [5, 5, 5], brutal: true }); // 3 saves normales ignorées
+  assert.equal(r.survivingHits, 1);
+  assert.equal(r.damage, 3);
+});
+
+test('Brutale : une sauvegarde critique bloque encore', () => {
+  const r = shot({ atkRolls: [5], defRolls: [6, 1, 1], brutal: true }); // la save crit vaut save normale
+  assert.equal(r.damage, 0);
+});
+
+test('Dévastatrice x : chaque crit inflige x dégâts inéluctables', () => {
+  const r = shot({ atkRolls: [6], defRolls: [6, 6, 6], devastating: 3 }); // défense parfaite, mais inéluctable
+  assert.equal(r.mortal, 3);
+  assert.equal(r.survivingCrits, 0);
+  assert.equal(r.damage, 3);
+});
+
+test('Précision x : x réussites normales automatiques', () => {
+  const r = shot({ atkRolls: [1, 1], defRolls: [1, 1, 1], precision: 2 }); // aucun dé ne touche, +2 sûres
+  assert.equal(r.hits, 2);
+  assert.equal(r.damage, 6);
+});
+
+test('Précision : les dés lancés sont réduits d\'autant', () => {
+  assert.equal(attackDice({ a: 6, precision: 1 }), 5);
+  assert.equal(attackDice({ a: 4 }), 4);
+});
+
+test('Saturation : le couvert n\'ajoute pas de sauvegarde', () => {
+  const r = shot({ atkRolls: [5], defRolls: [1, 1, 1], cover: true, saturate: true });
+  assert.equal(r.damage, 3); // sans saturation, le dé de couvert annulerait la touche
 });
 
 test('une surchauffe (dé de surchauffe à 1) blesse le tireur', () => {

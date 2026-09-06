@@ -75,7 +75,11 @@ la main humaine pendant le tour de l'IA).
   de `state/game.js`) : `a` dés contre la valeur Touche `ws`, dégâts `dn`/`dc`.
 - Un **trait d'arme** est un marqueur sur l'entrée du catalogue (ex. `overheat: true` pour la
   surchauffe du plasma) ; sa règle est pure (ex. `resolveOverheat`, seuils en `config.js`) et
-  son effet animé vit dans `loop/combat.js`.
+  son effet animé vit dans `loop/combat.js`. Les traits de tir résolus par `resolveShot` :
+  `lethal` (crit dès x+), `ap` (−x dés de défense), `brutal` (seules les saves critiques bloquent),
+  `devastating` (crit = x dégâts inéluctables), `precision` (x touches sûres, −x dés d'attaque),
+  `saturate` (annule le couvert), en plus de `heavy` et `range`. Le nombre de dés lancés vient des
+  helpers purs `attackDice`/`defenseDice`.
 - Déplacement : un mouvement **contourne automatiquement le décor** (graphe de visibilité,
   `rules/pathfind.js`) ; la distance dépensée est la **longueur du chemin** contourné, plafonnée
   à `M`, pour un seul point d'action. Les figurines ne bloquent pas le trajet (seule la

@@ -1,5 +1,5 @@
 import {
-  DEFENSE_DICE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST, COMBAT_PACE,
+  CRIT_VALUE, DIE_ROW, DIE_START_X, DIE_GAP, DIE_SPIN_INTERVAL, SPEED_FAST, COMBAT_PACE,
   ENDSHOT_WAIT_DMG, ENDSHOT_WAIT_NODMG, DICE_FACES,
   DIE_REVEAL_STEP, ATTACK_SETTLE, ATTACK_NOTE_HOLD, DEFENSE_INTRO, COVER_DIE_DELAY,
   DEFENSE_NOTE_HOLD, CANCEL_ALIGN, CANCEL_POP, DAMAGE_STEP, DAMAGE_SETTLE, DOWN_DELAY,
@@ -13,7 +13,7 @@ import {
   OVERHEAT_ROLL, OVERHEAT_DAMAGE, OVERHEAT_INTRO,
 } from '../config.js';
 import { state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
-import { isCrit, isHit, isSave, effectiveBs, resolveShot, resolveOverheat } from '../rules/combat.js';
+import { isCrit, isHit, isSave, effectiveBs, resolveShot, resolveOverheat, attackDice, defenseDice } from '../rules/combat.js';
 import { weaponsForRole } from '../rules/loadout.js';
 import { weaponCanFire } from '../rules/sight.js';
 import { sfx, audio, tone } from '../audio.js';
@@ -42,25 +42,42 @@ function place(el, x, y, rot = 0, scale = 1) {
   el.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg) scale(${scale})`;
 }
 
+// Libellé court des traits actifs d'une arme, pour la modale.
+function traitLabel(w) {
+  const t = [];
+  if (w.lethal) t.push(`Létale ${w.lethal}+`);
+  if (w.ap) t.push(`Perforante ${w.ap}`);
+  if (w.brutal) t.push('Brutale');
+  if (w.devastating) t.push(`Dévastatrice ${w.devastating}`);
+  if (w.precision) t.push(`Précision ${w.precision}`);
+  if (w.saturate) t.push('Saturation');
+  if (w.heavy) t.push('Lourde');
+  if (w.overheat) t.push('Surchauffe');
+  return t.join(' · ');
+}
+
 // Redessine les parties de la modale qui dépendent de l'arme équipée : méta, briefing,
 // sélecteur d'armes (verdict de portée par arme) et disponibilité du bouton de tir.
 function shotBrief() {
   const { shooter, target, s } = state.pending;
-  const bs = effectiveBs(shooter.weapon.bs, shooter.aimed);
-  const conceal = s.cover ? 'cible à couvert' : s.masked ? 'cible masquée' : 'cible à découvert';
+  const w = shooter.weapon;
+  const bs = effectiveBs(w.bs, shooter.aimed), critOn = w.lethal || CRIT_VALUE;
+  const useCover = s.cover && !w.saturate;
+  const conceal = useCover ? 'cible à couvert' : s.masked ? 'cible masquée' : 'cible à découvert';
+  const traits = traitLabel(w);
   document.getElementById('cbMeta').textContent =
     `${s.len.toFixed(1)}″ · ${conceal}${shooter.aimed ? ' · en joue' : ''}`;
   document.getElementById('cbBrief').innerHTML = `
-    <div class="col">Attaque<br><b>${shooter.weapon.a} dés, touche ${bs}+</b><br>${shooter.weapon.name}${s.masked ? '<br>− 1 réussite (masquée)' : ''}</div>
-    <div class="col">Défense<br><b>${DEFENSE_DICE} dés, sauvegarde ${target.sv}+</b><br>${s.cover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
-    <div class="col">Dégâts<br><b>${shooter.weapon.dn} par touche, ${shooter.weapon.dc} si critique</b><br>${target.name} a ${target.hp} PV</div>`;
+    <div class="col">Attaque<br><b>${w.a} dés, touche ${bs}+${w.lethal ? `, crit ${critOn}+` : ''}</b><br>${w.name}${traits ? `<br><small>${traits}</small>` : ''}${s.masked ? '<br>− 1 réussite (masquée)' : ''}</div>
+    <div class="col">Défense<br><b>${defenseDice(w)} dés, sauvegarde ${target.sv}+</b><br>${w.saturate && s.cover ? 'couvert annulé (saturation)' : useCover ? '+ 1 dé de couvert offert' : 'aucun couvert'}</div>
+    <div class="col">Dégâts<br><b>${w.dn} par touche, ${w.devastating ? `${w.devastating} par crit (inéluctable)` : `${w.dc} si critique`}</b><br>${target.name} a ${target.hp} PV</div>`;
 
   const box = document.getElementById('cbWeapons'); box.innerHTML = '';
   for (const key of weaponsForRole(shooter.role, ROLE_LOADOUTS)) {
     const wp = WEAPONS[key], reach = weaponCanFire(wp, shooter.moved, s);
     const b = document.createElement('button');
     b.className = 'wpick' + (shooter.weapon === wp ? ' on' : '') + (reach.ok ? '' : ' out');
-    b.innerHTML = `<b>${wp.name}</b><span>${wp.a} dés · ${wp.bs}+ · ${wp.dn}/${wp.dc} · ${wp.range ? wp.range + '″' : '∞'}${wp.heavy ? ' · lourde' : ''}</span><em>${reach.ok ? 'à portée' : reach.why}</em>`;
+    b.innerHTML = `<b>${wp.name}</b><span>${wp.a} dés · ${wp.bs}+ · ${wp.dn}/${wp.dc} · ${wp.range ? wp.range + '″' : '∞'}${traitLabel(wp) ? ' · ' + traitLabel(wp) : ''}</span><em>${reach.ok ? 'à portée' : reach.why}</em>`;
     b.onclick = () => selectWeapon(key);
     box.appendChild(b);
   }
@@ -115,14 +132,21 @@ export async function fire() {
   // fermeture de la modale (playCinematic), pour qu'ils soient visibles sur le plateau.
   const plan = { shooter, target, s, damage: 0, cancels: 0, impacts: [], targetDown: false, overheat: 0, shooterDown: false };
 
-  // --- jet d'attaque
-  const atk = await throwDice(shooter.weapon.a, ROW.atk, 'left');
+  // --- jet d'attaque (Létale abaisse le seuil de crit ; Précision retire des dés lancés)
+  const critOn = shooter.weapon.lethal || CRIT_VALUE;
+  const atk = await throwDice(attackDice(shooter.weapon), ROW.atk, 'left');
   let hits = [], crits = [], miss = [];
   for (const d of atk) {
     await sleep(DIE_REVEAL_STEP);
-    if (isCrit(d.v)) { d.el.classList.add('crit'); crits.push(d); sfx.hitDie(); }
-    else if (isHit(d.v, bs)) { d.el.classList.add('hit'); hits.push(d); sfx.hitDie(); }
+    if (isCrit(d.v, critOn)) { d.el.classList.add('crit'); crits.push(d); sfx.hitDie(); }
+    else if (isHit(d.v, bs, critOn)) { d.el.classList.add('hit'); hits.push(d); sfx.hitDie(); }
     else { d.el.classList.add('miss'); miss.push(d); }
+  }
+  // Précision : réussites normales automatiques, posées comme des touches sûres (non lancées).
+  for (let i = 0; i < (shooter.weapon.precision || 0); i++) {
+    const el = makeDie(); paintDie(el, bs); el.classList.add('hit', 'land');
+    place(el, DX, ROW.atk, 0, 1);
+    hits.push({ el, x: DX, rot: 0, v: bs });
   }
   await sleep(ATTACK_SETTLE);
   // masquage : le décor au milieu de la ligne retire une réussite (une touche simple d'abord).
@@ -150,7 +174,9 @@ export async function fire() {
   nDef.innerHTML = `<em>${target.name}</em> doit encaisser…`;
   nDef.classList.add('show');
   await sleep(DEFENSE_INTRO);
-  const def = await throwDice(DEFENSE_DICE, ROW.def, 'right');
+  // Perforante retire des dés de défense ; Saturation prive la cible de son dé de couvert.
+  const nDefDice = defenseDice(shooter.weapon), useCover = s.cover && !shooter.weapon.saturate;
+  const def = await throwDice(nDefDice, ROW.def, 'right');
   let saves = [], csaves = [];
   for (const d of def) {
     await sleep(DIE_REVEAL_STEP);
@@ -158,29 +184,32 @@ export async function fire() {
     else if (isSave(d.v, target.sv)) { d.el.classList.add('save'); saves.push(d); sfx.save(); }
     else d.el.classList.add('miss');
   }
-  if (s.cover) {
+  if (useCover) {
     await sleep(COVER_DIE_DELAY);
     const el = makeDie(); paintDie(el, target.sv); el.classList.add('cover');
-    place(el, DX + DEFENSE_DICE * GAP + COVER_DIE_OFFSET, ROW.def, COVER_DIE_ROT, 1); el.classList.add('land');
-    saves.push({ el, v: target.sv, x: DX + DEFENSE_DICE * GAP + COVER_DIE_OFFSET, rot: COVER_DIE_ROT }); sfx.save();
+    place(el, DX + nDefDice * GAP + COVER_DIE_OFFSET, ROW.def, COVER_DIE_ROT, 1); el.classList.add('land');
+    saves.push({ el, v: target.sv, x: DX + nDefDice * GAP + COVER_DIE_OFFSET, rot: COVER_DIE_ROT }); sfx.save();
   }
   const failed = def.filter(d => !saves.includes(d) && !csaves.includes(d));
   failed.forEach(d => { place(d.el, d.x, ROW.def + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
   const goodDef = [...csaves, ...saves];
   goodDef.forEach((d, i) => { d.x = DX + i * GAP; place(d.el, d.x, ROW.def, d.rot, 1); });
   nDef.innerHTML = goodDef.length
-    ? `<em>${goodDef.length} sauvegarde${goodDef.length > 1 ? 's' : ''}</em>${s.cover ? ' (dont le dé de couvert)' : ''}`
+    ? `<em>${goodDef.length} sauvegarde${goodDef.length > 1 ? 's' : ''}</em>${useCover ? ' (dont le dé de couvert)' : ''}`
     : 'aucune sauvegarde';
   await sleep(DEFENSE_NOTE_HOLD);
 
   // --- résolution des annulations et des dégâts (règle pure)
+  const w = shooter.weapon;
   const outcome = resolveShot({
     atkRolls: atk.map(d => d.v), defRolls: def.map(d => d.v),
-    bs, sv: target.sv, cover: s.cover, masked: s.masked, dn: shooter.weapon.dn, dc: shooter.weapon.dc,
+    bs, sv: target.sv, cover: s.cover, masked: s.masked, dn: w.dn, dc: w.dc,
+    critOn, brutal: !!w.brutal, devastating: w.devastating || 0, precision: w.precision || 0, saturate: !!w.saturate,
   });
 
   // --- annulations, une par une (l'animation suit les comptes de la règle)
-  let rc = [...crits], rh = [...hits], ns = [...saves], cs = [...csaves];
+  // Brutale : les saves normales n'entrent pas dans le pool d'annulation (seules les critiques comptent).
+  let rc = [...crits], rh = [...hits], ns = w.brutal ? [] : [...saves], cs = [...csaves];
   const ops = [];
   for (let i = 0; i < outcome.critCancelledByCrit; i++) ops.push({ sv: [cs.shift()], hit: rc.shift(), label: 'critique annulée' });
   ns.push(...cs); cs = [];
@@ -208,7 +237,7 @@ export async function fire() {
     left.forEach(d => d.el.classList.add('pulse'));
     let shown = 0;
     for (const d of left) {
-      shown += rc.includes(d) ? shooter.weapon.dc : shooter.weapon.dn;
+      shown += rc.includes(d) ? (w.devastating || w.dc) : w.dn; // Dévastatrice : le crit inflige ses dégâts inéluctables
       document.getElementById('tallyNum').textContent = shown;
       await sleep(DAMAGE_STEP);
     }
@@ -221,7 +250,7 @@ export async function fire() {
     plan.targetDown = newHp <= 0;
     document.getElementById('cbVerdict').innerHTML =
       `<em>${dmg} dégâts</em> — ${target.name} ${plan.targetDown ? 'tombe' : `passe à ${newHp} PV`}`;
-    journal(`<b>${shooter.name}</b> touche <b>${target.name}</b> : ${dmg} dégâts${s.cover ? ' (couvert)' : ''}.`);
+    journal(`<b>${shooter.name}</b> touche <b>${target.name}</b> : ${dmg} dégâts${useCover ? ' (couvert)' : ''}.`);
   } else {
     document.getElementById('cbVerdict').innerHTML = 'Tout est encaissé.';
     journal(`<b>${shooter.name}</b> touche <b>${target.name}</b>, sans dégât.`);

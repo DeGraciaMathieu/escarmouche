@@ -17,8 +17,14 @@ animée** (`src/loop/combat.js`). Toute modification de mécanique passe d'abord
 | Touche | `isHit(v, bs)` | `v >= bs`, `v > 1`, pas un critique |
 | Sauvegarde | `isSave(v, sv)` | `v >= sv`, `v > 1`, pas un critique |
 | Seuil après visée | `effectiveBs(bs, aimed)` | viser abaisse d'un cran, plancher `MIN_HIT_TARGET` (2+) |
-| Résolution | `resolveShot({ atkRolls, defRolls, bs, sv, cover, dn, dc })` | renvoie comptes + `damage` |
+| Résolution | `resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc, critOn, brutal, devastating, precision, saturate })` | renvoie comptes + `damage` (+ `mortal`) |
+| Nombre de dés lancés (traits) | `attackDice(w)`, `defenseDice(w)` | `a − precision` / `DEFENSE_DICE − ap`, plancher 0 |
 | Surchauffe (trait plasma) | `resolveOverheat(roll)` | `OVERHEAT_DAMAGE` si `roll === OVERHEAT_ROLL`, sinon 0 |
+
+Traits de tir gérés par `resolveShot` (défauts = comportement sans trait) : `lethal` (crit dès x+,
+attaquant seulement, via `critOn`), `brutal` (saves normales ignorées), `devastating` (chaque crit
+= x dégâts inéluctables, `mortal`), `precision` (x touches sûres ajoutées), `saturate` (couvert
+annulé). `ap` (Perforante) agit en amont via `defenseDice`.
 
 `resolveShot` applique les annulations dans cet ordre :
 1. une **sauvegarde critique** annule une critique (1 pour 1) ;

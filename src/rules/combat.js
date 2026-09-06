@@ -1,9 +1,15 @@
-import { CRIT_VALUE, MIN_HIT_TARGET, SAVES_PER_CRIT, OVERHEAT_ROLL, OVERHEAT_DAMAGE } from '../config.js';
+import { CRIT_VALUE, MIN_HIT_TARGET, SAVES_PER_CRIT, DEFENSE_DICE, OVERHEAT_ROLL, OVERHEAT_DAMAGE } from '../config.js';
 
-// Classement d'un dé (un 1 ne touche/sauve jamais ; un 6 est toujours critique).
-export const isCrit = v => v === CRIT_VALUE;
-export const isHit = (v, bs) => v !== CRIT_VALUE && v >= bs && v > 1;
+// Classement d'un dé (un 1 ne touche/sauve jamais). Le seuil de critique `critOn` vaut 6 par
+// défaut, abaissé par le trait Létale (côté attaquant seulement) ; une touche est en deçà.
+export const isCrit = (v, critOn = CRIT_VALUE) => v >= critOn && v > 1;
+export const isHit = (v, bs, critOn = CRIT_VALUE) => v >= bs && v < critOn && v > 1;
 export const isSave = (v, sv) => v !== CRIT_VALUE && v >= sv && v > 1;
+
+// Nombre de dés lancés en tenant compte des traits : Précision retire des dés d'attaque (les
+// réussites automatiques les remplacent), Perforante retire des dés de défense.
+export const attackDice = w => Math.max(0, w.a - (w.precision || 0));
+export const defenseDice = w => Math.max(0, DEFENSE_DICE - (w.ap || 0));
 
 // Seuil de touche effectif : viser abaisse le seuil d'un cran, sans descendre sous 2+.
 export const effectiveBs = (bs, aimed) => Math.max(MIN_HIT_TARGET, aimed ? bs - 1 : bs);
@@ -15,12 +21,17 @@ export const resolveOverheat = roll => roll === OVERHEAT_ROLL ? OVERHEAT_DAMAGE 
 // une sauvegarde annule une touche, deux sauvegardes (ou une sauvegarde critique) annulent
 // une critique ; le couvert offre une sauvegarde supplémentaire ; le masquage fait retirer une
 // réussite à l'attaquant (une touche simple d'abord, une critique seulement à défaut).
-export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc }) {
-  let crits = atkRolls.filter(isCrit).length;
-  let hits = atkRolls.filter(v => isHit(v, bs)).length;
+export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc,
+  critOn = CRIT_VALUE, brutal = false, devastating = 0, precision = 0, saturate = false }) {
+  let crits = atkRolls.filter(v => isCrit(v, critOn)).length;
+  let hits = atkRolls.filter(v => isHit(v, bs, critOn)).length + precision; // Précision : réussites sûres
   if (masked) { if (hits > 0) hits--; else if (crits > 0) crits--; }
-  const csaves = defRolls.filter(isCrit).length;
-  const saves = defRolls.filter(v => isSave(v, sv)).length + (cover ? 1 : 0);
+  // Dévastatrice : chaque critique inflige des dégâts inéluctables et quitte la résolution normale.
+  let mortal = 0;
+  if (devastating > 0) { mortal = crits * devastating; crits = 0; }
+  const csaves = defRolls.filter(v => isCrit(v)).length;
+  const effCover = cover && !saturate;                          // Saturation : le couvert ne s'applique pas
+  const saves = brutal ? 0 : defRolls.filter(v => isSave(v, sv)).length + (effCover ? 1 : 0); // Brutale : saves normales ignorées
 
   const critCancelledByCrit = Math.min(csaves, crits);          // une sauvegarde critique annule une critique
   let rc = crits - critCancelledByCrit;
@@ -34,8 +45,8 @@ export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc 
   return {
     crits, hits, csaves, saves,
     critCancelledByCrit, critCancelledByPair, hitCancelled,
-    survivingCrits: rc, survivingHits: rh,
-    damage: rc * dc + rh * dn,
+    survivingCrits: rc, survivingHits: rh, mortal,
+    damage: mortal + rc * dc + rh * dn,
   };
 }
 
@@ -46,7 +57,7 @@ export function resolveShot({ atkRolls, defRolls, bs, sv, cover, masked, dn, dc 
 // Classe les dés de mêlée d'un camp en touches normales et critiques (les échecs sont écartés).
 export const classifyMelee = (rolls, ws) => ({
   hits: rolls.filter(v => isHit(v, ws)).length,
-  crits: rolls.filter(isCrit).length,
+  crits: rolls.filter(v => isCrit(v)).length,
 });
 
 const hasDice = s => s.hits + s.crits > 0;
