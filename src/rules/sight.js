@@ -57,6 +57,17 @@ export function canShoot(m, target, terrain, models = []) {
   return w.ok ? { ok: true, s: t.s } : { ok: false, why: w.why, s: t.s };
 }
 
+// Verdict d'affichage du survol : cible visable (vue dégagée) ET au moins une des `weapons`
+// (armes du rôle) l'atteint. Le joueur peut changer d'arme dans la modale, donc la portée se
+// juge sur tout l'arsenal du rôle et non sur la seule arme équipée (sinon « hors de portée »
+// trompeur). Ne remplace pas canShoot, qui reste le verdict de l'arme équipée pour le tir réel.
+export function canReachAny(m, target, terrain, models, weapons) {
+  const t = canTarget(m, target, terrain, models);
+  if (!t.ok) return t;
+  if (!weapons.some(w => weaponCanFire(w, m.moved, t.s).ok)) return { ok: false, why: 'hors de portée', s: t.s };
+  return { ok: true, s: t.s };
+}
+
 // Deux figurines sont au contact si elles sont à portée de contrôle l'une de l'autre.
 export const inControlRange = (a, b) => dist(a, b) <= CONTROL_RANGE;
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sight, canShoot, canTarget, weaponCanFire, canFight, inControlRange } from '../src/rules/sight.js';
+import { sight, canShoot, canTarget, canReachAny, weaponCanFire, canFight, inControlRange } from '../src/rules/sight.js';
 import { BASE_RADIUS } from '../src/config.js';
 
 const shooter = (o = {}) => ({ team: 'A', alive: true, ap: 2, shot: false, moved: false, weapon: { a: 4, bs: 3 }, meleeWeapon: { a: 4, ws: 3 }, x: 0, y: 5, ...o });
@@ -100,6 +100,23 @@ test('le corps à corps ignore les figurines interposées (tir seulement)', () =
   const chk = canFight(shooter(), target({ x: 1.5, y: 5 }), []); // au contact
   assert.equal(chk.ok, true);
   assert.equal(chk.s.cover, false); // la mêlée ne reçoit jamais le couvert d'une figurine
+});
+
+test('le survol reste à portée si une arme du rôle atteint la cible, même équipé d\'une plus courte', () => {
+  const m = shooter({ weapon: { a: 4, bs: 3, range: 8 } });   // arme équipée hors de portée (8 < 10)
+  const t = target({ x: 10, y: 5 });
+  const roleWeapons = [{ a: 4, bs: 3, range: 8 }, { a: 3, bs: 3, range: 18 }]; // une arme atteint (18 ≥ 10)
+  assert.equal(canShoot(m, t, []).ok, false);                 // l'arme équipée n'atteint pas
+  assert.equal(canReachAny(m, t, [], [], roleWeapons).ok, true); // mais le rôle peut tirer → affichage à portée
+});
+
+test('le survol est hors de portée seulement si aucune arme du rôle n\'atteint', () => {
+  const m = shooter();
+  const t = target({ x: 10, y: 5 });
+  const roleWeapons = [{ a: 4, bs: 3, range: 6 }, { a: 3, bs: 3, range: 8 }]; // aucune n'atteint 10
+  const chk = canReachAny(m, t, [], [], roleWeapons);
+  assert.equal(chk.ok, false);
+  assert.equal(chk.why, 'hors de portée');
 });
 
 test('une cible ennemie à vue dégagée et à portée peut être visée', () => {

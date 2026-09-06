@@ -27,6 +27,7 @@ Si une fonction ne peut pas respecter 1–5, ce n'est pas une règle : elle va d
 | Peut-on cibler (camp, PA, tir, ligne de vue — sans l'arme) | `rules/sight.js` | `canTarget(m, target, terrain, models)` |
 | Une arme peut-elle faire feu (portée, arme lourde) | `rules/sight.js` | `weaponCanFire(weapon, moved, s)` |
 | Peut-on tirer avec l'arme équipée (compose les deux) | `rules/sight.js` | `canShoot(m, target, terrain, models)` |
+| Au moins une arme du rôle atteint (verdict d'affichage du survol) | `rules/sight.js` | `canReachAny(m, target, terrain, models, weapons)` |
 | Déplacement légal (bords, socle, place, chemin contourné ≤ M) | `rules/movement.js` | `moveCheck(m, to, models, terrain)` |
 | Plus court chemin contournant le décor | `rules/pathfind.js` | `findPath(from, to, rects)` |
 | Fin d'activation : changer de camp / nouveau tour / enchaîner | `rules/turn.js` | `decideActivationEnd(models, side)` |

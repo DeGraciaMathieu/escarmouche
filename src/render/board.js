@@ -1,8 +1,9 @@
 import { cv, ctx, px } from '../canvas.js';
 import { MAT_TEXTURE_DOTS } from '../config.js';
-import { TEAMS, state } from '../state/game.js';
+import { TEAMS, state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { sfx } from '../audio.js';
-import { sight, canShoot, canTarget } from '../rules/sight.js';
+import { sight, canTarget, canReachAny } from '../rules/sight.js';
+import { weaponsForRole } from '../rules/loadout.js';
 import { dist } from '../rules/geometry.js';
 
 // Texture du tapis, pré-rendue une fois hors écran.
@@ -287,7 +288,8 @@ export function drawFiringLine() {
 export function drawSight() {
   if (!state.selected || !state.hoverModel || state.drag || state.busy) return;
   if (state.hoverModel.team === state.selected.team) return;
-  const chk = canShoot(state.selected, state.hoverModel, state.terrain, state.models), s = chk.s || sight(state.selected, state.hoverModel, state.terrain, state.models);
+  const roleWeapons = weaponsForRole(state.selected.role, ROLE_LOADOUTS).map(k => WEAPONS[k]);
+  const chk = canReachAny(state.selected, state.hoverModel, state.terrain, state.models, roleWeapons), s = chk.s || sight(state.selected, state.hoverModel, state.terrain, state.models);
   const a = { x: px(state.selected.x), y: px(state.selected.y) }, b = { x: px(state.hoverModel.x), y: px(state.hoverModel.y) };
   let col, label;
   if (!s.los) { col = '#c4503a'; label = 'vue bloquée'; }
