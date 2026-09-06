@@ -1,20 +1,20 @@
-import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_POINTS, KILL_POINTS } from '../config.js';
+import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS, OBJECTIVES, OBJECTIVE_RANGE } from '../config.js';
 import { TEAMS, state } from '../state/game.js';
 import { decideActivationEnd, annihilationWinner, scoreWinner } from '../rules/turn.js';
 import { scoreObjectives } from '../rules/objective.js';
+import { awardKill, addObjectiveScore } from '../rules/score.js';
 import { remaining } from '../rules/squad.js';
 import { sfx } from '../audio.js';
 import { refresh, journal } from '../render/ui.js';
 
 // Crédite le camp d'un kill (figurine ennemie mise hors de combat). Appelé par les résolutions
 // de tir et de corps à corps au moment où la victime tombe.
-export function registerKill(killerTeam) { state.score[killerTeam] += KILL_POINTS; }
+export function registerKill(killerTeam) { state.score = awardKill(state.score, killerTeam); }
 
 // Objectifs contrôlés à la fin du tour qui s'achève : ajoute les points et journalise le bilan.
 function scoreEndOfTurn() {
   const held = scoreObjectives(state.models, OBJECTIVES, OBJECTIVE_RANGE);
-  state.score.A += held.A * OBJECTIVE_POINTS;
-  state.score.B += held.B * OBJECTIVE_POINTS;
+  state.score = addObjectiveScore(state.score, held);
   if (held.A || held.B) journal(`<b>Fin du tour ${state.turn}</b> — objectifs tenus : ${TEAMS.A.name} ${held.A}, ${TEAMS.B.name} ${held.B}.`);
 }
 

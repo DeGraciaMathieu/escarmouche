@@ -93,11 +93,13 @@ la main humaine pendant le tour de l'IA).
   de la ligne (loin des deux). Une **figurine tierce vivante** dont le socle coupe la ligne (et à plus
   de `INTERVENING_MIN_DISTANCE` de chaque extrémité) donne aussi le couvert — au tir seulement
   (`canFight` ne passe pas les figurines à `sight`). Le couvert prime le masquage. Seuils en `config.js`.
-- Score et objectifs : chaque camp accumule des points dans `state.score` (`{ A, B }`). Une
-  **élimination** rapporte `KILL_POINTS` au camp responsable (crédité par `registerKill` dans
-  `loop/turn.js`, appelé depuis les résolutions de tir et de mêlée ; une auto-élimination par
-  surchauffe ne rapporte rien). Le **contrôle de zone** rapporte `OBJECTIVE_POINTS` par marqueur
-  d'objectif tenu, compté **en fin de chaque tour** (`scoreEndOfTurn`). Les marqueurs sont une
+- Score et objectifs : chaque camp accumule des points dans `state.score` (`{ A, B }`).
+  L'accumulation est une règle pure sans mutation (`rules/score.js` → `awardKill` /
+  `addObjectiveScore`) ; `loop/turn.js` la câble aux effets. Une **élimination** rapporte
+  `KILL_POINTS` au camp responsable (crédité par `registerKill`, appelé depuis les résolutions de
+  tir et de mêlée ; une auto-élimination par surchauffe ne rapporte rien). Le **contrôle de zone**
+  rapporte `OBJECTIVE_POINTS` par marqueur d'objectif tenu, compté **en fin de chaque tour**
+  (`scoreEndOfTurn`). Les marqueurs sont une
   liste fixe `OBJECTIVES` (config, positions en pouces), symétriques autour de l'axe vertical du
   plateau. On contrôle un marqueur si l'on a **plus de figurines vivantes** que l'adversaire dans
   un rayon `OBJECTIVE_RANGE` (règle pure `rules/objective.js` → `controlOf`/`scoreObjectives` ;
