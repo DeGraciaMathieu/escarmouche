@@ -192,17 +192,20 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .act-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
 .act-name{font-family:'Barlow Condensed';font-size:20px;font-weight:600}
 .act-name.empty{color:var(--dim);font-weight:500}
+.act-head-right{display:flex;align-items:center;gap:10px}
+.icon-btn{font-size:16px;line-height:1;padding:4px 7px;border-radius:3px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
+.icon-btn:hover:not(:disabled){background:#323c2e;border-color:var(--brass)}
+.icon-btn:disabled{opacity:.3;cursor:default}
 .pips{display:flex;gap:4px}
 .pips i{width:11px;height:11px;border-radius:50%;background:#39412f;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
 .pips i.on{background:var(--brass)}
 .act-sub{font-size:12.5px;color:var(--dim);margin:-4px 0 9px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.actions{display:grid;grid-template-columns:1fr;gap:6px}
 .actions button{font-size:16px;padding:9px 6px;border-radius:3px;border:1px solid var(--line);
   background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
 .actions button:hover:not(:disabled){background:#323c2e;border-color:var(--brass)}
-.actions button.on{background:var(--brass);color:#191b12;border-color:var(--brass)}
 .actions button:disabled{opacity:.3;cursor:default}
-.actions button.wide{grid-column:span 2}
 .actions .k{opacity:.55;font-size:12px;margin-left:4px}
 .urow{background:var(--panel-2);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:3px;
   padding:5px 9px;margin-bottom:5px;cursor:pointer;transition:background .12s,transform .12s,border-color .12s}
@@ -218,13 +221,6 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .usub{font-size:11px;color:var(--dim);margin-top:2px}
 .hpbar{height:4px;background:#161a15;margin-top:6px;border-radius:2px;overflow:hidden}
 .hpbar i{display:block;height:100%;background:var(--tc);transition:width .45s ease-out}
-.journal{list-style:none;margin:0;padding:0;font-size:13.5px;color:var(--dim);line-height:1.45}
-.journal li{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.journal li:first-child{color:var(--paper)}
-.journal li:last-child{border:0}
-.journal b{color:var(--paper);font-weight:500}
-.legend{font-size:12.5px;color:var(--dim);line-height:1.6}
-.legend span{color:var(--paper)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:1200px){body{flex-direction:column;align-items:center}.side-col{width:100%;max-width:920px}}
 </style>
@@ -320,29 +316,19 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
   <div class="block">
     <div class="act-head">
       <span class="act-name empty" id="actName">Aucune figurine sélectionnée</span>
-      <span class="pips" id="actPips"></span>
+      <span class="act-head-right">
+        <button id="btnUndo" class="icon-btn" title="Annuler le déplacement (Z)" aria-label="Annuler le déplacement">↺</button>
+        <span class="pips" id="actPips"></span>
+      </span>
     </div>
     <div class="act-sub" id="actSub"></div>
     <div class="actions">
-      <button id="btnAim">Viser<span class="k">V</span></button>
-      <button id="btnUndo">Annuler le déplacement<span class="k">Z</span></button>
-      <button id="btnEnd" class="wide">Terminer l'activation<span class="k">Espace</span></button>
+      <button id="btnEnd">Terminer l'activation<span class="k">Espace</span></button>
     </div>
   </div>
-  <div class="block"><h2>Journal</h2><ul class="journal" id="journal"></ul></div>
   <div class="block">
     <h2>Garde de Fer</h2><div id="rosterA"></div>
     <h2 style="margin-top:10px">Écumeurs</h2><div id="rosterB"></div>
-  </div>
-  <div class="block legend">
-    <span>★</span> meneur · <span>▲</span> appui · <span>●</span> ligne<br>
-    Un socle terni avec un jeton sombre a déjà été activé ce tour.<br>
-    Glisse une figurine pour la déplacer : le trajet contourne le décor et la distance suit le chemin.<br>
-    Cible une figurine adverse en vue pour ouvrir la modale de tir : elle propose les armes du rôle avec leur portée sur la cible.<br>
-    Ennemi au contact (portée de contrôle) : le clic ouvre un <span>corps à corps</span> — les deux lancent leurs dés, on <span>frappe</span> ou on <span>contre</span> à tour de rôle, l'attaquant d'abord (seule une critique contre une critique).<br>
-    Aux dés : <span>6</span> = critique, une sauvegarde annule une touche, deux annulent une critique.<br>
-    Décor bas sur la ligne de tir : <span>couvert</span> (+1 sauvegarde) s'il est près de la cible, <span>masquage</span> (−1 réussite) s'il est au milieu.<br>
-    Pistolet plasma : après le tir, un dé de <span>surchauffe</span> — sur un 1, le tireur subit des dégâts.
   </div>
 </div>
 

@@ -80,10 +80,6 @@ cv.addEventListener('click', ev => {
   } else declareShot(state.selected, m, chk.s);
 });
 
-document.getElementById('btnAim').onclick = () => {
-  if (!state.selected || state.selected.ap < 1 || state.selected.aimed || state.selected.shot || state.pending) return;
-  audio(); aim(state.selected);
-};
 document.getElementById('btnUndo').onclick = () => {
   if (!state.undoState || state.undoState.m !== state.selected || state.selected.shot) return;
   audio();
@@ -119,7 +115,10 @@ window.addEventListener('keydown', ev => {
     select(pool[(pool.indexOf(state.selected) + 1) % pool.length]);
   }
   else if (ev.key === ' ') { ev.preventDefault(); document.getElementById('btnEnd').click(); }
-  else if (ev.key === 'v' || ev.key === 'V') document.getElementById('btnAim').click();
+  else if (ev.key === 'v' || ev.key === 'V') {
+    if (!state.selected || state.selected.ap < 1 || state.selected.aimed || state.selected.shot || state.pending) return;
+    audio(); aim(state.selected);
+  }
   else if (ev.key === 'z' || ev.key === 'Z') document.getElementById('btnUndo').click();
   else if (ev.key === 'Escape') { state.selected = null; refresh(); }
 });

@@ -6,8 +6,10 @@ import { select } from '../loop/turn.js';
 // Journal des six derniers événements.
 const events = [];
 export function journal(html) {
+  const el = document.getElementById('journal');
+  if (!el) return;
   events.unshift(html); if (events.length > JOURNAL_MAX) events.pop();
-  document.getElementById('journal').innerHTML = events.map(e => `<li>${e}</li>`).join('');
+  el.innerHTML = events.map(e => `<li>${e}</li>`).join('');
 }
 
 function chips(team, box) {
@@ -62,9 +64,6 @@ export function refresh() {
           : `${state.selected.ap} point${state.selected.ap > 1 ? 's' : ''} d'action · ${state.selected.moved ? 'a bougé' : "n'a pas bougé"}${state.selected.shot ? ' · a tiré' : ''}`;
   } else { name.textContent = 'Aucune figurine sélectionnée'; name.classList.add('empty'); pips.innerHTML = ''; sub.textContent = ''; }
   const own = state.selected && state.selected.team === state.side && state.selected.alive && !state.over && !state.pending;
-  const aim = document.getElementById('btnAim');
-  aim.disabled = !(own && state.selected.ap > 0 && !state.selected.aimed && !state.selected.shot);
-  aim.classList.toggle('on', !!(state.selected && state.selected.aimed));
   document.getElementById('btnUndo').disabled = !(own && state.undoState && state.undoState.m === state.selected && !state.selected.shot);
   document.getElementById('btnEnd').disabled = !(own && state.selected.ap > 0);
 
