@@ -76,6 +76,11 @@ la main humaine pendant le tour de l'IA).
   = une routine de rendu dans `render/board.js` (map `SKINS`), aucune règle touchée.
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
   `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
+- Rendu d'une figurine : un **jeton-photo circulaire** (« médaillon ») dessiné sur le canvas par
+  `drawMedallion` (`render/board.js`) — photo cadrée (constantes `MEDAL_*` de `config.js`) sur fond
+  clair, cerclée de la couleur du camp ; les halos, l'arc de PV, les pips d'AP et la coche
+  « a agi » restent gérés par `drawModel`. Les photos sont une par camp dans `assets/units/`
+  (`team-A.png` / `team-B.png`). Vue de dessus, pas d'inclinaison 3D.
 - Les armes vivent dans le catalogue `WEAPONS` (`state/game.js`) ; `ROLE_LOADOUTS` fixe
   l'ensemble autorisé par rôle. `m.weapon` référence une entrée du catalogue (lecture seule).
   La validation d'un choix d'arme est une règle pure (`rules/loadout.js`).

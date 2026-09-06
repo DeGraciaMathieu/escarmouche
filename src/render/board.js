@@ -1,5 +1,5 @@
 import { cv, ctx, px } from '../canvas.js';
-import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS } from '../config.js';
+import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS, MEDAL_DISC_COLOR, MEDAL_IMG_SCALE, MEDAL_IMG_Y_OFFSET } from '../config.js';
 import { TEAMS, state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { sfx } from '../audio.js';
 import { sight, canTarget, canReachAny } from '../rules/sight.js';
@@ -184,6 +184,30 @@ function tag(x, y, text, bg = '#c9a227', fg = '#191b12') {
   ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y);
 }
 
+// Photos de figurine préchargées, une par camp (fond blanc conservé, cadrées par le pipeline).
+const UNIT_IMG = { A: new Image(), B: new Image() };
+UNIT_IMG.A.src = 'assets/units/team-A.png';
+UNIT_IMG.B.src = 'assets/units/team-B.png';
+
+// Jeton-photo circulaire (« médaillon ») d'une figurine, centré en (cx, cy), rayon R. La photo
+// est agrandie et décalée pour cadrer casque/épaules/arme, sur un fond qui prolonge le blanc de la
+// photo, puis cerclée de la couleur du camp. Tant que l'image n'est pas chargée, seul le fond est posé.
+function drawMedallion(cx, cy, R, col, team) {
+  const img = UNIT_IMG[team];
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.clip();
+  ctx.fillStyle = MEDAL_DISC_COLOR; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  if (img.complete && img.naturalWidth) {
+    const D = R * 2, h = D * (img.naturalHeight / img.naturalWidth);
+    const dw = MEDAL_IMG_SCALE * D, dh = MEDAL_IMG_SCALE * h;
+    ctx.drawImage(img, cx - dw / 2, cy + MEDAL_IMG_Y_OFFSET * h - dh / 2, dw, dh);
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7);
+  ctx.lineWidth = 3; ctx.strokeStyle = col.color; ctx.stroke();
+  ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.stroke();
+}
+
 export function drawModel(m) {
   const p = modelPos(m), isSel = m === state.selected, held = state.drag && state.drag.m === m;
   const playable = !state.over && m.team === state.side && !m.activated && m.alive && !state.busy;
@@ -202,14 +226,7 @@ export function drawModel(m) {
   ctx.fillStyle = 'rgba(0,0,0,' + (.42 - lift * .08) + ')';
   ctx.beginPath(); ctx.ellipse(px(p.x) + 3 + lift * 4, px(p.y) + 4 + lift * 5, R * (1 + lift * .12), R * .72 * (1 + lift * .12), 0, 0, 7); ctx.fill();
   const done = m.activated && !isSel; if (done) ctx.globalAlpha = .5;
-  const g = ctx.createRadialGradient(cx - R * .4, cy - R * .5, 2, cx, cy, R);
-  g.addColorStop(0, col.color); g.addColorStop(1, col.deep);
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fillStyle = g; ctx.fill();
-  ctx.lineWidth = 2.4; ctx.strokeStyle = '#15180f'; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, R - 4, 0, 7); ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.font = '600 13px "Barlow Condensed", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(m.role === 'meneur' ? '★' : (m.role === 'appui' ? '▲' : '●'), cx, cy + 1);
+  drawMedallion(cx, cy, R, col, m.team);
   if (m.flash > 0) {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7);
     ctx.fillStyle = 'rgba(255,255,255,' + Math.min(.8, m.flash) + ')'; ctx.fill();

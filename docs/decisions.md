@@ -174,6 +174,29 @@ pas changer le jeu.
 - **Poids et priorités** dans `config.js` (`AI_PRIO_*`, `AI_TARGET_HP_WEIGHT`) : valeurs de
   départ, ajustables ; le grand écart entre priorités garantit que l'ordre prime le départage.
 
+## Rendu des figurines en jeton-photo (« médaillon »)
+
+- **Périmètre retenu** : le jeton-photo seul, sur le plateau canvas **vu de dessus** existant.
+  La perspective inclinée à 20° du prototype (`tmp/plateau-pions-photo.html`) a été écartée : elle
+  supposerait de repenser tout le rendu canvas (terrain, lignes de vue/tir, portées, effets) en 3D.
+- **Implémentation** : `drawModel` délègue le disque à `drawMedallion` (`render/board.js`) — clip
+  circulaire, fond clair (`MEDAL_DISC_COLOR`), photo agrandie/décalée (`MEDAL_IMG_SCALE`,
+  `MEDAL_IMG_Y_OFFSET`, cadrage repris du prototype) puis anneau de la couleur du camp. Tous les
+  autres retours visuels (halo de sélection/jouable, arc de PV, pips d'AP, coche « a agi », flash,
+  cercle de cible) sont conservés inchangés.
+- **Assets** : deux photos réutilisées du prototype (marine GW), une par camp — `assets/units/team-A.png`
+  (bleu → Garde de Fer) et `team-B.png` (vert reteinté → Écumeurs). L'anneau porte la couleur de
+  faction ; le décalage photo verte / anneau rouge du camp B est assumé (choix « réutiliser les 2
+  photos »). Servi en `src` relatif à la racine (le jeu tourne derrière `npx serve .`, pas en `file://`).
+- **Régression assumée** : le glyphe de rôle central (★/▲/●) est retiré du plateau (le médaillon n'en
+  a pas) ; avec deux photos par camp, les figurines d'un même camp sont indiscernables à l'écran. Le
+  rôle reste lisible dans le panneau latéral. Un badge de rôle sur le médaillon pourra être rajouté si
+  besoin (non demandé). Une photo par figurine (pipeline Python du brief) reste l'option pour lever
+  l'indiscernabilité.
+- **Vérification** : rendu réel capturé en headless Chrome (pilotage via CDP) sur le plan « Classique »,
+  les deux camps — cadrage, fond de disque et anneaux de faction validés. Le rendu n'a pas de test
+  automatisé (couche canvas, hors périmètre `node:test`).
+
 ## Open questions
 
 Décisions que le code ne tranche pas et qui n'ont pas été prises. Jamais résolues par

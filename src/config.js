@@ -45,6 +45,12 @@ export const OBJECTIVE_RADIUS = 0.7; // rayon visuel du marqueur (pouces)
 export const KILL_POINTS = 1;        // points gagnés en mettant une figurine ennemie hors de combat
 export const OBJECTIVE_POINTS = 1;   // points par objectif contrôlé, comptés en fin de tour
 
+// --- Médaillon (jeton-photo de figurine, dessiné par drawModel)
+export const MEDAL_DISC_COLOR = '#efece5'; // fond du disque, prolonge le fond blanc de la photo
+export const MEDAL_IMG_SCALE = 1.6;        // agrandissement de la photo dans le disque (cadrage calibré)
+export const MEDAL_IMG_Y_OFFSET = 0.33;    // décalage vertical du centre de l'image (fraction de sa
+                                           // hauteur non mise à l'échelle) pour cadrer casque/épaules/arme
+
 // --- Intelligence artificielle (mode 1 joueur)
 export const AI_ACT_DELAY = 1100; // délai de réflexion entre deux actions de l'IA (ms)
 // Priorités d'action : l'IA choisit l'action candidate de plus haute priorité, puis départage à
