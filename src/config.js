@@ -114,6 +114,11 @@ export const DICE_FACES = 6;
 export const DEPLOY_ZONE_WIDTH = 5;    // largeur en pouces
 export const DEPLOY_ZONE_ALPHA = 0.06; // opacité de la teinte
 
+// --- Éditeur de map (mode création)
+export const EDITOR_GRID = 0.5;               // pas d'aimantation par défaut (pouces)
+export const EDITOR_GRID_OPTIONS = [0.25, 0.5, 1]; // pas proposés à l'écran
+export const EDITOR_MIN_RECT = 0.4;           // dimension minimale d'un décor tracé (pouces)
+
 // --- Cadence de la séquence de tir (ms, multipliés par la vitesse d'animation)
 export const DIE_REVEAL_STEP = 130;   // révélation d'un dé, un par un
 export const ATTACK_SETTLE = 120;     // pause après le jet d'attaque

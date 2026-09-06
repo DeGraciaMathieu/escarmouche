@@ -5,19 +5,23 @@ import { render } from './loop/render-loop.js';
 import { refresh, journal } from './render/ui.js';
 import { autoSelect } from './loop/turn.js';
 import { enableAi } from './ai/runner.js';
+import { initEditor, openEditor } from './editor/editor.js';
+import { loadCustomMaps } from './editor/storage.js';
 import './loop/combat.js';    // enregistre les gestionnaires du panneau de combat
 import './loop/melee.js';     // enregistre les gestionnaires du duel de corps à corps
 import './input/controls.js'; // enregistre souris, clavier et boutons d'action
 
-// Démarre la partie sur le plan choisi : c'est ici — et ici seulement — qu'on décide la graine
-// du hasard, le décor actif et le mode de jeu (l'IA joue le camp B en mode solo).
-function startGame(mapKey) {
-  state.terrain = MAPS[mapKey].terrain;
+// Démarre la partie sur le plan choisi (objet { name, terrain }, intégré ou personnalisé) : c'est
+// ici — et ici seulement — qu'on décide la graine du hasard, le décor actif et le mode de jeu
+// (l'IA joue le camp B en mode solo).
+function startGame(map) {
+  state.terrain = map.terrain;
   state.models = createModels();
   state.rng = createRng(Date.now());
   if (mode === 'ia') enableAi('B');
   document.getElementById('start').classList.remove('show');
-  journal(`La partie commence sur « ${MAPS[mapKey].name} »${mode === 'ia' ? ' — les Écumeurs sont joués par l’IA' : ''} : quatre tours, activation alternée.`);
+  document.body.classList.remove('editing');
+  journal(`La partie commence sur « ${map.name} »${mode === 'ia' ? ' — les Écumeurs sont joués par l’IA' : ''} : quatre tours, activation alternée.`);
   autoSelect();
   refresh();
 }
@@ -30,12 +34,30 @@ modeBox.querySelectorAll('button').forEach(b => {
 });
 
 const picks = document.getElementById('mapPicks');
-for (const [key, m] of Object.entries(MAPS)) {
+function addPick(m, custom) {
   const b = document.createElement('button');
   b.innerHTML = `<b>${m.name}</b><span>${m.desc}</span>`;
-  b.onclick = () => startGame(key);
+  if (custom) b.classList.add('custom');
+  b.onclick = () => startGame(m);
   picks.appendChild(b);
 }
+// Plans intégrés (catalogue MAPS) puis plans personnalisés (localStorage).
+function buildPicks() {
+  picks.innerHTML = '';
+  Object.values(MAPS).forEach(m => addPick(m, false));
+  loadCustomMaps().forEach(m => addPick(m, true));
+}
+buildPicks();
+
+// Éditeur de map : « Créer » ouvre le mode ; ses actions reviennent ici (tester / rafraîchir la
+// liste après sauvegarde / retour à l'écran de démarrage).
+initEditor({
+  play: map => startGame(map),
+  saved: buildPicks,
+  back: () => document.getElementById('start').classList.add('show'),
+});
+document.getElementById('btnEditor').onclick = openEditor;
+
 document.getElementById('start').classList.add('show');
 
 // Recale le backing dès que la taille affichée du canvas change (mise en page, redimensionnement).

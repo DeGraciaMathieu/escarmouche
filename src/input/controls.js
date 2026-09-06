@@ -12,6 +12,7 @@ import { moveModel, aim } from '../loop/actions.js';
 import { declareShot, cancelShot, fire } from '../loop/combat.js';
 import { declareFight, cancelFight, fight } from '../loop/melee.js';
 import { isAiControlled } from '../ai/runner.js';
+import { isEditing } from '../editor/editor.js';
 
 function toBoard(ev) {
   const r = cv.getBoundingClientRect();
@@ -29,6 +30,7 @@ function toast(msg, ev) {
 }
 
 cv.addEventListener('mousedown', ev => {
+  if (isEditing()) return;
   if (state.busy || state.over || isAiControlled(state.side)) return; audio();
   const p = toBoard(ev), m = modelAt(p); if (!m) return;
   if (m.team === state.side) {
@@ -49,6 +51,7 @@ cv.addEventListener('mousedown', ev => {
   }
 });
 cv.addEventListener('mousemove', ev => {
+  if (isEditing()) return;
   const p = toBoard(ev), m = modelAt(p);
   if (state.drag) { state.drag.to = p; state.drag.chk = moveCheck(state.drag.m, p, state.models, state.terrain); state.hoverModel = null; cv.style.cursor = 'grabbing'; return; }
   state.hoverModel = m;
@@ -58,6 +61,7 @@ cv.addEventListener('mousemove', ev => {
 });
 cv.addEventListener('mouseleave', () => { state.hoverModel = null; });
 window.addEventListener('mouseup', ev => {
+  if (isEditing()) return;
   if (!state.drag) return;
   const d = state.drag; state.drag = null; cv.style.cursor = 'default';
   if (d.chk.d <= DRAG_MIN_DISTANCE) { refresh(); return; }
@@ -66,6 +70,7 @@ window.addEventListener('mouseup', ev => {
   refresh();
 });
 cv.addEventListener('click', ev => {
+  if (isEditing()) return;
   if (state.busy || state.over || state.drag || isAiControlled(state.side)) return;
   const p = toBoard(ev), m = modelAt(p);
   if (!m || !state.selected || m.team === state.selected.team) return;
@@ -93,6 +98,7 @@ document.getElementById('btnUndo').onclick = () => {
 document.getElementById('btnEnd').onclick = () => { if (!state.busy && !state.over && state.selected && state.selected.team === state.side) endActivation(); };
 
 window.addEventListener('keydown', ev => {
+  if (isEditing()) return;
   if (state.over || isAiControlled(state.side)) return;
   if (state.pending) {
     if (ev.key === 'Enter') { ev.preventDefault(); if (document.getElementById('cbCta').style.display !== 'none') fire(); }

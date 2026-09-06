@@ -3,9 +3,11 @@ import { BW, BH, SHAKE_DAMPING, SHAKE_MIN, DEPLOY_ZONE_WIDTH, DEPLOY_ZONE_ALPHA 
 import { state } from '../state/game.js';
 import { mat, drawTerrain, drawObjectives, drawRange, drawTape, drawTargets, drawModel, drawFiringLine, drawSight, drawHoverName } from '../render/board.js';
 import { drawFx } from '../render/fx.js';
+import { isEditing, drawEditor } from '../editor/editor.js';
 
 // Boucle de rendu principale : redessine le plateau à chaque frame.
 export function render() {
+  if (isEditing()) { drawEditor(); requestAnimationFrame(render); return; }
   ctx.save();
   ctx.setTransform(cv.width / px(BW), 0, 0, cv.height / px(BH), 0, 0); // backing (retina) → repère logique 900×660
   if (state.shake > 0) { ctx.translate((Math.random() - .5) * state.shake, (Math.random() - .5) * state.shake); state.shake *= SHAKE_DAMPING; if (state.shake < SHAKE_MIN) state.shake = 0; }

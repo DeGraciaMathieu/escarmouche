@@ -186,6 +186,45 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .map-picks button:hover{border-color:var(--brass);background:#323c2e}
 .map-picks button b{display:block;font-family:'Barlow Condensed';font-size:19px;margin-bottom:3px}
 .map-picks button span{display:block;font-size:12px;color:var(--dim);line-height:1.4}
+.map-picks button.custom b::after{content:'perso';font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;color:var(--brass);
+  border:1px solid var(--brass);border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:middle}
+.btn-editor{margin-top:16px;font-family:'Barlow Condensed';font-size:15px;padding:9px 18px;border-radius:4px;
+  border:1px dashed var(--line);background:transparent;color:var(--dim);cursor:pointer;transition:border-color .12s,color .12s}
+.btn-editor:hover{border-color:var(--brass);color:var(--paper)}
+
+/* --- Éditeur de map --- */
+body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#editorPanel){display:none}
+#editorPanel:not([hidden]){display:flex;flex-direction:column;gap:8px}
+.ed-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim)}
+.ed-row>span{width:42px}
+.ed-row select{flex:1;background:#20261f;color:var(--paper);border:1px solid var(--line);border-radius:3px;padding:5px 6px;font-family:'Barlow',sans-serif}
+.ed-seg{display:flex;flex:1}
+.ed-seg button{flex:1;font-family:'Barlow Condensed';font-size:14px;padding:6px;border:1px solid var(--line);background:#252c22;color:var(--paper);cursor:pointer}
+.ed-seg button:first-child{border-radius:3px 0 0 3px}
+.ed-seg button:last-child{border-radius:0 3px 3px 0;border-left:0}
+.ed-seg button.on{background:#333d2d;border-color:var(--brass);color:var(--brass)}
+.ed-two{display:flex;gap:6px}
+.ed-two button,.ed-back{font-family:'Barlow Condensed';font-size:14px;padding:8px;border-radius:3px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
+.ed-two button{flex:1}
+.ed-two button:hover,.ed-back:hover{border-color:var(--brass);background:#323c2e}
+#editorPanel button.fire{background:var(--brass);border-color:var(--brass);color:#191b12;font-weight:600}
+#editorPanel button.fire:hover{background:#dcb536}
+.ed-name{background:#20261f;color:var(--paper);border:1px solid var(--line);border-radius:3px;padding:7px 8px;font-family:'Barlow',sans-serif;font-size:14px}
+.ed-status{font-size:12px;min-height:16px;color:var(--dim);line-height:1.35}
+.ed-status.ok{color:var(--good)}
+.ed-status.bad{color:var(--bad)}
+.ed-back{color:var(--dim)}
+.ed-hint{font-size:11px;color:var(--dim);line-height:1.5;margin-top:2px}
+.ed-export{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;width:min(560px,92%);
+  background:rgba(12,16,12,.97);border:1px solid var(--line);border-radius:6px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.ed-export h3{margin:0 0 8px;font-family:'Barlow Condensed';font-size:16px;font-weight:600}
+.ed-export code{color:var(--brass);font-size:13px}
+.ed-export textarea{width:100%;height:220px;resize:vertical;background:#161a15;color:var(--paper);border:1px solid var(--line);
+  border-radius:3px;padding:8px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5}
+.ed-export-cta{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.ed-export-cta button{font-family:'Barlow Condensed';font-size:15px;padding:8px 18px;border-radius:3px;border:1px solid var(--line);background:#252c22;color:var(--paper);cursor:pointer}
+.ed-export-cta button.fire{background:var(--brass);border-color:var(--brass);color:#191b12;font-weight:600}
 
 /* colonne droite */
 .side-col{width:334px;display:flex;flex-direction:column;gap:12px;flex:none}
@@ -314,7 +353,14 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
         <button data-mode="ia">Contre l'IA</button>
       </div>
       <div class="map-picks" id="mapPicks"></div>
+      <button id="btnEditor" class="btn-editor">＋ Créer une map</button>
     </div></div>
+
+    <div class="ed-export" id="edExportBox" hidden>
+      <h3>À coller dans <code>MAPS</code> (src/state/game.js)</h3>
+      <textarea id="edExportText" readonly spellcheck="false"></textarea>
+      <div class="ed-export-cta"><button id="edCopy" class="fire">Copier</button><button id="edCloseExport">Fermer</button></div>
+    </div>
   </div>
 
 </div>
@@ -338,6 +384,22 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
     <h2 style="margin-top:10px">Écumeurs</h2><div id="rosterB"></div>
   </div>
   <div class="hotkeys"><kbd>Tab</kbd> figurine suivante · <kbd>V</kbd> viser · <kbd>Z</kbd> annuler · <kbd>Espace</kbd> terminer</div>
+
+  <div class="block" id="editorPanel" hidden>
+    <h2>Éditeur de map</h2>
+    <div class="ed-row"><span>Décor</span>
+      <div class="ed-seg"><button data-t="wall" class="on">Mur</button><button data-t="low">Bas</button></div>
+    </div>
+    <div class="ed-row"><span>Skin</span><select id="edVariant"></select></div>
+    <div class="ed-row"><span>Grille</span><select id="edGrid"></select></div>
+    <div class="ed-two"><button id="edDelete">Supprimer</button><button id="edClear">Tout effacer</button></div>
+    <input id="edName" class="ed-name" placeholder="Nom de la map" maxlength="28">
+    <div class="ed-status" id="edStatus"></div>
+    <div class="ed-two"><button id="edValidate">Valider</button><button id="edExport">Exporter</button></div>
+    <div class="ed-two"><button id="edSave">Sauvegarder</button><button id="edPlay" class="fire">Tester</button></div>
+    <button id="edBack" class="ed-back">Retour au menu</button>
+    <div class="ed-hint">Glisser le vide = tracer · glisser un décor = déplacer · clic = sélectionner · <kbd>Suppr</kbd> efface</div>
+  </div>
 </div>
 
 <script type="module" src="./src/main.js"></script>

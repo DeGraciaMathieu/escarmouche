@@ -27,6 +27,7 @@ mutable partagé (`src/state/game.js`).
 | entrée | `src/input/` | souris, clavier, boutons → intentions | `config`, `canvas`, `state`, règles, `loop`, `render` |
 | boucle | `src/loop/` | orchestration : intention → règle → état → rendu | tout le reste |
 | IA | `src/ai/` | décision et pilotage de l'IA (mode solo) | `config`, `state` (lecture), règles, `loop` |
+| éditeur | `src/editor/` | création de map hors-jeu (dessin, validation, persistance) | `config`, `canvas`, `state`, `render`, règles |
 | entrée programme | `src/main.js` | câblage, graine du hasard, démarrage | tout |
 
 La flèche de dépendance ne pointe que vers le haut de ce tableau.
@@ -46,6 +47,14 @@ meilleure action a la plus haute utilité, sinon poursuit la figurine engagée) 
 son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
 importé que par `main.js` (câblage) et par `input/` (qui consulte `isAiControlled` pour bloquer
 la main humaine pendant le tour de l'IA).
+
+**Éditeur = consommateur.** `src/editor/` est un module isolé sur le même modèle que l'IA :
+importé par `main.js` (câblage), `input/controls.js` (qui consulte `isEditing` pour bloquer la main
+de jeu) et `loop/render-loop.js` (qui délègue le rendu à `drawEditor` en mode édition). L'éditeur
+manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObjectives` ; la
+**validité d'une map** (spawns/objectifs dégagés et mutuellement accessibles) est une **règle pure**
+(`rules/mapcheck.js`). Les maps créées sont persistées en `localStorage` (`editor/storage.js`, format
+`{ name, desc, terrain }` identique à une entrée `MAPS`) et exportables en code à coller dans `MAPS`.
 
 ## Conventions de code — non négociables
 
@@ -74,6 +83,9 @@ la main humaine pendant le tour de l'IA).
   règles). Les plans s'assemblent à partir du catalogue de pièces `PIECES` via `place(key, x, y)`
   (ou du helper `skin(variant, ...rects)` pour habiller des rects écrits en dur). Ajouter un skin
   = une routine de rendu dans `render/board.js` (map `SKINS`), aucune règle touchée.
+  On peut aussi **créer un plan à l'écran** (bouton « Créer une map », `src/editor/`) : il est
+  stocké en `localStorage` et apparaît dans le sélecteur de démarrage, ou s'exporte en entrée `MAPS`
+  à committer. Un plan (intégré ou personnalisé) est un objet `{ name, desc, terrain }`.
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
   `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
 - Rendu d'une figurine : un **jeton-photo circulaire** (« médaillon ») dessiné sur le canvas par
@@ -138,7 +150,7 @@ la main humaine pendant le tour de l'IA).
 ## Skills disponibles
 
 - **architecture** — carte des modules et « où va le nouveau code ».
-- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `pathfind`, `turn`, `combat`, `squad`, `loadout`).
+- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `pathfind`, `turn`, `combat`, `squad`, `loadout`, `mapcheck`).
 - **combat** — résolution du tir (dés, seuils, annulations, dégâts) et séquence animée.
 - **rendering** — dessin du plateau, des figurines, des effets et boucle de rendu.
 - **turn-flow** — état partagé, activation, transitions de tour/camp, victoire.
