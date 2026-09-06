@@ -128,6 +128,31 @@ test('au dernier tour, les figurines en trop renforcent les objectifs au lieu d\
   assert.ok(own.some(m => g2.get(m).kind === 'attack')); // à un tour normal, des attaquants restent
 });
 
+test('menée aux points, l\'IA renforce les objectifs même en début de partie', () => {
+  const own = [ai({ x: 4, y: 4 }), ai({ x: 4, y: 11 }), ai({ x: 4, y: 18 }), ai({ x: 6, y: 8 }), ai({ x: 6, y: 14 })];
+  const e = foe({ x: 25, y: 11 });
+
+  const menee = st([...own, e]); menee.turn = 1; menee.score = { A: 2, B: 0 };
+  const g = planSquad(menee, 'B');
+  assert.ok(own.every(m => g.get(m).kind === 'seize')); // menée : tout l'effectif sur les objectifs
+
+  const egalite = st([...own, e]); egalite.turn = 1; egalite.score = { A: 0, B: 0 };
+  const g2 = planSquad(egalite, 'B');
+  assert.ok(own.some(m => g2.get(m).kind === 'attack')); // à égalité tôt : neutre, des attaquants restent
+});
+
+test('menée en fin de partie, l\'IA envoie une figurine de plus arracher un objectif disputé', () => {
+  const contested = OBJECTIVES[0];
+  // 5 figurines : 2 pour les objectifs vides, 3 disponibles pour le disputé (aucune surnuméraire)
+  const own = [ai({ x: 9, y: 14 }), ai({ x: 21, y: 14 }), ai({ x: 13, y: 6 }), ai({ x: 17, y: 6 }), ai({ x: 15, y: 9 })];
+  const enemis = [foe({ x: contested.x, y: contested.y }), foe({ x: contested.x - 1, y: contested.y })]; // 2 défenseurs
+
+  const st3 = st([...own, ...enemis]); st3.turn = MAXTURN; st3.score = { A: 5, B: 0 };
+  const goals = planSquad(st3, 'B');
+  const dessus = own.filter(m => { const g = goals.get(m); return g.kind === 'seize' && g.at === contested; });
+  assert.equal(dessus.length, 3); // cap relevé (2 + 1) quand menée en fin de partie
+});
+
 const meleeState = (o) => createMelee({
   atkWeapon: { ws: 3, dn: 3, dc: 4 }, defWeapon: { ws: 3, dn: 3, dc: 5 }, atkHp: 12, defHp: 8, ...o,
 });

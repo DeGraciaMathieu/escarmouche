@@ -64,6 +64,10 @@ export const AI_W_COVER = 2;
 // Coordination : nombre maximal de figurines envoyées sur un même objectif (assez pour départager
 // un défenseur, sans vider l'escouade sur un seul marqueur).
 export const AI_MAX_PER_OBJECTIVE = 2;
+// Tempo : seuil de « fin de partie » = nombre de tours restants APRÈS le tour courant
+// (MAXTURN − turn) en dessous ou égal duquel l'IA bascule tout son effectif sur les objectifs
+// (le score se fige à chaque fin de tour). 1 → les deux derniers tours.
+export const AI_ENDGAME_TURNS = 1;
 
 // --- Journal
 export const JOURNAL_MAX = 6; // lignes conservées dans le journal

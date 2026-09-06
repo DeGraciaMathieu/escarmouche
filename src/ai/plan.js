@@ -1,4 +1,4 @@
-import { OBJECTIVES, OBJECTIVE_RANGE, AI_MAX_PER_OBJECTIVE, MAXTURN } from '../config.js';
+import { OBJECTIVES, OBJECTIVE_RANGE, AI_MAX_PER_OBJECTIVE, AI_ENDGAME_TURNS, MAXTURN } from '../config.js';
 import { dist } from '../rules/geometry.js';
 
 // ============================================================
@@ -28,19 +28,36 @@ function enemiesAt(models, o, side) {
   return models.filter(m => m.alive && m.team !== side && dist(m, o) <= OBJECTIVE_RANGE).length;
 }
 
+// Posture selon le tour et l'écart de points (du point de vue de `side`) :
+// - `objectiveFocus` : les figurines en trop sécurisent les objectifs (le score se fige chaque
+//   tour) plutôt que d'attaquer — vrai en fin de partie ou quand l'IA est menée ; neutre sinon.
+// - `contestCap` : plafond de figurines par objectif, relevé quand l'IA est menée en fin de partie
+//   pour arracher un objectif disputé.
+function tempo(state, side) {
+  const other = side === 'A' ? 'B' : 'A';
+  const score = state.score || { A: 0, B: 0 };
+  const lead = score[side] - score[other];
+  const endgame = MAXTURN - state.turn <= AI_ENDGAME_TURNS;
+  return {
+    objectiveFocus: endgame || lead < 0,
+    contestCap: (lead < 0 && endgame) ? AI_MAX_PER_OBJECTIVE + 1 : AI_MAX_PER_OBJECTIVE,
+  };
+}
+
 // Assigne un but à chaque figurine vivante du camp `side`. On sécurise d'abord les objectifs les
 // moins défendus (points les plus faciles), en y envoyant assez de figurines pour départager le
-// défenseur (`enemis + 1`, plafonné à AI_MAX_PER_OBJECTIVE), les plus proches d'abord — ce qui
-// garde naturellement en place les tenants déjà à portée. Au dernier tour, les figurines restantes
-// renforcent les objectifs (le score se fige à la fin du tour) ; sinon elles engagent l'ennemi.
+// défenseur (`enemis + 1`, plafonné par le tempo), les plus proches d'abord — ce qui garde en
+// place les tenants déjà à portée. Selon le tempo (tour + écart de points), les figurines restantes
+// renforcent les objectifs ou engagent l'ennemi.
 export function planSquad(state, side) {
   const { models } = state;
   const own = models.filter(m => m.alive && m.team === side);
   const goals = new Map();
   const taken = new Set();
+  const { objectiveFocus, contestCap } = tempo(state, side);
 
   const ranked = OBJECTIVES
-    .map(o => ({ o, need: Math.min(AI_MAX_PER_OBJECTIVE, enemiesAt(models, o, side) + 1) }))
+    .map(o => ({ o, need: Math.min(contestCap, enemiesAt(models, o, side) + 1) }))
     .sort((a, b) => a.need - b.need);
 
   for (const { o, need } of ranked) {
@@ -51,10 +68,9 @@ export function planSquad(state, side) {
     }
   }
 
-  const lastTurn = state.turn === MAXTURN;
   for (const m of own) {
     if (taken.has(m)) continue;
-    goals.set(m, lastTurn ? { kind: 'seize', at: nearestObjective(m) } : { kind: 'attack' });
+    goals.set(m, objectiveFocus ? { kind: 'seize', at: nearestObjective(m) } : { kind: 'attack' });
   }
   return goals;
 }

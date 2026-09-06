@@ -160,10 +160,13 @@ pas changer le jeu.
   objectif d'abord, repositionnements ensuite ; une figurine déjà engagée est poursuivie). `planSquad`
   **coordonne** : objectifs les moins défendus d'abord, `ennemis + 1` figurines par objectif
   (plafond `AI_MAX_PER_OBJECTIVE`), les plus proches — ce qui garde en place les tenants. **Tempo** :
-  au dernier tour (`MAXTURN`), les figurines en trop renforcent les objectifs au lieu d'attaquer
-  (le score se fige à la fin du tour). Le tempo reste simple (basé sur le tour, pas encore sur
-  l'écart de score) : une pondération fine agressivité/prudence selon `state.score` est laissée
-  pour plus tard si besoin.
+  une posture (`tempo()`) dérivée du **tour ET de l'écart de points** règle deux leviers —
+  `objectiveFocus` (les figurines en trop sécurisent les objectifs plutôt que d'attaquer) est vrai
+  en fin de partie (`MAXTURN − turn ≤ AI_ENDGAME_TURNS`) ou quand l'IA est **menée** ; `contestCap`
+  (plafond par objectif) monte à `AI_MAX_PER_OBJECTIVE + 1` quand l'IA est **menée en fin de
+  partie**, pour arracher un objectif disputé. **En tête, la posture reste neutre** (choix produit :
+  presser vs protéger l'avance a été tranché « neutre » — l'écart ne joue que quand l'IA est menée
+  ou en fin de partie). À égalité tôt : neutre.
 - **Refonte IA : terminée** (incréments 0→3). L'IA est désormais à deux niveaux (plan de camp
   stratégique + moteur d'utilité tactique), joue les objectifs, coordonne, cible par dégâts
   attendus, se met à couvert et ordonne ses activations. Réglages (poids `AI_*`) = valeurs de
