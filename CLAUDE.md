@@ -34,10 +34,13 @@ La flèche de dépendance ne pointe que vers le haut de ce tableau.
 **IA = consommateur.** En mode 1 joueur, `src/ai/` pilote le camp B via les **mêmes actions**
 qu'un humain (`loop/actions.js` : `moveModel`, `aim` ; + `declareShot`/`fire`,
 `declareFight`/`fight`, `submitMeleeChoice`, `endActivation`). La décision est pure et à deux
-étages : `ai/utility.js` génère les actions candidates d'une figurine et les **note**
-(`{ priority, value }` : priorité la plus haute, puis départage tactique), et `ai/decide.js`
-choisit la figurine à activer puis retient l'action de meilleure utilité (`decide(state, side) →
-intention`). Un ordonnanceur (`ai/runner.js`) observe `state` et agit à son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
+niveaux : `ai/plan.js` (stratégique) assigne à chaque figurine un **but** — `{ kind:'seize', at }`
+tenir/prendre un objectif, ou `{ kind:'attack' }` engager l'ennemi (`planSquad(state, side)`) ; puis
+`ai/utility.js` (tactique) génère les actions candidates de la figurine et les **note**
+(`{ priority, value }` : priorité la plus haute, puis départage tactique), la cible de déplacement
+dépendant du but. `ai/decide.js` fait la colle : figurine à activer → but → action de meilleure
+utilité (`decide(state, side) → intention`). Un ordonnanceur (`ai/runner.js`) observe `state` et
+agit à son tour. Le cœur (`rules`/`state`/`render`) **ignore l'IA** ; `src/ai/` n'est
 importé que par `main.js` (câblage) et par `input/` (qui consulte `isAiControlled` pour bloquer
 la main humaine pendant le tour de l'IA).
 

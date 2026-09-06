@@ -2,6 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { decide, decideMelee } from '../src/ai/decide.js';
 import { createMelee } from '../src/rules/combat.js';
+import { OBJECTIVES } from '../src/config.js';
+import { dist } from '../src/rules/geometry.js';
+
+const OBJ = OBJECTIVES[0]; // objectif de référence pour les scénarios de zone
 
 // figurine IA (camp B) et cible ennemie (camp A), champs minimaux lus par les règles
 const ai = (o = {}) => ({ team: 'B', alive: true, activated: false, ap: 2, shot: false, aimed: false, moved: false,
@@ -42,6 +46,26 @@ test('sans PA, l\'IA termine l\'activation', () => {
 
 test('sans ennemi vivant, l\'IA termine l\'activation', () => {
   assert.equal(decide(st([ai()]), 'B').type, 'end');
+});
+
+test('faute de tir ou de mêlée, l\'IA se dirige vers un objectif à prendre', () => {
+  const m = ai({ x: OBJ.x - 5, y: OBJ.y, weapon: { a: 4, bs: 3, range: 4 } });
+  const e = foe({ x: OBJ.x + 11, y: OBJ.y }); // 16″ : hors de portée et hors contact
+  const it = decide(st([m, e]), 'B');
+  assert.equal(it.type, 'move');
+  assert.ok(dist(it.dest, OBJ) < dist(m, OBJ)); // le déplacement rapproche de l'objectif
+});
+
+test('une figurine qui tient un objectif y reste au lieu de charger l\'ennemi', () => {
+  const m = ai({ x: OBJ.x, y: OBJ.y, weapon: { a: 4, bs: 3, range: 4 } }); // sur l'objectif, le contrôle
+  const e = foe({ x: OBJ.x + 11, y: OBJ.y }); // trop loin pour être tiré ou atteint
+  assert.equal(decide(st([m, e]), 'B').type, 'end');
+});
+
+test('l\'IA ne quitte pas un tir sûr pour marcher vers un objectif', () => {
+  const m = ai({ x: OBJ.x - 5, y: OBJ.y, ap: 1, moved: true }); // 1 PA : tire sans viser
+  const e = foe({ x: OBJ.x - 2, y: OBJ.y }); // à portée et en vue (3″)
+  assert.equal(decide(st([m, e]), 'B').type, 'shoot');
 });
 
 const meleeState = (o) => createMelee({

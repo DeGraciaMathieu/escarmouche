@@ -1,7 +1,7 @@
 import { dist } from '../rules/geometry.js';
 import { canShoot, canFight } from '../rules/sight.js';
 import { moveCheck } from '../rules/movement.js';
-import { AI_PRIO_FIGHT, AI_PRIO_AIM, AI_PRIO_SHOOT, AI_PRIO_MOVE, AI_PRIO_END, AI_TARGET_HP_WEIGHT } from '../config.js';
+import { AI_PRIO_FIGHT, AI_PRIO_AIM, AI_PRIO_SHOOT, AI_PRIO_MOVE, AI_PRIO_END, AI_TARGET_HP_WEIGHT, OBJECTIVE_RANGE } from '../config.js';
 
 // ============================================================
 //  Moteur d'utilité de l'IA — PUR (aucun DOM, aucun hasard).
@@ -38,9 +38,10 @@ function bestApproach(m, target, models, terrain) {
   return best;
 }
 
-// Actions candidates de la figurine `m` du camp `side`, chacune notée et portant son intention
-// prête pour le runner. « Terminer » est toujours présent comme repli de plus basse priorité.
-export function candidateActions(state, m, side) {
+// Actions candidates de la figurine `m` du camp `side`, selon son but `goal` (voir ai/plan.js),
+// chacune notée et portant son intention prête pour le runner. « Terminer » est toujours présent
+// comme repli de plus basse priorité.
+export function candidateActions(state, m, side, goal = { kind: 'attack' }) {
   const { models, terrain } = state;
   const enemies = models.filter(e => e.alive && e.team !== side);
   const cands = [{ priority: AI_PRIO_END, value: 0, intention: { type: 'end', model: m } }];
@@ -63,9 +64,15 @@ export function candidateActions(state, m, side) {
     }
   }
 
-  // Se rapprocher de l'ennemi le plus proche.
-  const approach = bestApproach(m, nearest(m, enemies), models, terrain);
-  if (approach) cands.push({ priority: AI_PRIO_MOVE, value: -approach.d, intention: { type: 'move', model: m, dest: approach.dest } });
+  // Déplacement selon le but : rejoindre l'objectif assigné (sauf si on y est déjà, auquel cas on
+  // le tient sans bouger), sinon se rapprocher de l'ennemi le plus proche.
+  const moveTarget = goal.kind === 'seize'
+    ? (dist(m, goal.at) > OBJECTIVE_RANGE ? goal.at : null)
+    : nearest(m, enemies);
+  if (moveTarget) {
+    const approach = bestApproach(m, moveTarget, models, terrain);
+    if (approach) cands.push({ priority: AI_PRIO_MOVE, value: -approach.d, intention: { type: 'move', model: m, dest: approach.dest } });
+  }
 
   return cands;
 }

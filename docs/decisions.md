@@ -137,11 +137,17 @@ pas changer le jeu.
   échelle (mêlée > viser > tirer > se rapprocher > terminer) via des priorités `AI_PRIO_*` et un
   départage tactique (`value`). Les 10 tests IA existants restent verts : ils servent de contrat
   d'iso-comportement. `decideMelee` inchangé.
-- **`ai/plan.js` volontairement différé** à l'incrément 1 (objectifs) : on n'introduit pas de
-  module mort tant qu'il ne pilote pas de comportement.
-- **Incréments suivants (à venir)** : 1) conscience des objectifs (stratégique) ; 2) ciblage &
-  positionnement (tactique : chance de touche, traits d'arme, couvert) ; 3) ordre d'activation &
-  tempo selon le score/tour.
+- **Incrément 1 (fait)** : conscience des objectifs. `ai/plan.js` (`planSquad`) assigne à chaque
+  figurine un but (`seize` un objectif / `attack`) : on garde le tenant le plus proche d'un
+  objectif qu'on contrôle, sinon on y envoie la figurine libre la plus proche ; le reste engage
+  l'ennemi. La cible de déplacement du moteur d'utilité dépend du but ; une figurine déjà sur son
+  objectif le **tient** (pas de marche). Assignation volontairement simple (1 figurine par
+  objectif) : le nombre nécessaire pour départager un objectif disputé est reporté à l'incrément 3.
+  Priorités inchangées → tir/mêlée priment sur la marche vers un objectif (on ne sacrifie pas un
+  kill). Les tests IA restent le contrat d'iso-comportement ; 3 macro-tests ajoutés pour la zone.
+- **Incréments suivants (à venir)** : 2) ciblage & positionnement (tactique : chance de touche,
+  traits d'arme, couvert) ; 3) ordre d'activation, coordination (nombre par objectif) & tempo
+  selon le score/tour.
 - **Poids et priorités** dans `config.js` (`AI_PRIO_*`, `AI_TARGET_HP_WEIGHT`) : valeurs de
   départ, ajustables ; le grand écart entre priorités garantit que l'ordre prime le départage.
 

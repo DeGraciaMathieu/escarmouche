@@ -1,6 +1,7 @@
 import { meleeOptions } from '../rules/combat.js';
 import { engagedModel } from '../rules/turn.js';
 import { candidateActions, bestAction } from './utility.js';
+import { planSquad } from './plan.js';
 
 // ============================================================
 //  Décision de l'IA — colle PURE (aucun DOM, aucun hasard).
@@ -9,13 +10,15 @@ import { candidateActions, bestAction } from './utility.js';
 // ============================================================
 
 // Intention suivante de l'IA du camp `side` : engager la figurine active (celle en cours
-// d'activation, sinon la première non activée) et retenir son action de meilleure utilité.
+// d'activation, sinon la première non activée), lire son but dans le plan de camp, et retenir
+// son action de meilleure utilité.
 export function decide(state, side) {
   const { models } = state;
   const m = engagedModel(models, side) || models.find(x => x.alive && x.team === side && !x.activated);
   if (!m) return { type: 'none' };
   if (m.ap <= 0) return { type: 'end', model: m };
-  return bestAction(candidateActions(state, m, side)).intention;
+  const goal = planSquad(state, side).get(m) || { kind: 'attack' };
+  return bestAction(candidateActions(state, m, side, goal)).intention;
 }
 
 // Choix de l'IA dans un duel (état vivant `duel`) : contrer une critique adverse seulement si
