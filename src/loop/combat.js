@@ -130,7 +130,7 @@ export async function fire() {
 
   // Effets plateau (tir, impacts, dégâts, mort) collectés dans ce plan et joués APRÈS la
   // fermeture de la modale (playCinematic), pour qu'ils soient visibles sur le plateau.
-  const plan = { shooter, target, s, damage: 0, cancels: 0, impacts: [], targetDown: false, overheat: 0, shooterDown: false };
+  const plan = { shooter, target, s, damage: 0, cancels: 0, hits: 0, impacts: [], targetDown: false, overheat: 0, shooterDown: false };
 
   // --- jet d'attaque (Létale abaisse le seuil de crit ; Précision retire des dés lancés)
   const critOn = shooter.weapon.lethal || CRIT_VALUE;
@@ -155,6 +155,7 @@ export async function fire() {
   // les échecs (et la réussite masquée) quittent la table
   miss.forEach((d, i) => { place(d.el, d.x, ROW.atk + DIE_MISS_DROP, d.rot + DIE_MISS_ROT, DIE_MISS_SCALE); d.el.style.opacity = DIE_MISS_OPACITY; });
   const kept = [...crits, ...hits];
+  plan.hits = kept.length; // une traçante par réussite au jet d'attaque (cf. playCinematic)
   kept.forEach((d, i) => { d.x = DX + i * GAP; place(d.el, d.x, ROW.atk, d.rot, 1); });
   nAtk.innerHTML = (kept.length
     ? `<em>${kept.length} touche${kept.length > 1 ? 's' : ''}</em>${crits.length ? ` dont <em>${crits.length} critique${crits.length > 1 ? 's' : ''}</em>` : ''}`
@@ -323,11 +324,11 @@ async function endSequence(plan) {
 // Effets sur le plateau, joués une fois la modale fermée : tir, sauvegardes, impacts,
 // dégâts (cible puis surchauffe du tireur) et mises hors de combat.
 async function playCinematic(plan) {
-  const { shooter, target, damage, impacts, cancels } = plan;
+  const { shooter, target, damage, impacts, cancels, hits } = plan;
   const fxColor = tracerColor(shooter.weapon.tracer);   // teinte de l'arme (bouche, impact), null si aucune
   sfx.shot();
   addFx({ type: 'muzzle', x: shooter.x, y: shooter.y, dur: FX_MUZZLE_MS, color: fxColor });
-  for (let i = 0; i < shooter.weapon.a; i++)
+  for (let i = 0; i < hits; i++)
     setTimeout(() => addFx({ type: 'tracer', from: shooter, to: target, dur: FX_TRACER_MS, style: shooter.weapon.tracer }), i * TRACER_STAGGER);
   await sleep(CINE_TRACER_HOLD);
 
