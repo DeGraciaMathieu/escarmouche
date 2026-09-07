@@ -58,8 +58,6 @@ initEditor({
 });
 document.getElementById('btnEditor').onclick = openEditor;
 
-document.getElementById('start').classList.add('show');
-
 // Recale le backing dès que la taille affichée du canvas change (mise en page, redimensionnement).
 new ResizeObserver(resize).observe(cv);
 render();

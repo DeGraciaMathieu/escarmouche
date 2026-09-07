@@ -172,23 +172,61 @@ kbd{font-family:'Barlow Condensed';font-size:12px;background:#2c342a;border:1px 
 .banner p{margin:0 0 16px;color:var(--dim);text-align:center;font-size:15px}
 .banner button{font-size:18px;padding:10px 24px;background:var(--brass);border:0;border-radius:3px;color:#191b12;cursor:pointer;display:block;margin:0 auto}
 
-.start{position:absolute;inset:0;display:none;place-items:center;background:rgba(10,13,10,.92);border-radius:6px;z-index:9}
+.start{position:fixed;inset:0;display:none;place-items:center;z-index:50;overflow:auto;padding:24px;
+  background:radial-gradient(1200px 700px at 50% -10%, #242b25 0%, #131713 70%), #131713}
 .start.show{display:grid}
-.start h2{font-family:'Barlow Condensed';font-size:38px;margin:0 0 4px;text-align:center}
-.start p{margin:0 0 16px;color:var(--dim);text-align:center;font-size:15px}
-.mode-picks{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+/* home dédiée plein écran : tant qu'elle est affichée, la scène de jeu et la colonne latérale sont masquées */
+.start.show ~ .stage,.start.show ~ .side-col{display:none}
+/* quadrillage tactique en fond, fondu vers les bords par un masque radial */
+.start::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
+  background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/44px 44px;
+  -webkit-mask:radial-gradient(72% 62% at 50% 44%,#000 28%,transparent 100%);
+          mask:radial-gradient(72% 62% at 50% 44%,#000 28%,transparent 100%)}
+
+/* cartouche central à coins en équerre */
+.start-panel{position:relative;display:flex;flex-direction:column;align-items:center;gap:24px;
+  padding:40px 48px;max-width:640px;max-height:calc(100vh - 48px);overflow:auto;
+  border:1px solid var(--line);border-radius:4px;
+  background:linear-gradient(180deg,rgba(38,46,36,.55),rgba(19,23,19,.5));
+  box-shadow:0 24px 64px rgba(0,0,0,.5);animation:startIn .5s ease}
+@keyframes startIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.corner{position:absolute;width:16px;height:16px;border:2px solid var(--brass)}
+.corner.tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.corner.tr{top:-1px;right:-1px;border-left:0;border-bottom:0}
+.corner.bl{bottom:-1px;left:-1px;border-right:0;border-top:0}
+.corner.br{bottom:-1px;right:-1px;border-left:0;border-top:0}
+
+.start-head{text-align:center}
+.start h2{font-family:'Barlow Condensed';font-weight:600;font-size:64px;line-height:.9;margin:0;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--paper)}
+.start h2::after{content:'';display:block;width:130px;height:3px;margin:16px auto 0;
+  background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+.start p{margin:14px 0 0;color:var(--dim);text-align:center;font-size:15px}
+
+/* sections : intitulé en petites capitales espacées, flanqué de filets */
+.start-section{width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+.start-label{display:flex;align-items:center;gap:12px;font-family:'Barlow Condensed';font-weight:600;
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--brass)}
+.start-label::before,.start-label::after{content:'';width:28px;height:1px;background:var(--line)}
+
+.mode-picks{display:flex;gap:8px;justify-content:center}
 .mode-picks button{font-family:'Barlow Condensed';font-size:15px;padding:8px 18px;border-radius:3px;
   border:1px solid var(--line);background:#252c22;color:var(--dim);cursor:pointer;transition:background .12s,border-color .12s,color .12s}
 .mode-picks button.on{border-color:var(--brass);background:#333d2d;color:var(--paper)}
 .map-picks{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:560px}
-.map-picks button{width:168px;text-align:left;padding:12px 14px;border-radius:4px;border:1px solid var(--line);
-  background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
-.map-picks button:hover{border-color:var(--brass);background:#323c2e}
+.map-picks button{position:relative;width:168px;text-align:left;padding:14px 14px 12px;border-radius:4px;border:1px solid var(--line);
+  background:#252c22;color:var(--paper);cursor:pointer;overflow:hidden;transition:background .12s,border-color .12s,transform .12s}
+/* liseré laiton en tête de carte, révélé au survol */
+.map-picks button::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--brass);
+  transform:scaleX(0);transform-origin:left;transition:transform .16s}
+.map-picks button:hover{border-color:var(--brass);background:#323c2e;transform:translateY(-2px)}
+.map-picks button:hover::before{transform:scaleX(1)}
 .map-picks button b{display:block;font-family:'Barlow Condensed';font-size:19px;margin-bottom:3px}
 .map-picks button span{display:block;font-size:12px;color:var(--dim);line-height:1.4}
 .map-picks button.custom b::after{content:'perso';font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;color:var(--brass);
   border:1px solid var(--brass);border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:middle}
-.btn-editor{margin-top:16px;font-family:'Barlow Condensed';font-size:15px;padding:9px 18px;border-radius:4px;
+.btn-editor{font-family:'Barlow Condensed';font-size:15px;padding:9px 18px;border-radius:4px;
   border:1px dashed var(--line);background:transparent;color:var(--dim);cursor:pointer;transition:border-color .12s,color .12s}
 .btn-editor:hover{border-color:var(--brass);color:var(--paper)}
 
@@ -275,6 +313,29 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
 </head>
 <body>
 
+<div class="start show" id="start">
+  <div class="start-panel">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <header class="start-head">
+      <h2>Escarmouche</h2>
+      <p>Jeu d'escarmouche tactique au tour par tour</p>
+    </header>
+    <div class="start-section">
+      <span class="start-label">Mode</span>
+      <div class="mode-picks" id="modePicks">
+        <button data-mode="2p" class="on">2 joueurs</button>
+        <button data-mode="ia">Contre l'IA</button>
+      </div>
+    </div>
+    <div class="start-section">
+      <span class="start-label">Théâtre d'opération</span>
+      <div class="map-picks" id="mapPicks"></div>
+    </div>
+    <button id="btnEditor" class="btn-editor">＋ Créer une map</button>
+  </div>
+</div>
+
 <div class="stage">
   <div class="hud">
     <div class="hud-turn"><b id="turnNum">1</b><span>tour sur 4</span></div>
@@ -343,17 +404,6 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
     <div class="banner" id="banner"><div>
       <h2 id="bannerTitle"></h2><p id="bannerSub"></p>
       <button onclick="location.reload()">Rejouer</button>
-    </div></div>
-
-    <div class="start" id="start"><div>
-      <h2>Escarmouche</h2>
-      <p>Choisis le mode, puis le plan</p>
-      <div class="mode-picks" id="modePicks">
-        <button data-mode="2p" class="on">2 joueurs</button>
-        <button data-mode="ia">Contre l'IA</button>
-      </div>
-      <div class="map-picks" id="mapPicks"></div>
-      <button id="btnEditor" class="btn-editor">＋ Créer une map</button>
     </div></div>
 
     <div class="ed-export" id="edExportBox" hidden>
