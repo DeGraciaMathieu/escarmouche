@@ -51,10 +51,14 @@ la main humaine pendant le tour de l'IA).
 **Éditeur = consommateur.** `src/editor/` est un module isolé sur le même modèle que l'IA :
 importé par `main.js` (câblage), `input/controls.js` (qui consulte `isEditing` pour bloquer la main
 de jeu) et `loop/render-loop.js` (qui délègue le rendu à `drawEditor` en mode édition). L'éditeur
-manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObjectives` ; la
+travaille en brouillon sur `state` via **trois outils** : `terrain` (décor, `state.terrain`),
+`objective` (marqueurs, `state.objectives` — poser/déplacer/supprimer, placement libre) et `deploy`
+(zones de déploiement, `state.deploy` — une par camp, déplacer/redimensionner) ; il réutilise
+`drawTerrain`/`drawObjectives` et n'ajoute que la grille, la sélection et les poignées. La
 **validité d'une map** (spawns/objectifs dégagés et mutuellement accessibles) est une **règle pure**
 (`rules/mapcheck.js`). Les maps créées sont persistées en `localStorage` (`editor/storage.js`, format
-`{ name, desc, terrain }` identique à une entrée `MAPS`) et exportables en code à coller dans `MAPS`.
+`{ name, desc, terrain, objectives, deploy }` identique à une entrée `MAPS`) et exportables en code à
+coller dans `MAPS`.
 
 ## Conventions de code — non négociables
 
@@ -85,7 +89,13 @@ manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObject
   = une routine de rendu dans `render/board.js` (map `SKINS`), aucune règle touchée.
   On peut aussi **créer un plan à l'écran** (bouton « Créer une map », `src/editor/`) : il est
   stocké en `localStorage` et apparaît dans le sélecteur de démarrage, ou s'exporte en entrée `MAPS`
-  à committer. Un plan (intégré ou personnalisé) est un objet `{ name, desc, terrain }`.
+  à committer. Un plan (intégré ou personnalisé) est un objet `{ name, desc, terrain, objectives?,
+  deploy? }` ; `objectives`/`deploy` sont optionnels et retombent sur les défauts de `config`
+  (`OBJECTIVES`, `DEPLOY_ZONES`). Au démarrage, `main.js` copie les trois dans `state`
+  (`state.terrain` / `state.objectives` / `state.deploy`, lus partout). Les figurines sont ensuite
+  **déployées dans la zone de leur camp** : `rules/deploy.js` (`placeSpawns`, pur) remappe la position
+  d'origine de chaque figurine (exprimée dans la zone par défaut) vers la zone active — identité sur
+  les zones par défaut, transformation affine dès qu'une zone est déplacée/redimensionnée.
 - Une figurine est un objet plat (voir `createModels` dans `state/game.js`) : `hp`, `ap`,
   `activated`, `aimed`, `moved`, `shot`, `weapon`, `role`, etc. Pas de classes.
 - Rendu d'une figurine : un **jeton-photo circulaire** (« médaillon ») dessiné sur le canvas par
@@ -125,9 +135,9 @@ manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObject
   `KILL_POINTS` au camp responsable (crédité par `registerKill`, appelé depuis les résolutions de
   tir et de mêlée ; une auto-élimination par surchauffe ne rapporte rien). Le **contrôle de zone**
   rapporte `OBJECTIVE_POINTS` par marqueur d'objectif tenu, compté **en fin de chaque tour**
-  (`scoreEndOfTurn`). Les marqueurs sont une
-  liste fixe `OBJECTIVES` (config, positions en pouces), symétriques autour de l'axe vertical du
-  plateau. On contrôle un marqueur si l'on a **plus de figurines vivantes** que l'adversaire dans
+  (`scoreEndOfTurn`). Les marqueurs vivent dans `state.objectives` (positions en pouces, propres au
+  plan actif ; `OBJECTIVES` de config n'est que le défaut, éditable et non plus forcément symétrique).
+  On contrôle un marqueur si l'on a **plus de figurines vivantes** que l'adversaire dans
   un rayon `OBJECTIVE_RANGE` (règle pure `rules/objective.js` → `controlOf`/`scoreObjectives` ;
   égalité = disputé). La **victoire** finale (fin du tour `MAXTURN`) revient au plus grand total
   (`scoreWinner`, égalité = match nul) ; l'anéantissement reste une victoire immédiate.
@@ -151,7 +161,7 @@ manipule `state.terrain` comme brouillon et réutilise `drawTerrain`/`drawObject
 ## Skills disponibles
 
 - **architecture** — carte des modules et « où va le nouveau code ».
-- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `pathfind`, `turn`, `combat`, `squad`, `loadout`, `mapcheck`).
+- **rules** — couche de règles pures (`geometry`, `sight`, `movement`, `pathfind`, `turn`, `combat`, `squad`, `loadout`, `mapcheck`, `deploy`).
 - **combat** — résolution du tir (dés, seuils, annulations, dégâts) et séquence animée.
 - **rendering** — dessin du plateau, des figurines, des effets et boucle de rendu.
 - **turn-flow** — état partagé, activation, transitions de tour/camp, victoire.

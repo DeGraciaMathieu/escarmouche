@@ -1,4 +1,4 @@
-import { OBJECTIVES, OBJECTIVE_RANGE, AI_MAX_PER_OBJECTIVE, AI_ENDGAME_TURNS, MAXTURN } from '../config.js';
+import { OBJECTIVE_RANGE, AI_MAX_PER_OBJECTIVE, AI_ENDGAME_TURNS, MAXTURN } from '../config.js';
 import { dist } from '../rules/geometry.js';
 
 // ============================================================
@@ -18,9 +18,9 @@ function nearestFree(own, taken, o) {
   return best;
 }
 
-// Objectif le plus proche d'une figurine.
-function nearestObjective(m) {
-  return OBJECTIVES.reduce((a, b) => (dist(m, b) < dist(m, a) ? b : a));
+// Objectif le plus proche d'une figurine (parmi `objectives`).
+function nearestObjective(m, objectives) {
+  return objectives.reduce((a, b) => (dist(m, b) < dist(m, a) ? b : a));
 }
 
 // Nombre d'ennemis à portée d'un objectif.
@@ -50,13 +50,13 @@ function tempo(state, side) {
 // place les tenants déjà à portée. Selon le tempo (tour + écart de points), les figurines restantes
 // renforcent les objectifs ou engagent l'ennemi.
 export function planSquad(state, side) {
-  const { models } = state;
+  const { models, objectives } = state;
   const own = models.filter(m => m.alive && m.team === side);
   const goals = new Map();
   const taken = new Set();
   const { objectiveFocus, contestCap } = tempo(state, side);
 
-  const ranked = OBJECTIVES
+  const ranked = objectives
     .map(o => ({ o, need: Math.min(contestCap, enemiesAt(models, o, side) + 1) }))
     .sort((a, b) => a.need - b.need);
 
@@ -70,7 +70,7 @@ export function planSquad(state, side) {
 
   for (const m of own) {
     if (taken.has(m)) continue;
-    goals.set(m, objectiveFocus ? { kind: 'seize', at: nearestObjective(m) } : { kind: 'attack' });
+    goals.set(m, (objectiveFocus && objectives.length) ? { kind: 'seize', at: nearestObjective(m, objectives) } : { kind: 'attack' });
   }
   return goals;
 }

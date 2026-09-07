@@ -1,4 +1,4 @@
-import { BASE_RADIUS, ACTIONS_PER_ACTIVATION } from '../config.js';
+import { BASE_RADIUS, ACTIONS_PER_ACTIVATION, OBJECTIVES, DEPLOY_ZONES } from '../config.js';
 
 export const TEAMS = {
   A: { name: 'Garde de Fer', color: '#5c7f9e', deep: '#33506b' },
@@ -181,6 +181,8 @@ export const state = {
   pending: null,      // tir déclaré, en attente de confirmation
   duel: null,         // duel de corps à corps en cours (état interactif)
   terrain: [],        // plan de décor actif, choisi au démarrage (main.js)
+  objectives: OBJECTIVES.map(o => ({ ...o })),                    // marqueurs d'objectif du plan actif
+  deploy: { A: { ...DEPLOY_ZONES.A }, B: { ...DEPLOY_ZONES.B } }, // zones de déploiement du plan actif
   speed: 1,           // accéléré si le joueur clique pendant la résolution
   shake: 0,
   models: [],

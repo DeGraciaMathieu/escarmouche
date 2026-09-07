@@ -110,14 +110,22 @@ export const ENDSHOT_WAIT_NODMG = 950; // attente après un tir sans dégât
 // --- Dé à six faces
 export const DICE_FACES = 6;
 
-// --- Zones de déploiement (bandes colorées sur les bords du plateau)
-export const DEPLOY_ZONE_WIDTH = 5;    // largeur en pouces
+// --- Zones de déploiement (rectangles en pouces, une bande par camp sur son bord)
+export const DEPLOY_ZONE_WIDTH = 5;    // largeur de la bande par défaut (pouces)
 export const DEPLOY_ZONE_ALPHA = 0.06; // opacité de la teinte
+// Disposition par défaut, copiée dans state.deploy quand une map n'en fournit pas.
+export const DEPLOY_ZONES = {
+  A: { x: 0, y: 0, w: DEPLOY_ZONE_WIDTH, h: BH },
+  B: { x: BW - DEPLOY_ZONE_WIDTH, y: 0, w: DEPLOY_ZONE_WIDTH, h: BH },
+};
 
 // --- Éditeur de map (mode création)
 export const EDITOR_GRID = 0.5;               // pas d'aimantation par défaut (pouces)
 export const EDITOR_GRID_OPTIONS = [0.25, 0.5, 1]; // pas proposés à l'écran
 export const EDITOR_MIN_RECT = 0.4;           // dimension minimale d'un décor tracé (pouces)
+export const EDITOR_HANDLE = 0.5;             // taille visuelle d'une poignée de redimensionnement (pouces)
+export const EDITOR_HANDLE_HIT = 0.7;         // rayon de saisie d'une poignée (pouces)
+export const EDITOR_OBJ_HIT = 0.9;            // rayon de saisie d'un objectif à la souris (pouces)
 
 // --- Cadence de la séquence de tir (ms, multipliés par la vitesse d'animation)
 export const DIE_REVEAL_STEP = 130;   // révélation d'un dé, un par un

@@ -1,5 +1,5 @@
 import { cv, ctx, px } from '../canvas.js';
-import { MAT_TEXTURE_DOTS, OBJECTIVES, OBJECTIVE_RANGE, OBJECTIVE_RADIUS, MEDAL_VIEW_SCALE, MEDAL_DISC_COLOR, MEDAL_IMG_SCALE, MEDAL_IMG_Y_OFFSET } from '../config.js';
+import { MAT_TEXTURE_DOTS, OBJECTIVE_RANGE, OBJECTIVE_RADIUS, MEDAL_VIEW_SCALE, MEDAL_DISC_COLOR, MEDAL_IMG_SCALE, MEDAL_IMG_Y_OFFSET } from '../config.js';
 import { TEAMS, state, WEAPONS, ROLE_LOADOUTS } from '../state/game.js';
 import { sfx } from '../audio.js';
 import { sight, canTarget, canReachAny } from '../rules/sight.js';
@@ -131,7 +131,7 @@ const SKINS = {
 // Marqueurs d'objectif : halo de portée + palet losangé teinté par le camp qui le contrôle
 // (doré si disputé). Dessiné entre le décor et les figurines.
 export function drawObjectives() {
-  for (const o of OBJECTIVES) {
+  for (const o of state.objectives) {
     const cx = px(o.x), cy = px(o.y), owner = controlOf(state.models, o, OBJECTIVE_RANGE);
     const col = owner ? TEAMS[owner].color : '#c9a227';
     ctx.save();

@@ -1,5 +1,5 @@
 import { cv, ctx, px } from '../canvas.js';
-import { BW, BH, SHAKE_DAMPING, SHAKE_MIN, DEPLOY_ZONE_WIDTH, DEPLOY_ZONE_ALPHA } from '../config.js';
+import { BW, BH, SHAKE_DAMPING, SHAKE_MIN, DEPLOY_ZONE_ALPHA } from '../config.js';
 import { state } from '../state/game.js';
 import { mat, drawTerrain, drawObjectives, drawRange, drawTape, drawTargets, drawModel, drawFiringLine, drawSight, drawHoverName } from '../render/board.js';
 import { drawFx } from '../render/fx.js';
@@ -12,8 +12,9 @@ export function render() {
   ctx.setTransform(cv.width / px(BW), 0, 0, cv.height / px(BH), 0, 0); // backing (retina) → repère logique 900×660
   if (state.shake > 0) { ctx.translate((Math.random() - .5) * state.shake, (Math.random() - .5) * state.shake); state.shake *= SHAKE_DAMPING; if (state.shake < SHAKE_MIN) state.shake = 0; }
   ctx.drawImage(mat, 0, 0);
-  ctx.fillStyle = `rgba(92,127,158,${DEPLOY_ZONE_ALPHA})`; ctx.fillRect(0, 0, px(DEPLOY_ZONE_WIDTH), cv.height);
-  ctx.fillStyle = `rgba(180,85,58,${DEPLOY_ZONE_ALPHA})`; ctx.fillRect(px(BW - DEPLOY_ZONE_WIDTH), 0, px(DEPLOY_ZONE_WIDTH), cv.height);
+  const za = state.deploy.A, zb = state.deploy.B;
+  ctx.fillStyle = `rgba(92,127,158,${DEPLOY_ZONE_ALPHA})`; ctx.fillRect(px(za.x), px(za.y), px(za.w), px(za.h));
+  ctx.fillStyle = `rgba(180,85,58,${DEPLOY_ZONE_ALPHA})`; ctx.fillRect(px(zb.x), px(zb.y), px(zb.w), px(zb.h));
   drawTerrain();
   drawObjectives();
   if (state.selected && state.selected.team === state.side && state.selected.ap > 0 && !state.selected.anim && !state.busy && !state.over) drawRange(state.selected);

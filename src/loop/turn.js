@@ -1,4 +1,4 @@
-import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS, OBJECTIVES, OBJECTIVE_RANGE } from '../config.js';
+import { MAXTURN, FLASH_SIDE_MS, FLASH_TURN_MS, OBJECTIVE_RANGE } from '../config.js';
 import { TEAMS, state } from '../state/game.js';
 import { decideActivationEnd, annihilationWinner, scoreWinner } from '../rules/turn.js';
 import { scoreObjectives } from '../rules/objective.js';
@@ -13,7 +13,7 @@ export function registerKill(killerTeam) { state.score = awardKill(state.score, 
 
 // Objectifs contrôlés à la fin du tour qui s'achève : ajoute les points et journalise le bilan.
 function scoreEndOfTurn() {
-  const held = scoreObjectives(state.models, OBJECTIVES, OBJECTIVE_RANGE);
+  const held = scoreObjectives(state.models, state.objectives, OBJECTIVE_RANGE);
   state.score = addObjectiveScore(state.score, held);
   if (held.A || held.B) journal(`<b>Fin du tour ${state.turn}</b> — objectifs tenus : ${TEAMS.A.name} ${held.A}, ${TEAMS.B.name} ${held.B}.`);
 }

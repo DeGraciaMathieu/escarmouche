@@ -239,8 +239,10 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
 .ed-seg{display:flex;flex:1}
 .ed-seg button{flex:1;font-family:'Barlow Condensed';font-size:14px;padding:6px;border:1px solid var(--line);background:#252c22;color:var(--paper);cursor:pointer}
 .ed-seg button:first-child{border-radius:3px 0 0 3px}
-.ed-seg button:last-child{border-radius:0 3px 3px 0;border-left:0}
+.ed-seg button:not(:first-child){border-left:0}
+.ed-seg button:last-child{border-radius:0 3px 3px 0}
 .ed-seg button.on{background:#333d2d;border-color:var(--brass);color:var(--brass)}
+#edTools button{font-size:12.5px;padding:6px 3px}
 .ed-two{display:flex;gap:6px}
 .ed-two button,.ed-back{font-family:'Barlow Condensed';font-size:14px;padding:8px;border-radius:3px;border:1px solid var(--line);
   background:#252c22;color:var(--paper);cursor:pointer;transition:background .12s,border-color .12s}
@@ -437,10 +439,17 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
 
   <div class="block" id="editorPanel" hidden>
     <h2>Éditeur de map</h2>
-    <div class="ed-row"><span>Décor</span>
-      <div class="ed-seg"><button data-t="wall" class="on">Mur</button><button data-t="low">Bas</button></div>
+    <div class="ed-row"><span>Outil</span>
+      <div class="ed-seg" id="edTools">
+        <button data-tool="terrain" class="on">Décor</button><button data-tool="objective">Objectifs</button><button data-tool="deploy">Déploiement</button>
+      </div>
     </div>
-    <div class="ed-row"><span>Skin</span><select id="edVariant"></select></div>
+    <div id="edTerrainRows">
+      <div class="ed-row"><span>Type</span>
+        <div class="ed-seg"><button data-t="wall" class="on">Mur</button><button data-t="low">Bas</button></div>
+      </div>
+      <div class="ed-row"><span>Skin</span><select id="edVariant"></select></div>
+    </div>
     <div class="ed-row"><span>Grille</span><select id="edGrid"></select></div>
     <div class="ed-two"><button id="edDelete">Supprimer</button><button id="edClear">Tout effacer</button></div>
     <input id="edName" class="ed-name" placeholder="Nom de la map" maxlength="28">
@@ -448,7 +457,7 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
     <div class="ed-two"><button id="edValidate">Valider</button><button id="edExport">Exporter</button></div>
     <div class="ed-two"><button id="edSave">Sauvegarder</button><button id="edPlay" class="fire">Tester</button></div>
     <button id="edBack" class="ed-back">Retour au menu</button>
-    <div class="ed-hint">Glisser le vide = tracer · glisser un décor = déplacer · clic = sélectionner · <kbd>Suppr</kbd> efface</div>
+    <div class="ed-hint">Décor : glisser = tracer, clic = sélectionner · Objectifs : clic = poser, glisser = déplacer · Déploiement : glisser = bouger, coins = redimensionner · <kbd>Suppr</kbd> efface</div>
   </div>
 </div>
 

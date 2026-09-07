@@ -13,7 +13,7 @@ const OBJ = OBJECTIVES[0]; // objectif de référence pour les scénarios de zon
 const ai = (o = {}) => ({ team: 'B', alive: true, activated: false, ap: 2, shot: false, aimed: false, moved: false,
   hp: 8, w: 8, r: 0.62, M: 6, sv: 4, x: 0, y: 5, weapon: { a: 4, bs: 3, dn: 3 }, meleeWeapon: { a: 4, ws: 3 }, ...o });
 const foe = (o = {}) => ({ team: 'A', alive: true, hp: 12, w: 12, r: 0.62, sv: 4, x: 10, y: 5, ...o });
-const st = (models, terrain = []) => ({ models, terrain });
+const st = (models, terrain = []) => ({ models, terrain, objectives: OBJECTIVES });
 
 test('une cible au contact déclenche le corps à corps', () => {
   const m = ai(), e = foe({ x: 1.5, y: 5 }); // 1.5″ ≤ portée de contrôle

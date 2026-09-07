@@ -1,6 +1,8 @@
 import { createRng } from './rules/rng.js';
 import { cv, resize } from './canvas.js';
 import { state, createModels, MAPS } from './state/game.js';
+import { OBJECTIVES, DEPLOY_ZONES } from './config.js';
+import { placeSpawns } from './rules/deploy.js';
 import { render } from './loop/render-loop.js';
 import { refresh, journal } from './render/ui.js';
 import { autoSelect } from './loop/turn.js';
@@ -16,7 +18,10 @@ import './input/controls.js'; // enregistre souris, clavier et boutons d'action
 // (l'IA joue le camp B en mode solo).
 function startGame(map) {
   state.terrain = map.terrain;
-  state.models = createModels();
+  state.objectives = (map.objectives || OBJECTIVES).map(o => ({ ...o }));
+  const dz = map.deploy || DEPLOY_ZONES;
+  state.deploy = { A: { ...dz.A }, B: { ...dz.B } };
+  state.models = placeSpawns(createModels(), state.deploy);
   state.rng = createRng(Date.now());
   if (mode === 'ia') enableAi('B');
   document.getElementById('start').classList.remove('show');

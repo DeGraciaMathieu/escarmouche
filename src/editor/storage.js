@@ -1,5 +1,6 @@
 // Persistance des maps créées dans l'éditeur, côté navigateur (localStorage). Format d'une map
-// stockée : { name, desc, terrain } — identique à une entrée de MAPS, prête pour startGame.
+// stockée : { name, desc, terrain, objectives, deploy } — identique à une entrée de MAPS, prête
+// pour startGame (objectives/deploy retombent sur les défauts de config si absents).
 const KEY = 'escarmouche.maps.v1';
 
 export function loadCustomMaps() {
