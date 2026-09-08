@@ -308,8 +308,16 @@ body.editing .hud,body.editing .hotkeys,body.editing .side-col>.block:not(#edito
    plateau (width:100%) et les bandeaux (min-width:100% de .stage) rétrécissent ensemble pour que
    tout tienne à l'écran. Ratio du plateau 30:22 ; +26px = padding gauche/droite du cadre. */
 @media (min-width:1201px){
-  .stage{max-width:calc((100vh - var(--board-chrome)) * 30 / 22 + 26px)}
-  .side-col{max-height:calc(100vh - 40px);overflow-y:auto}
+  /* grand écran : on donne au plateau une LARGEUR cible dérivée de la hauteur (et non un simple
+     plafond), pour qu'il grandisse jusqu'à remplir la hauteur. La colonne latérale étant fixe
+     (flex:none), le .stage (min-width:0, flex-shrink:1) rétrécit seul si la largeur manque :
+     plateau = min(cap hauteur, largeur disponible), sans scroll. --board-chrome rogne le chrome
+     vertical (marges/gouttières réduites ci-dessous) pour gagner encore un peu de hauteur. */
+  :root{--board-chrome:134px}
+  body{padding-top:8px;padding-bottom:8px}
+  .stage{gap:8px;width:calc((100vh - var(--board-chrome)) * 30 / 22 + 26px)}
+  .hotkeys{line-height:1.35}
+  .side-col{max-height:calc(100vh - 16px);overflow-y:auto}
 }
 </style>
 </head>
